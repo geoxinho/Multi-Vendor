@@ -1,0 +1,46 @@
+import mongoose, { Schema, model, models, Document } from "mongoose";
+
+export interface IUser extends Document {
+  name: string;
+  email: string;
+  password: string;
+  role: "buyer" | "seller" | "admin";
+  roles: string[];
+  avatar?: string;
+  storeName?: string;
+  storeDescription?: string;
+  isBanned: boolean;
+  nin?: string;
+  isEmailVerified: boolean;
+  emailVerificationToken?: string;
+  emailVerificationTokenExpires?: Date;
+  phone?: string;
+  hearAboutUs?: string;
+  sellerCategory?: string;
+  createdAt: Date;
+}
+
+
+const UserSchema = new Schema<IUser>(
+  {
+    name: { type: String, required: true, trim: true },
+    email: { type: String, required: true, unique: true, lowercase: true },
+    password: { type: String, required: true, minlength: 6 },
+    role: { type: String, enum: ["buyer", "seller", "admin"], default: "buyer" },
+    roles: { type: [String], enum: ["buyer", "seller", "admin"], default: ["buyer"] },
+    avatar: { type: String, default: "" },
+    storeName: { type: String, default: "" },
+    storeDescription: { type: String, default: "" },
+    isBanned: { type: Boolean, default: false },
+    nin: { type: String, default: "" },
+    isEmailVerified: { type: Boolean, default: false },
+    emailVerificationToken: { type: String, default: "" },
+    emailVerificationTokenExpires: { type: Date },
+    phone: { type: String, default: "" },
+    hearAboutUs: { type: String, default: "" },
+    sellerCategory: { type: String, default: "" },
+  },
+  { timestamps: true }
+);
+
+export const User = models.User || model<IUser>("User", UserSchema);
