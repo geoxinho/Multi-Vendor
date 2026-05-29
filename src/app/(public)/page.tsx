@@ -58,7 +58,7 @@ const FALLBACK_GRADIENTS = [
 function getCategoryMeta(name: string, index: number) {
   const key = name.toLowerCase();
   for (const [k, v] of Object.entries(CATEGORY_META)) {
-    if (key.includes(k)) return { faIcon: v.faIcon, ...v };
+    if (key.includes(k)) return { ...v };
   }
   const fallback = FALLBACK_GRADIENTS[index % FALLBACK_GRADIENTS.length];
   return { faIcon: "fa-bag-shopping", gradient: fallback.gradient, iconBg: fallback.iconBg, text: fallback.text };
