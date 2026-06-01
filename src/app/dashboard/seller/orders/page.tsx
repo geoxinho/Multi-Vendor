@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import Image from "next/image";
 import LoadingSpinner from "@/components/ui/LoadingSpinner";
 import EmptyState from "@/components/ui/EmptyState";
+import ConfirmDeliveryForm from "@/components/orders/ConfirmDeliveryForm";
 
 interface OrderItem {
   title: string;
@@ -147,21 +148,10 @@ export default function SellerOrdersPage() {
                 ))}
               </div>
 
-              {/* Security PIN Warning box */}
+              {/* Delivery PIN Input Form */}
               {order.deliveryStatus !== "delivered" && order.paymentStatus === "paid" && (
-                <div className="mb-4 p-4 rounded-xl border border-amber-200 bg-amber-50/50 text-amber-900 text-xs">
-                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-2">
-                    <div className="flex items-center gap-1.5 font-bold">
-                      <i className="fa-solid fa-key text-amber-600" />
-                      <span>Delivery Verification PIN:</span>
-                    </div>
-                    <span className="font-mono text-sm font-black px-2.5 py-0.5 bg-amber-100 text-amber-900 rounded-lg tracking-wider select-all border border-amber-200 self-start sm:self-auto">
-                      {order.deliveryPin}
-                    </span>
-                  </div>
-                  <p className="text-[11px] text-amber-700 leading-relaxed">
-                    <i className="fa-solid fa-triangle-exclamation" /> <strong>IMPORTANT FOR SELLER:</strong> You must <strong>NOT</strong> disclose this 6-digit PIN to the buyer until the package has been delivered and received successfully.
-                  </p>
+                <div className="mb-4">
+                  <ConfirmDeliveryForm orderId={order._id} onSuccess={fetchOrders} />
                 </div>
               )}
 

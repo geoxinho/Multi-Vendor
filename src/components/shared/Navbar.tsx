@@ -52,7 +52,7 @@ export default function Navbar() {
 
   return (
     <>
-      <header className="sticky top-0 z-40 bg-white/95 backdrop-blur-sm border-b border-gray-100 shadow-sm">
+      <header className="sticky top-0 z-40 bg-white/80 backdrop-blur-md border-b border-gray-100 shadow-sm transition-all duration-300">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-16 gap-4">
 
@@ -199,16 +199,7 @@ export default function Navbar() {
                               </button>
                             )}
 
-                            {/* Become a Seller (pure buyer, no seller role yet) */}
-                            {!hasBothRoles && isbuyer && (
-                              <button onClick={() => { setMenuOpen(false); setBecomeSellerOpen(true); }}
-                                className="flex items-center gap-3 w-full px-4 py-2.5 text-sm text-teal-600 hover:bg-teal-50 transition-colors font-semibold">
-                                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
-                                </svg>
-                                Start Selling
-                              </button>
-                            )}
+                            {/* Start Selling removed as per request */}
                           </>
                         )}
 
@@ -245,7 +236,7 @@ export default function Navbar() {
           </div>
 
           {/* Mobile search */}
-          <div className="pb-3 md:hidden">
+          <div className="pb-4 px-2 md:hidden">
             <SearchBar />
           </div>
         </div>

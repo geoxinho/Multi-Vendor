@@ -52,13 +52,36 @@ function ProductsContent() {
     router.push(`/products?${p}`);
   };
 
+  const [isFilterOpen, setIsFilterOpen] = useState(false);
+
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      {/* Mobile Filter Toggle */}
+      <div className="lg:hidden flex justify-between items-center mb-4">
+        <h1 className="text-2xl font-bold text-gray-900">Products</h1>
+        <button
+          onClick={() => setIsFilterOpen(!isFilterOpen)}
+          className="flex items-center gap-2 px-4 py-2 bg-gray-100 text-gray-700 rounded-xl font-medium"
+        >
+          <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z" />
+          </svg>
+          Filters
+        </button>
+      </div>
+
       <div className="flex flex-col lg:flex-row gap-8">
         {/* Sidebar filters */}
-        <aside className="w-full lg:w-56 shrink-0">
+        <aside className={`w-full lg:w-56 shrink-0 ${isFilterOpen ? "block" : "hidden lg:block"}`}>
           <div className="bg-white rounded-2xl border border-gray-100 p-5 space-y-6 sticky top-20">
-            <h2 className="font-bold text-gray-900">Filters</h2>
+            <div className="flex justify-between items-center">
+              <h2 className="font-bold text-gray-900">Filters</h2>
+              <button className="lg:hidden p-1 text-gray-500" onClick={() => setIsFilterOpen(false)}>
+                <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
 
             {/* Condition */}
             <div>

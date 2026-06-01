@@ -7,7 +7,7 @@ type Params = { params: Promise<{ id: string }> };
 type OrderItem = { seller?: { toString(): string } };
 
 // PATCH /api/orders/[id]/deliver — seller marks order as delivered
-export async function PATCH(_req: NextRequest, { params }: Params) {
+export async function PATCH(req: NextRequest, { params }: Params) {
   try {
     const session = await auth();
     if (!session || session.user.role === "buyer") {
@@ -29,6 +29,28 @@ export async function PATCH(_req: NextRequest, { params }: Params) {
       if (!hasSellersItems) {
         return NextResponse.json({ error: "Forbidden" }, { status: 403 });
       }
+    }
+
+    if (order.deliveryStatus === "delivered") {
+      return NextResponse.json(
+        { error: "Order has already been marked as delivered" },
+        { status: 400 }
+      );
+    }
+
+    const { pin } = await req.json();
+    if (!pin || typeof pin !== "string" || pin.length !== 6) {
+      return NextResponse.json(
+        { error: "Invalid PIN format. Must be a 6-digit number." },
+        { status: 400 }
+      );
+    }
+
+    if (order.deliveryPin !== pin) {
+      return NextResponse.json(
+        { error: "Incorrect Delivery PIN. Please ask the buyer for the correct PIN." },
+        { status: 400 }
+      );
     }
 
     const deliveredAt = new Date();

@@ -26,7 +26,7 @@ export default function ConfirmDeliveryForm({ orderId, onSuccess }: ConfirmDeliv
     setLoading(true);
 
     try {
-      const res = await fetch(`/api/orders/${orderId}/confirm`, {
+      const res = await fetch(`/api/orders/${orderId}/deliver`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ pin }),
@@ -71,7 +71,7 @@ export default function ConfirmDeliveryForm({ orderId, onSuccess }: ConfirmDeliv
         <span>Confirm Delivery Receipt</span>
       </h3>
       <p className="text-xs text-gray-500 mb-4 leading-relaxed">
-        Please ask the delivery person for the **6-digit delivery PIN** that was sent to their dashboard. Enter the PIN below to confirm you have successfully received your package.
+        Please ask the buyer for their **6-digit delivery PIN** that was sent to their email. Enter the PIN below to confirm you have successfully delivered the package.
       </p>
       
       <form onSubmit={handleSubmit} className="flex flex-col sm:flex-row gap-3">

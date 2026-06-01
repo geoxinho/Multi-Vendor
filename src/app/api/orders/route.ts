@@ -2,10 +2,12 @@ import { NextRequest, NextResponse } from "next/server";
 import { connectDB } from "@/lib/db";
 import { Order } from "@/models/Order";
 import { Product } from "@/models/Product";
+import { User } from "@/models/User";
 import { auth } from "@/lib/auth";
 import { verifyPayment } from "@/lib/paystack";
 import { shippingSchema } from "@/utils/validators";
 import { randomUUID } from "crypto";
+import { sendOrderConfirmationEmails } from "@/utils/email";
 
 // POST /api/orders — buyer creates order after payment
 export async function POST(req: NextRequest) {
@@ -86,6 +88,16 @@ export async function POST(req: NextRequest) {
       paymentStatus: "paid",
       shippingAddress: addressParsed.data,
     });
+
+    // Send emails
+    try {
+      const sellerIds = [...new Set(orderItems.map((item) => item.seller))];
+      const sellers = await User.find({ _id: { $in: sellerIds } }).select("email").lean();
+      const sellerEmails = sellers.map((s) => s.email);
+      await sendOrderConfirmationEmails(order, session.user.email, session.user.name, sellerEmails);
+    } catch (e) {
+      console.error("[ORDERS EMAIL ERROR]", e);
+    }
 
     return NextResponse.json(order, { status: 201 });
   } catch (err) {

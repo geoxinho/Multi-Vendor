@@ -110,10 +110,6 @@ export default async function HomePage() {
                     <path strokeLinecap="round" strokeLinejoin="round" d="M13 7l5 5m0 0l-5 5m5-5H6" />
                   </svg>
                 </Link>
-                <Link href="/auth/register"
-                  className="inline-flex items-center justify-center gap-2 px-8 py-4 bg-teal-500/20 text-white font-semibold rounded-2xl hover:bg-teal-500/30 transition-all border border-white/20 backdrop-blur-sm text-base">
-                  Start Selling →
-                </Link>
               </div>
 
               {/* Trust badges */}
@@ -202,20 +198,15 @@ export default async function HomePage() {
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
 
             {/* Header */}
-            <div className="flex items-end justify-between mb-8">
+            <div className="flex items-center justify-between mb-6">
               <div>
-                <span className="inline-flex items-center gap-1.5 text-xs font-bold text-teal-600 uppercase tracking-widest mb-2">
-                  <span className="w-4 h-0.5 bg-teal-500 rounded-full" />
-                  Categories
-                </span>
-                <h2 className="text-3xl font-extrabold text-slate-900 leading-tight">
+                <h2 className="text-xl sm:text-2xl font-extrabold text-slate-900 leading-tight">
                   Shop by Category
                 </h2>
-                <p className="text-slate-400 text-sm mt-1">Browse our curated collections</p>
               </div>
               <Link
                 href="/products"
-                className="hidden sm:inline-flex items-center gap-1.5 text-sm font-semibold text-teal-600 hover:text-teal-800 transition-colors group"
+                className="inline-flex items-center gap-1.5 text-xs sm:text-sm font-semibold text-teal-600 hover:text-teal-800 transition-colors group"
               >
                 View all
                 <svg className="w-4 h-4 group-hover:translate-x-1 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
@@ -224,8 +215,8 @@ export default async function HomePage() {
               </Link>
             </div>
 
-            {/* Mobile: horizontal scroll-snap */}
-            <div className="flex gap-4 overflow-x-auto pb-3 snap-x snap-mandatory scroll-smooth -mx-4 px-4 sm:hidden"
+            {/* Mobile: horizontal scroll-snap (pills) */}
+            <div className="flex gap-3 overflow-x-auto pb-2 snap-x snap-mandatory scroll-smooth -mx-4 px-4 sm:hidden"
               style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}>
               {categories.map((cat: { _id: string; name: string; slug: string }, idx: number) => {
                 const meta = getCategoryMeta(cat.name, idx);
@@ -233,61 +224,39 @@ export default async function HomePage() {
                   <Link
                     key={cat._id}
                     href={`/products?category=${cat._id}`}
-                    className="snap-start shrink-0 w-32 flex flex-col items-center gap-3 group"
+                    className="snap-start shrink-0 flex items-center gap-2.5 p-1.5 pr-4 rounded-full bg-white border border-slate-100 shadow-sm"
                   >
-                    <div className={`w-full aspect-square rounded-3xl bg-gradient-to-br ${meta.gradient} flex items-center justify-center shadow-lg shadow-black/10 group-hover:scale-105 group-hover:shadow-xl transition-all duration-300 relative overflow-hidden`}>
-                      {/* Shine */}
-                      <div className="absolute top-0 left-0 right-0 h-1/2 bg-white/15 rounded-t-3xl" />
-                      <i className={`fa-solid ${meta.faIcon} text-3xl text-white drop-shadow-md relative z-10`} />
+                    <div className={`w-8 h-8 shrink-0 rounded-full bg-gradient-to-br ${meta.gradient} flex items-center justify-center`}>
+                      <i className={`fa-solid ${meta.faIcon} text-white text-xs`} />
                     </div>
-                    <span className="text-xs font-bold text-slate-700 text-center leading-tight group-hover:text-teal-700 transition-colors">{cat.name}</span>
+                    <span className="text-xs font-bold text-slate-700 whitespace-nowrap">{cat.name}</span>
                   </Link>
                 );
               })}
             </div>
 
-            {/* Desktop: 4-col grid */}
-            <div className="hidden sm:grid grid-cols-2 md:grid-cols-4 gap-5">
+            {/* Desktop: compact horizontal cards */}
+            <div className="hidden sm:grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-3">
               {categories.map((cat: { _id: string; name: string; slug: string }, idx: number) => {
                 const meta = getCategoryMeta(cat.name, idx);
                 return (
                   <Link
                     key={cat._id}
                     href={`/products?category=${cat._id}`}
-                    className="group relative flex flex-col items-center justify-center gap-4 p-6 rounded-3xl bg-white border border-slate-100 hover:border-transparent hover:shadow-2xl hover:-translate-y-1.5 transition-all duration-300 overflow-hidden"
+                    className="group flex items-center gap-3 p-2.5 pr-4 rounded-2xl bg-white border border-slate-100 hover:border-teal-100 hover:shadow-lg hover:-translate-y-0.5 transition-all duration-300"
                   >
-                    {/* Subtle tinted background on hover */}
-                    <div className={`absolute inset-0 bg-gradient-to-br ${meta.gradient} opacity-0 group-hover:opacity-[0.07] transition-opacity duration-300 rounded-3xl`} />
-
-                    {/* Icon container */}
-                    <div className={`relative w-16 h-16 rounded-2xl bg-gradient-to-br ${meta.gradient} flex items-center justify-center shadow-lg shadow-black/10 group-hover:scale-110 group-hover:shadow-xl transition-all duration-300`}>
-                      <div className="absolute top-0 left-0 right-0 h-1/2 bg-white/20 rounded-t-2xl" />
-                      <i className={`fa-solid ${meta.faIcon} text-2xl text-white drop-shadow relative z-10`} />
+                    <div className={`w-10 h-10 shrink-0 rounded-xl bg-gradient-to-br ${meta.gradient} flex items-center justify-center shadow-sm group-hover:scale-105 transition-transform`}>
+                      <i className={`fa-solid ${meta.faIcon} text-white drop-shadow-sm text-sm`} />
                     </div>
-
-                    {/* Name */}
-                    <div className="text-center">
-                      <p className={`text-sm font-bold text-slate-800 group-hover:${meta.text} transition-colors leading-tight`}>{cat.name}</p>
-                      <p className="text-xs text-slate-400 mt-0.5 opacity-0 group-hover:opacity-100 transition-opacity">Browse →</p>
-                    </div>
-
-                    {/* Arrow badge */}
-                    <div className={`absolute top-3 right-3 w-6 h-6 rounded-full bg-gradient-to-br ${meta.gradient} flex items-center justify-center opacity-0 group-hover:opacity-100 scale-50 group-hover:scale-100 transition-all duration-200 shadow`}>
-                      <svg className="w-3 h-3 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
-                        <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
-                      </svg>
-                    </div>
+                    <span className="text-sm font-semibold text-slate-700 group-hover:text-teal-700 transition-colors truncate">
+                      {cat.name}
+                    </span>
                   </Link>
                 );
               })}
             </div>
 
-            {/* Mobile view-all */}
-            <div className="mt-5 text-center sm:hidden">
-              <Link href="/products" className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-teal-600 text-white text-sm font-bold hover:bg-teal-700 transition-colors shadow-md">
-                Browse All Products
-              </Link>
-            </div>
+
 
           </div>
         </section>
@@ -315,10 +284,10 @@ export default async function HomePage() {
               <i className="fa-solid fa-bag-shopping text-4xl text-teal-300" />
             </div>
             <p className="text-lg font-semibold text-slate-700 mb-1">No products yet</p>
-            <p className="text-slate-400 text-sm mb-6">Be the first seller on MarketHub!</p>
-            <Link href="/auth/register"
+            <p className="text-slate-400 text-sm mb-6">Check back soon for new arrivals!</p>
+            <Link href="/products"
               className="inline-block px-6 py-3 bg-teal-600 text-white font-bold rounded-xl hover:bg-teal-700 transition-colors shadow-md">
-              Start Selling
+              Browse Categories
             </Link>
           </div>
         )}

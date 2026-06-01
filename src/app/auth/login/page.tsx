@@ -8,8 +8,7 @@ import { loginSchema } from "@/utils/validators";
 
 function LoginForm() {
   const router = useRouter();
-  const searchParams = useSearchParams();
-  const callbackUrl = searchParams.get("callbackUrl") ?? "/";
+  const callbackUrl = "/";
 
   const [form, setForm] = useState({ email: "", password: "" });
   const [error, setError] = useState("");

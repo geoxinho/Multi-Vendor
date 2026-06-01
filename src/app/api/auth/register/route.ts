@@ -4,7 +4,7 @@ import { connectDB } from "@/lib/db";
 import { User } from "@/models/User";
 import { registerSchema } from "@/utils/validators";
 import { randomBytes } from "crypto";
-import { sendVerificationEmail } from "@/utils/email";
+import { sendVerificationEmail, sendWelcomeEmail } from "@/utils/email";
 
 export async function POST(req: NextRequest) {
   try {
@@ -58,6 +58,9 @@ export async function POST(req: NextRequest) {
     // Send verification email only if SMTP is configured
     if (hasSMTP) {
       await sendVerificationEmail(email, token);
+      await sendWelcomeEmail(email, name);
+    } else {
+      await sendWelcomeEmail(email, name); // Will use mock
     }
 
     return NextResponse.json(

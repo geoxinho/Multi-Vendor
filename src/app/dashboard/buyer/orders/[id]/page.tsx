@@ -4,7 +4,6 @@ import { connectDB } from "@/lib/db";
 import { Order } from "@/models/Order";
 import Image from "next/image";
 import Link from "next/link";
-import ConfirmDeliveryForm from "@/components/orders/ConfirmDeliveryForm";
 import type { Metadata } from "next";
 
 export const metadata: Metadata = { title: "Order Details" };
@@ -158,8 +157,19 @@ export default async function OrderDetailPage({ params }: Props) {
       </div>
 
       {order.paymentStatus === "paid" && order.deliveryStatus !== "delivered" && (
-        <div className="mb-4">
-          <ConfirmDeliveryForm orderId={order._id} />
+        <div className="mb-4 p-4 rounded-xl border border-amber-200 bg-amber-50/50 text-amber-900 text-xs">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-2">
+            <div className="flex items-center gap-1.5 font-bold">
+              <i className="fa-solid fa-key text-amber-600" />
+              <span>Delivery Verification PIN:</span>
+            </div>
+            <span className="font-mono text-sm font-black px-2.5 py-0.5 bg-amber-100 text-amber-900 rounded-lg tracking-wider select-all border border-amber-200 self-start sm:self-auto">
+              {order.deliveryPin}
+            </span>
+          </div>
+          <p className="text-[11px] text-amber-700 leading-relaxed">
+            <i className="fa-solid fa-triangle-exclamation" /> <strong>IMPORTANT:</strong> You must <strong>NOT</strong> disclose this 6-digit PIN to the seller until the package has been physically delivered to you.
+          </p>
         </div>
       )}
 
