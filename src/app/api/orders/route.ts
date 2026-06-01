@@ -94,7 +94,12 @@ export async function POST(req: NextRequest) {
       const sellerIds = [...new Set(orderItems.map((item) => item.seller))];
       const sellers = await User.find({ _id: { $in: sellerIds } }).select("email").lean();
       const sellerEmails = sellers.map((s) => s.email);
-      await sendOrderConfirmationEmails(order, session.user.email, session.user.name, sellerEmails);
+      const buyerEmail = session.user.email;
+      const buyerName = session.user.name || "Buyer";
+      if (!buyerEmail) {
+        throw new Error("Buyer email not found in session");
+      }
+      await sendOrderConfirmationEmails(order, buyerEmail, buyerName, sellerEmails);
     } catch (e) {
       console.error("[ORDERS EMAIL ERROR]", e);
     }
