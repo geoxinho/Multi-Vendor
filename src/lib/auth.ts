@@ -1,15 +1,14 @@
-import NextAuth from "next-auth";
+import NextAuth, { AuthError } from "next-auth";
 import Credentials from "next-auth/providers/credentials";
 import bcrypt from "bcryptjs";
 import { connectDB } from "@/lib/db";
 import { User } from "@/models/User";
 
-import { CredentialsSignin } from "next-auth";
-
-class CustomAuthError extends CredentialsSignin {
+class CustomAuthError extends AuthError {
   code: string;
   constructor(message: string) {
     super();
+    this.type = "CredentialsSignin";
     this.code = message;
   }
 }
@@ -29,17 +28,20 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
         const emailToFind = (credentials.email as string).toLowerCase().trim();
         const user = await User.findOne({ email: emailToFind }).lean();
 
-        if (!user) throw new CustomAuthError("No account found with this email address.");
-        if (user.isBanned) throw new CustomAuthError("Your account has been banned.");
-        if (!user.isEmailVerified) throw new CustomAuthError("Please verify your email address before logging in.");
+        if (!user)
+          throw new CustomAuthError("No account found with this email address.");
+        if (user.isBanned)
+          throw new CustomAuthError("Your account has been banned.");
+        if (!user.isEmailVerified)
+          throw new CustomAuthError("Please verify your email address before logging in.");
 
         const isMatch = await bcrypt.compare(
           credentials.password as string,
           user.password,
         );
-        if (!isMatch) throw new CustomAuthError("Incorrect password. Please try again.");
+        if (!isMatch)
+          throw new CustomAuthError("Incorrect password. Please try again.");
 
-        // Ensure roles array is populated (backward compat with old accounts)
         const roles: string[] =
           user.roles && user.roles.length > 0
             ? (user.roles as string[])
@@ -59,7 +61,6 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
   session: { strategy: "jwt" },
   callbacks: {
     async jwt({ token, user, trigger, session }) {
-      // Initial sign-in
       if (user) {
         token.id = user.id;
         token.role = (user as { role?: string }).role ?? "";
@@ -67,7 +68,6 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
           token.role as string,
         ];
       }
-      // session.update({ role, roles }) called from client
       if (trigger === "update" && session) {
         if (session.role) token.role = session.role;
         if (session.roles) token.roles = session.roles;

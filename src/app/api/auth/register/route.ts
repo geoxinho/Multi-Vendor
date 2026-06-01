@@ -20,6 +20,8 @@ export async function POST(req: NextRequest) {
 
     const { name, email, password, role, phone, hearAboutUs, nin, sellerCategory, storeName, storeDescription } = parsed.data;
 
+    const hasSMTP = !!(process.env.SMTP_HOST && process.env.SMTP_USER && process.env.SMTP_PASS);
+
     await connectDB();
 
     const existing = await User.findOne({ email });
@@ -48,18 +50,21 @@ export async function POST(req: NextRequest) {
       sellerCategory: role === "seller" ? sellerCategory : "",
       storeName: role === "seller" ? (storeName ?? "") : "",
       storeDescription: role === "seller" ? (storeDescription ?? "") : "",
-      isEmailVerified: false,
+      isEmailVerified: !hasSMTP, // Auto-verify if no SMTP is configured
       emailVerificationToken: token,
       emailVerificationTokenExpires: tokenExpires,
     });
 
-    // Send verification email
-    await sendVerificationEmail(email, token);
+    // Send verification email only if SMTP is configured
+    if (hasSMTP) {
+      await sendVerificationEmail(email, token);
+    }
 
     return NextResponse.json(
       { 
         message: "Account created", 
         userId: user._id.toString(),
+        autoVerified: !hasSMTP,
         ...(process.env.NODE_ENV === "development" ? { devToken: token } : {})
       },
       { status: 201 }

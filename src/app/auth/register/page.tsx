@@ -38,6 +38,7 @@ function RegisterForm() {
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const [isRegistered, setIsRegistered] = useState(false);
+  const [isAutoVerified, setIsAutoVerified] = useState(false);
   const [devToken, setDevToken] = useState("");
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -63,6 +64,9 @@ function RegisterForm() {
       if (data.devToken) {
         setDevToken(data.devToken);
       }
+      if (data.autoVerified) {
+        setIsAutoVerified(true);
+      }
       setIsRegistered(true);
       setLoading(false);
     } catch {
@@ -77,20 +81,27 @@ function RegisterForm() {
         <div className="w-full max-w-md">
           <div className="bg-white rounded-3xl shadow-xl p-8 border border-green-100 text-center">
             <div className="w-16 h-16 bg-green-100 text-green-600 rounded-full flex items-center justify-center mx-auto mb-6 text-3xl">
-              <i className="fa-solid fa-envelope" />
+              <i className={isAutoVerified ? "fa-solid fa-check" : "fa-solid fa-envelope"} />
             </div>
-            <h2 className="text-2xl font-bold text-gray-900 mb-2">Verify your Email</h2>
+            <h2 className="text-2xl font-bold text-gray-900 mb-2">
+              {isAutoVerified ? "Account Created!" : "Verify your Email"}
+            </h2>
             <p className="text-sm text-gray-500 mb-6 leading-relaxed">
-              We've sent a verification link to <strong className="text-gray-900">{form.email}</strong>. 
-              Please check your email to activate your account.
+              {isAutoVerified ? (
+                <>Your account <strong className="text-gray-900">{form.email}</strong> is ready to use.</>
+              ) : (
+                <>We've sent a verification link to <strong className="text-gray-900">{form.email}</strong>. Please check your email to activate your account.</>
+              )}
             </p>
-            <div className="bg-green-50/50 border border-green-100 rounded-2xl p-4 mb-6 text-xs text-green-800 text-left">
-              <p className="font-bold mb-1"><i className="fa-solid fa-lightbulb" /> What&apos;s next?</p>
-              <ul className="list-disc pl-4 space-y-1">
-                <li>Check your spam/junk folder if you don't see it</li>
-                <li>Ensure you complete verification within 24 hours</li>
-              </ul>
-            </div>
+            {!isAutoVerified && (
+              <div className="bg-green-50/50 border border-green-100 rounded-2xl p-4 mb-6 text-xs text-green-800 text-left">
+                <p className="font-bold mb-1"><i className="fa-solid fa-lightbulb" /> What&apos;s next?</p>
+                <ul className="list-disc pl-4 space-y-1">
+                  <li>Check your spam/junk folder if you don't see it</li>
+                  <li>Ensure you complete verification within 24 hours</li>
+                </ul>
+              </div>
+            )}
             {devToken && (
               <div className="bg-amber-50 border border-amber-200 rounded-2xl p-4 mb-6 text-sm text-amber-900 text-center shadow-sm">
                 <p className="font-bold mb-2"><i className="fa-solid fa-code" /> Development Mode</p>

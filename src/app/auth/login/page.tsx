@@ -34,7 +34,19 @@ function LoginForm() {
     setLoading(false);
 
     if (res?.error) {
-      setError(res.error === "CredentialsSignin" ? "Invalid email or password" : res.error);
+      // In NextAuth v5 beta, our custom error message is in res.code
+      const code = (res as { code?: string }).code;
+      const knownMessages = [
+        "No account found with this email address.",
+        "Your account has been banned.",
+        "Please verify your email address before logging in.",
+        "Incorrect password. Please try again.",
+      ];
+      if (code && knownMessages.includes(code)) {
+        setError(code);
+      } else {
+        setError("Invalid email or password. Please try again.");
+      }
     } else {
       router.push(callbackUrl);
       router.refresh();
