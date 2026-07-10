@@ -7,6 +7,8 @@ interface OrderItem {
   price: number;
   quantity: number;
   seller: Types.ObjectId;
+  platformFee: number;
+  netPayout: number;
 }
 
 interface ShippingAddress {
@@ -22,6 +24,8 @@ export interface IOrder extends Document {
   buyer: Types.ObjectId;
   items: OrderItem[];
   totalAmount: number;
+  platformFee: number;
+  netPayout: number;
   paymentRef: string;
   paymentStatus: "pending" | "paid" | "failed";
   deliveryStatus: "processing" | "shipped" | "delivered";
@@ -40,6 +44,8 @@ const OrderItemSchema = new Schema<OrderItem>({
   price: Number,
   quantity: { type: Number, default: 1 },
   seller: { type: Schema.Types.ObjectId, ref: "User" },
+  platformFee: { type: Number, default: 0 },
+  netPayout: { type: Number, default: 0 },
 });
 
 const ShippingAddressSchema = new Schema<ShippingAddress>({
@@ -56,6 +62,8 @@ const OrderSchema = new Schema<IOrder>(
     buyer: { type: Schema.Types.ObjectId, ref: "User", required: true },
     items: [OrderItemSchema],
     totalAmount: { type: Number, required: true },
+    platformFee: { type: Number, required: true },
+    netPayout: { type: Number, required: true },
     paymentRef: { type: String, default: "" },
     paymentStatus: { type: String, enum: ["pending", "paid", "failed"], default: "pending" },
     deliveryStatus: { type: String, enum: ["processing", "shipped", "delivered"], default: "processing" },

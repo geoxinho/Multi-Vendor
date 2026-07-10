@@ -5,10 +5,7 @@ import nodemailer from "nodemailer";
  * Falls back to printing a highly visible local verification link in the console 
  * if SMTP variables are not configured in the environment.
  */
-export async function sendVerificationEmail(email: string, token: string) {
-  const nextAuthUrl = process.env.NEXTAUTH_URL || "http://localhost:3000";
-  const verifyUrl = `${nextAuthUrl}/auth/verify-email?token=${token}`;
-
+export async function sendVerificationEmail(email: string, otp: string) {
   const smtpHost = process.env.SMTP_HOST;
   const smtpPort = process.env.SMTP_PORT ? parseInt(process.env.SMTP_PORT) : 587;
   const smtpUser = process.env.SMTP_USER;
@@ -33,7 +30,7 @@ export async function sendVerificationEmail(email: string, token: string) {
         from: smtpFrom,
         to: email,
         subject: "Verify your MarketHub Account",
-        text: `Welcome to MarketHub! Please verify your email by clicking: ${verifyUrl}`,
+        text: `Welcome to MarketHub! Your verification code is: ${otp}`,
         html: `
           <div style="font-family: 'Inter', sans-serif; max-width: 600px; margin: 0 auto; padding: 30px; border: 1px solid #f0f0f0; border-radius: 16px; background-color: #ffffff;">
             <div style="text-align: center; margin-bottom: 25px;">
@@ -41,16 +38,13 @@ export async function sendVerificationEmail(email: string, token: string) {
             </div>
             <h2 style="font-size: 20px; font-weight: 700; color: #1f2937; margin-bottom: 12px; text-align: center;">Verify Your Email Address</h2>
             <p style="font-size: 14px; color: #4b5563; line-height: 1.6; margin-bottom: 24px; text-align: center;">
-              Welcome to MarketHub! To complete your registration and unlock full access to buying and selling, please verify your email address.
+              Welcome to MarketHub! To complete your registration, please enter the 6-digit verification code below:
             </p>
-            <div style="text-align: center; margin-bottom: 24px;">
-              <a href="${verifyUrl}" style="display: inline-block; background-color: #16a34a; color: #ffffff; font-weight: 700; font-size: 14px; padding: 12px 30px; border-radius: 12px; text-decoration: none; transition: background-color 0.2s;">
-                Verify Email Address
-              </a>
+            <div style="text-align: center; margin-bottom: 24px; padding: 15px; background-color: #f3f4f6; border-radius: 8px;">
+              <span style="font-size: 32px; font-weight: bold; letter-spacing: 5px; color: #16a34a;">${otp}</span>
             </div>
             <p style="font-size: 12px; color: #9ca3af; text-align: center; margin-bottom: 0;">
-              If the button doesn't work, copy and paste this link into your browser: <br/>
-              <a href="${verifyUrl}" style="color: #16a34a; word-break: break-all;">${verifyUrl}</a>
+              This code will expire in 24 hours.
             </p>
           </div>
         `,
@@ -69,7 +63,7 @@ export async function sendVerificationEmail(email: string, token: string) {
   console.log("[DEVELOPMENT MOCK EMAIL]");
   console.log(`To:      ${email}`);
   console.log("Subject: Verify your MarketHub account");
-  console.log(`Link:    ${verifyUrl}`);
+  console.log(`OTP Code: ${otp}`);
   console.log("=".repeat(60) + "\n");
   return true;
 }
@@ -121,7 +115,7 @@ export async function sendWelcomeEmail(email: string, name: string) {
 /**
  * Sends order confirmation emails to buyer and seller(s).
  */
-export async function sendOrderConfirmationEmails(order: any, buyerEmail: string, buyerName: string, sellerEmails: string[]) {
+export async function sendOrderConfirmationEmails(order: Record<string, any>, buyerEmail: string, buyerName: string, sellerEmails: string[]) {
   const smtpHost = process.env.SMTP_HOST;
   const smtpPort = process.env.SMTP_PORT ? parseInt(process.env.SMTP_PORT) : 587;
   const smtpUser = process.env.SMTP_USER;
@@ -151,7 +145,14 @@ export async function sendOrderConfirmationEmails(order: any, buyerEmail: string
       <h2>New Order Received!</h2>
       <p>Congratulations! A buyer has purchased one or more of your products.</p>
       <p>Please check your seller dashboard for shipping details.</p>
-      <p><strong>Note:</strong> You will need to ask the buyer for their 6-digit Delivery PIN when you deliver the product. Enter the PIN in your dashboard to mark the order as delivered and initiate your payout.</p>
+      <div style="background-color: #f0fdf4; padding: 15px; border-radius: 8px; margin: 20px 0; border: 1px solid #bbf7d0;">
+        <h3 style="margin-top: 0; color: #166534;">Payout Information</h3>
+        <ul style="color: #15803d;">
+          <li>A <strong>5% platform fee</strong> is deducted from the product price.</li>
+          <li>Your net payout will be processed automatically <strong>3 days</strong> after the order is marked as delivered.</li>
+        </ul>
+      </div>
+      <p><strong>Important:</strong> You will need to ask the buyer for their 6-digit Delivery PIN when you deliver the product. Enter the PIN in your dashboard to mark the order as delivered and initiate your payout countdown.</p>
     </div>
   `;
 

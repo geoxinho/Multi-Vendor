@@ -37,69 +37,38 @@ const STATUS_COLOR: Record<string, string> = {
 
 const DELIVERY_STEPS = ["processing", "shipped", "delivered"];
 
-export default async function OrderDetailPage({ params }: Props) {
-  const session = await auth();
+export default async function BuyerOrderDetailsPage({ params }: Props) {
   const { id } = await params;
+  const session = await auth();
+  if (!session?.user) notFound();
 
-  const order = await getOrder(id, session!.user.id);
+  const order = await getOrder(id, session.user.id);
   if (!order) notFound();
 
-  const stepIndex = DELIVERY_STEPS.indexOf(order.deliveryStatus);
-
   return (
-    <div className="max-w-3xl">
-      {/* Header */}
-      <div className="flex items-center gap-3 mb-8">
-        <Link href="/dashboard/buyer/orders" className="text-gray-400 hover:text-gray-600 transition-colors">
+    <div className="max-w-3xl mx-auto pb-10">
+      <div className="flex items-center gap-3 mb-6">
+        <Link href="/dashboard/buyer/orders" className="w-10 h-10 flex items-center justify-center rounded-xl bg-gray-100 text-gray-500 hover:bg-gray-200 hover:text-gray-900 transition-colors">
           <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
           </svg>
         </Link>
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Order Details</h1>
-          <p className="text-xs text-gray-400 font-mono mt-0.5">#{order._id.slice(-12).toUpperCase()}</p>
-        </div>
-        <div className="ml-auto flex gap-2">
-          <span className={`badge ${STATUS_COLOR[order.paymentStatus]}`}>{order.paymentStatus}</span>
-          <span className={`badge ${STATUS_COLOR[order.deliveryStatus]}`}>{order.deliveryStatus}</span>
+          <h1 className="text-2xl font-bold text-gray-900 leading-tight tracking-tight">Order Details</h1>
+          <p className="text-sm text-gray-500">#{order._id.toString().slice(-8).toUpperCase()}</p>
         </div>
       </div>
 
-      {/* Delivery progress tracker */}
-      <div className="bg-white rounded-2xl border border-gray-100 p-6 mb-4">
-        <h2 className="text-sm font-semibold text-gray-500 uppercase tracking-wider mb-5">Delivery Progress</h2>
-        <div className="flex items-center">
-          {DELIVERY_STEPS.map((step, i) => (
-            <div key={step} className="flex-1 flex items-center">
-              <div className="flex flex-col items-center">
-                <div className={`w-8 h-8 rounded-full flex items-center justify-center font-bold text-sm transition-colors ${
-                  i <= stepIndex
-                    ? "bg-green-600 text-white"
-                    : "bg-gray-100 text-gray-400"
-                }`}>
-                  {i < stepIndex ? (
-                    <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" />
-                    </svg>
-                  ) : (
-                    i + 1
-                  )}
-                </div>
-                <span className={`text-xs mt-1.5 font-medium capitalize ${i <= stepIndex ? "text-green-700" : "text-gray-400"}`}>
-                  {step}
-                </span>
-              </div>
-              {i < DELIVERY_STEPS.length - 1 && (
-                <div className={`flex-1 h-0.5 mx-2 mb-5 rounded-full ${i < stepIndex ? "bg-green-500" : "bg-gray-200"}`} />
-              )}
-            </div>
-          ))}
-        </div>
-        {order.deliveredAt && (
-          <p className="text-xs text-gray-400 mt-4 text-center">
-            Delivered on {new Date(order.deliveredAt).toLocaleDateString("en-NG", { dateStyle: "long" })}
-          </p>
-        )}
+      <div className="mb-4">
+        <Link 
+          href={`/dashboard/buyer/messages?orderId=${order._id}`}
+          className="flex items-center gap-2 justify-center w-full bg-teal-50 border border-teal-200 text-teal-700 py-3 rounded-2xl font-bold hover:bg-teal-100 transition-colors"
+        >
+          <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+          </svg>
+          Message Seller
+        </Link>
       </div>
 
       {/* Items */}

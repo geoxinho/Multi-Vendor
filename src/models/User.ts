@@ -17,6 +17,13 @@ export interface IUser extends Document {
   phone?: string;
   hearAboutUs?: string;
   sellerCategory?: string;
+  school?: string;
+  bankDetails?: {
+    bankName: string;
+    accountNumber: string;
+    accountName: string;
+  };
+  lastBrandNameChangeAt?: Date;
   createdAt: Date;
 }
 
@@ -39,6 +46,13 @@ const UserSchema = new Schema<IUser>(
     phone: { type: String, default: "" },
     hearAboutUs: { type: String, default: "" },
     sellerCategory: { type: String, default: "" },
+    school: { type: String, default: "" },
+    bankDetails: {
+      bankName: { type: String, default: "" },
+      accountNumber: { type: String, default: "" },
+      accountName: { type: String, default: "" },
+    },
+    lastBrandNameChangeAt: { type: Date },
   },
   { timestamps: true }
 );

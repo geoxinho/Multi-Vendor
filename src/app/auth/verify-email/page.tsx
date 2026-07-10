@@ -6,35 +6,38 @@ import Link from "next/link";
 
 function VerifyEmailContent() {
   const searchParams = useSearchParams();
-  const token = searchParams.get("token");
+  const initialEmail = searchParams.get("email") || "";
 
-  const [loading, setLoading] = useState(true);
+  const [email, setEmail] = useState(initialEmail);
+  const [token, setToken] = useState("");
+  const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState(false);
 
-  useEffect(() => {
-    if (!token) {
-      setError("No email verification token was provided.");
-      setLoading(false);
-      return;
-    }
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setLoading(true);
+    setError("");
 
-    fetch(`/api/auth/verify-email?token=${token}`)
-      .then(async (res) => {
-        const data = await res.json();
-        if (!res.ok) {
-          setError(data.error || "Verification failed.");
-        } else {
-          setSuccess(true);
-        }
-      })
-      .catch(() => {
-        setError("An unexpected network error occurred. Please try again.");
-      })
-      .finally(() => {
-        setLoading(false);
+    try {
+      const res = await fetch("/api/auth/verify-email", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email, token }),
       });
-  }, [token]);
+      const data = await res.json();
+
+      if (!res.ok) {
+        setError(data.error || "Verification failed.");
+      } else {
+        setSuccess(true);
+      }
+    } catch {
+      setError("An unexpected network error occurred. Please try again.");
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-green-50 to-yellow-50 flex items-center justify-center px-4 py-12">
@@ -50,15 +53,7 @@ function VerifyEmailContent() {
             </Link>
           </div>
 
-          {loading && (
-            <div className="py-8">
-              <div className="w-12 h-12 border-4 border-green-200 border-t-green-600 rounded-full animate-spin mx-auto mb-4"></div>
-              <h2 className="text-lg font-semibold text-gray-700">Verifying your email...</h2>
-              <p className="text-sm text-gray-400 mt-2">Just a moment while we activate your account.</p>
-            </div>
-          )}
-
-          {!loading && success && (
+          {success ? (
             <div>
               <div className="w-16 h-16 bg-green-100 text-green-600 rounded-full flex items-center justify-center mx-auto mb-6 text-3xl">
                 ✓
@@ -74,24 +69,41 @@ function VerifyEmailContent() {
                 Sign In to Your Account
               </Link>
             </div>
-          )}
-
-          {!loading && error && (
-            <div>
-              <div className="w-16 h-16 bg-red-100 text-red-600 rounded-full flex items-center justify-center mx-auto mb-6 text-3xl font-bold font-mono">
-                ✕
-              </div>
-              <h2 className="text-2xl font-bold text-gray-900 mb-2">Verification Failed</h2>
-              <p className="text-sm text-red-600 bg-red-50 p-4 rounded-2xl border border-red-100 mb-8 leading-relaxed text-left">
-                {error}
+          ) : (
+            <>
+              <h2 className="text-2xl font-bold text-gray-900 mb-2">Verify Email</h2>
+              <p className="text-sm text-gray-500 mb-8">
+                Enter the 6-digit verification code sent to your email.
               </p>
-              <Link
-                href="/auth/register"
-                className="inline-block w-full py-3 bg-gray-900 hover:bg-gray-800 text-white font-semibold rounded-xl transition-colors shadow-sm"
-              >
-                Register Again
-              </Link>
-            </div>
+              
+              <form onSubmit={handleSubmit} className="space-y-4">
+                <div>
+                  <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1.5 text-left ml-1">Email Address</label>
+                  <input type="email" required value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    placeholder="you@example.com"
+                    className="w-full px-4 py-3 rounded-xl border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-green-500 bg-gray-50 focus:bg-white transition" />
+                </div>
+                <div>
+                  <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1.5 text-left ml-1">Verification Code</label>
+                  <input type="text" required value={token}
+                    onChange={(e) => setToken(e.target.value.replace(/\D/g, "").slice(0, 6))}
+                    placeholder="123456"
+                    className="w-full px-4 py-3 rounded-xl border border-gray-200 text-center tracking-[0.5em] text-lg font-mono focus:outline-none focus:ring-2 focus:ring-green-500 bg-gray-50 focus:bg-white transition" />
+                </div>
+
+                {error && (
+                  <div className="flex items-start gap-2.5 p-3.5 bg-red-50 border border-red-100 rounded-xl text-xs text-red-600 font-medium text-left">
+                    <span>{error}</span>
+                  </div>
+                )}
+
+                <button type="submit" disabled={loading}
+                  className="w-full py-3.5 bg-green-600 hover:bg-green-700 text-white font-bold rounded-xl transition-all duration-200 disabled:opacity-60 disabled:cursor-not-allowed shadow-md cursor-pointer">
+                  {loading ? "Verifying..." : "Verify Account"}
+                </button>
+              </form>
+            </>
           )}
         </div>
       </div>

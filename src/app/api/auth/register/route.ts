@@ -18,7 +18,7 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const { name, email, password, role, phone, hearAboutUs, nin, sellerCategory, storeName, storeDescription } = parsed.data;
+    const { name, email, password, role, phone, hearAboutUs, school, nin, sellerCategory, storeName, storeDescription, bankName, accountNumber, accountName } = parsed.data;
 
     const hasSMTP = !!(process.env.SMTP_HOST && process.env.SMTP_USER && process.env.SMTP_PASS);
 
@@ -35,8 +35,8 @@ export async function POST(req: NextRequest) {
 
     const hashed = await bcrypt.hash(password, 12);
     
-    // Generate secure email verification token
-    const token = randomBytes(32).toString("hex");
+    // Generate 6-digit OTP
+    const token = Math.floor(100000 + Math.random() * 900000).toString();
     const tokenExpires = new Date(Date.now() + 24 * 60 * 60 * 1000); // 24 hours
 
     const user = await User.create({
@@ -48,8 +48,14 @@ export async function POST(req: NextRequest) {
       hearAboutUs,
       nin: role === "seller" ? nin : "",
       sellerCategory: role === "seller" ? sellerCategory : "",
+      school,
       storeName: role === "seller" ? (storeName ?? "") : "",
       storeDescription: role === "seller" ? (storeDescription ?? "") : "",
+      bankDetails: role === "seller" ? {
+        bankName: bankName ?? "",
+        accountNumber: accountNumber ?? "",
+        accountName: accountName ?? "",
+      } : undefined,
       isEmailVerified: !hasSMTP, // Auto-verify if no SMTP is configured
       emailVerificationToken: token,
       emailVerificationTokenExpires: tokenExpires,

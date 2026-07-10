@@ -13,9 +13,10 @@ import { useState, useEffect } from "react";
 
 interface ProductCardProps {
   product: ProductSummary;
+  priority?: boolean;
 }
 
-export default function ProductCard({ product }: ProductCardProps) {
+export default function ProductCard({ product, priority = false }: ProductCardProps) {
   const addItem = useCartStore((s) => s.addItem);
   const { increment, decrement, setCount } = useWishlistStore();
   const { data: session } = useSession();
@@ -47,7 +48,7 @@ export default function ProductCard({ product }: ProductCardProps) {
       price: product.price,
       image: product.images[0] ?? "/placeholder.png",
       condition: product.condition,
-      sellerId: product.seller._id,
+      sellerId: product.seller?._id || "",
       quantity: 1,
       stock: product.stock,
     });
@@ -95,6 +96,7 @@ export default function ProductCard({ product }: ProductCardProps) {
             fill
             className="object-cover group-hover:scale-105 transition-transform duration-300"
             sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
+            priority={priority}
           />
 
           {/* Condition badge — top left */}

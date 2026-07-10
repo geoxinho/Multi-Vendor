@@ -2,13 +2,18 @@
 
 import { useState, Suspense } from "react";
 import { signIn } from "next-auth/react";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { loginSchema } from "@/utils/validators";
 
+const ROLE_HOME: Record<string, string> = {
+  buyer: "/",
+  seller: "/dashboard/seller",
+  admin: "/dashboard/admin",
+};
+
 function LoginForm() {
   const router = useRouter();
-  const callbackUrl = "/";
 
   const [form, setForm] = useState({ email: "", password: "" });
   const [error, setError] = useState("");
@@ -33,7 +38,6 @@ function LoginForm() {
     setLoading(false);
 
     if (res?.error) {
-      // In NextAuth v5 beta, our custom error message is in res.code
       const code = (res as { code?: string }).code;
       const knownMessages = [
         "No account found with this email address.",
@@ -47,7 +51,11 @@ function LoginForm() {
         setError("Invalid email or password. Please try again.");
       }
     } else {
-      router.push(callbackUrl);
+      // Redirect based on role
+      const sessionRes = await fetch("/api/auth/session");
+      const session = await sessionRes.json();
+      const role = session?.user?.role ?? "buyer";
+      router.push(ROLE_HOME[role] ?? "/");
       router.refresh();
     }
   };

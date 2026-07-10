@@ -5,6 +5,8 @@ import Image from "next/image";
 import LoadingSpinner from "@/components/ui/LoadingSpinner";
 import EmptyState from "@/components/ui/EmptyState";
 import ConfirmDeliveryForm from "@/components/orders/ConfirmDeliveryForm";
+import Link from "next/link";
+import { useSession } from "next-auth/react";
 
 interface OrderItem {
   title: string;
@@ -16,7 +18,7 @@ interface OrderItem {
 
 interface Order {
   _id: string;
-  buyer: { name: string; email: string };
+  buyer: { _id: string; name: string; email: string };
   items: OrderItem[];
   totalAmount: number;
   deliveryStatus: string;
@@ -43,6 +45,7 @@ const STATUS_COLOR: Record<string, string> = {
 };
 
 export default function SellerOrdersPage() {
+  const { data: session } = useSession();
   const [orders, setOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -154,6 +157,19 @@ export default function SellerOrdersPage() {
                   <ConfirmDeliveryForm orderId={order._id} onSuccess={fetchOrders} />
                 </div>
               )}
+
+              {/* Message Buyer */}
+              <div className="mb-4">
+                <Link 
+                  href={`/dashboard/seller/messages?orderId=${order._id}`}
+                  className="flex items-center gap-2 justify-center w-full bg-teal-50 border border-teal-200 text-teal-700 py-2.5 rounded-xl font-bold hover:bg-teal-100 transition-colors text-sm"
+                >
+                  <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+                  </svg>
+                  Message Buyer
+                </Link>
+              </div>
 
               {/* Footer */}
               <div className="flex items-center justify-between pt-3 border-t border-gray-100">

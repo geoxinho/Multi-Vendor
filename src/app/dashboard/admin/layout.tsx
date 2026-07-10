@@ -1,5 +1,4 @@
-import DashboardSidebar from "@/components/dashboard/DashboardSidebar";
-import Navbar from "@/components/shared/Navbar";
+import AdminDashboardLayout from "@/components/dashboard/AdminDashboardLayout";
 
 const navItems = [
   {
@@ -20,7 +19,7 @@ const navItems = [
   {
     href: "/dashboard/admin/orders",
     label: "Orders",
-    icon: <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" /></svg>,
+    icon: <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2h2a2 2 0 012 2" /></svg>,
   },
   {
     href: "/dashboard/admin/payouts",
@@ -36,12 +35,8 @@ const navItems = [
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
   return (
-    <div className="flex flex-col min-h-screen">
-      <Navbar />
-      <div className="flex flex-1">
-        <DashboardSidebar title="Admin Dashboard" navItems={navItems} />
-        <main className="flex-1 p-4 md:p-6 pb-24 md:pb-6 min-w-0 max-w-7xl w-full">{children}</main>
-      </div>
-    </div>
+    <AdminDashboardLayout navItems={navItems}>
+      {children}
+    </AdminDashboardLayout>
   );
 }

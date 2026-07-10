@@ -53,6 +53,8 @@ export async function POST(req: NextRequest) {
 
     // Validate products and compute total
     let totalAmount = 0;
+    let totalPlatformFee = 0;
+    let totalNetPayout = 0;
     const orderItems = [];
 
     for (const item of items) {
@@ -64,7 +66,14 @@ export async function POST(req: NextRequest) {
         return NextResponse.json({ error: `Insufficient stock for ${product.title}` }, { status: 400 });
       }
 
-      totalAmount += product.price * item.quantity;
+      const itemTotal = product.price * item.quantity;
+      const itemPlatformFee = itemTotal * 0.05; // 5% fee
+      const itemNetPayout = itemTotal - itemPlatformFee;
+
+      totalAmount += itemTotal;
+      totalPlatformFee += itemPlatformFee;
+      totalNetPayout += itemNetPayout;
+
       orderItems.push({
         product: product._id,
         title: product.title,
@@ -72,6 +81,8 @@ export async function POST(req: NextRequest) {
         price: product.price,
         quantity: item.quantity,
         seller: product.seller._id,
+        platformFee: itemPlatformFee,
+        netPayout: itemNetPayout,
       });
 
       // Decrement stock
@@ -84,6 +95,8 @@ export async function POST(req: NextRequest) {
       buyer: session.user.id,
       items: orderItems,
       totalAmount,
+      platformFee: totalPlatformFee,
+      netPayout: totalNetPayout,
       paymentRef,
       paymentStatus: "paid",
       shippingAddress: addressParsed.data,
