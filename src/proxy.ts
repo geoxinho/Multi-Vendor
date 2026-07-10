@@ -1,6 +1,8 @@
 import { NextResponse } from "next/server";
-import type { NextRequest } from "next/server";
-import { getToken } from "next-auth/jwt";
+import NextAuth from "next-auth";
+import { authConfig } from "@/lib/auth.config";
+
+const { auth } = NextAuth(authConfig);
 
 // Dashboard home per role
 const ROLE_DASHBOARD: Record<string, string> = {
@@ -16,14 +18,9 @@ const ROLE_HOME: Record<string, string> = {
   admin: "/dashboard/admin",
 };
 
-export async function proxy(req: NextRequest) {
+export const proxy = auth((req) => {
   const { pathname } = req.nextUrl;
-
-  // Use the same secret as NextAuth — prefer AUTH_SECRET (Next-Auth v5) then NEXTAUTH_SECRET
-  const secret =
-    process.env.AUTH_SECRET ?? process.env.NEXTAUTH_SECRET ?? "";
-
-  const token = await getToken({ req, secret });
+  const token = req.auth?.user;
 
   // ── /admin login page ─────────────────────────────────────────────────────
   if (pathname === "/admin") {
@@ -94,7 +91,7 @@ export async function proxy(req: NextRequest) {
   }
 
   return NextResponse.next();
-}
+});
 
 export const config = {
   matcher: [
