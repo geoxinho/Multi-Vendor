@@ -1,4 +1,5 @@
 import { auth } from "@/lib/auth";
+import { notFound } from "next/navigation";
 import { connectDB } from "@/lib/db";
 import { Wishlist } from "@/models/Wishlist";
 import Link from "next/link";
@@ -9,6 +10,7 @@ export const metadata: Metadata = { title: "My Wishlist" };
 
 export default async function WishlistPage() {
   const session = await auth();
+  if (!session?.user) notFound();
   await connectDB();
 
   const items = await Wishlist.find({ buyer: session!.user.id })

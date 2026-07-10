@@ -3,7 +3,7 @@ import type { NextRequest } from "next/server";
 import { getToken } from "next-auth/jwt";
 
 const ROLE_HOME: Record<string, string> = {
-  buyer: "/dashboard/buyer",
+  buyer: "/",
   seller: "/dashboard/seller",
   admin: "/dashboard/admin",
 };

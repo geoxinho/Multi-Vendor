@@ -1,4 +1,5 @@
 import { auth } from "@/lib/auth";
+import { notFound } from "next/navigation";
 import { connectDB } from "@/lib/db";
 import { Order } from "@/models/Order";
 import Link from "next/link";
@@ -9,6 +10,7 @@ export const metadata: Metadata = { title: "Buyer Dashboard" };
 
 export default async function BuyerDashboardPage() {
   const session = await auth();
+  if (!session?.user) notFound();
   await connectDB();
 
   const orders = await Order.find({ buyer: session!.user.id }).lean();
