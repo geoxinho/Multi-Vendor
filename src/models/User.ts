@@ -24,6 +24,8 @@ export interface IUser extends Document {
     accountName: string;
   };
   lastBrandNameChangeAt?: Date;
+  passwordResetToken?: string;
+  passwordResetTokenExpires?: Date;
   createdAt: Date;
 }
 
@@ -53,6 +55,8 @@ const UserSchema = new Schema<IUser>(
       accountName: { type: String, default: "" },
     },
     lastBrandNameChangeAt: { type: Date },
+    passwordResetToken: { type: String, default: "" },
+    passwordResetTokenExpires: { type: Date },
   },
   { timestamps: true }
 );

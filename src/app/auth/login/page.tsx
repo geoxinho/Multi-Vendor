@@ -2,7 +2,7 @@
 
 import { useState, Suspense } from "react";
 import { signIn } from "next-auth/react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { loginSchema } from "@/utils/validators";
 
@@ -14,10 +14,13 @@ const ROLE_HOME: Record<string, string> = {
 
 function LoginForm() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const callbackUrl = searchParams.get("callbackUrl");
 
   const [form, setForm] = useState({ email: "", password: "" });
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -51,7 +54,12 @@ function LoginForm() {
         setError("Invalid email or password. Please try again.");
       }
     } else {
-      // Redirect based on role
+      // Redirect to callbackUrl if present, otherwise role-based home
+      if (callbackUrl) {
+        router.push(callbackUrl);
+        router.refresh();
+        return;
+      }
       const sessionRes = await fetch("/api/auth/session");
       const session = await sessionRes.json();
       const role = session?.user?.role ?? "buyer";
@@ -97,19 +105,32 @@ function LoginForm() {
             </div>
 
             <div>
-              <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1.5 ml-1">Password</label>
+              <div className="flex items-center justify-between mb-1.5 ml-1 pr-1">
+                <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider">Password</label>
+                <Link href="/auth/forgot-password" className="text-xs font-bold text-green-600 hover:underline">
+                  Forgot?
+                </Link>
+              </div>
               <div className="relative group">
                 <span className="absolute inset-y-0 left-0 pl-3.5 flex items-center text-gray-400 group-focus-within:text-green-600 transition-colors text-xs">
                   <i className="fa-solid fa-key"></i>
                 </span>
                 <input
-                  type="password"
+                  type={showPassword ? "text" : "password"}
                   required
                   value={form.password}
                   onChange={(e) => setForm((f) => ({ ...f, password: e.target.value }))}
                   placeholder="••••••••"
-                  className="w-full pl-10 pr-4 py-3 rounded-xl border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent bg-gray-50/50 focus:bg-white transition-all shadow-inner"
+                  className="w-full pl-10 pr-10 py-3 rounded-xl border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent bg-gray-50/50 focus:bg-white transition-all shadow-inner"
                 />
+                <button 
+                  type="button" 
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute inset-y-0 right-0 pr-3.5 flex items-center text-gray-400 hover:text-green-600 transition-colors text-sm"
+                  tabIndex={-1}
+                >
+                  <i className={`fa-solid ${showPassword ? "fa-eye-slash" : "fa-eye"}`} />
+                </button>
               </div>
             </div>
 

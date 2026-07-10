@@ -2,6 +2,14 @@ import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 import { getToken } from "next-auth/jwt";
 
+// Dashboard home per role
+const ROLE_DASHBOARD: Record<string, string> = {
+  buyer: "/dashboard/buyer",
+  seller: "/dashboard/seller",
+  admin: "/dashboard/admin",
+};
+
+// After login redirect (buyers go to homepage)
 const ROLE_HOME: Record<string, string> = {
   buyer: "/",
   seller: "/dashboard/seller",
@@ -10,65 +18,75 @@ const ROLE_HOME: Record<string, string> = {
 
 export async function proxy(req: NextRequest) {
   const { pathname } = req.nextUrl;
-  const token = await getToken({
-    req,
-    secret: process.env.AUTH_SECRET ?? process.env.NEXTAUTH_SECRET,
-  });
+
+  // Use the same secret as NextAuth — prefer AUTH_SECRET (Next-Auth v5) then NEXTAUTH_SECRET
+  const secret =
+    process.env.AUTH_SECRET ?? process.env.NEXTAUTH_SECRET ?? "";
+
+  const token = await getToken({ req, secret });
 
   // ── /admin login page ─────────────────────────────────────────────────────
-  // If already logged in as admin, skip the login page and go to dashboard
   if (pathname === "/admin") {
-    if (token && token.role === "admin") {
+    if (token?.role === "admin")
       return NextResponse.redirect(new URL("/dashboard/admin", req.url));
-    }
-    // Non-admins who are logged in should be bounced away
-    if (token && token.role !== "admin") {
-      return NextResponse.redirect(new URL(ROLE_HOME[token.role as string] ?? "/", req.url));
-    }
-    // Not logged in — allow access to the admin login form
+    if (token && token.role !== "admin")
+      return NextResponse.redirect(
+        new URL(ROLE_HOME[token.role as string] ?? "/", req.url)
+      );
     return NextResponse.next();
   }
 
-  // ── Protect /dashboard/admin — only accessible to admins ─────────────────
+  // ── Protect /dashboard/admin ───────────────────────────────────────────────
   if (pathname.startsWith("/dashboard/admin")) {
-    if (!token) {
+    if (!token)
       return NextResponse.redirect(new URL("/admin", req.url));
-    }
-    if (token.role !== "admin") {
-      return NextResponse.redirect(new URL(ROLE_HOME[token.role as string] ?? "/", req.url));
-    }
+    if (token.role !== "admin")
+      return NextResponse.redirect(
+        new URL(ROLE_HOME[token.role as string] ?? "/", req.url)
+      );
+    return NextResponse.next();
   }
 
-  // ── Protect all other dashboard routes ───────────────────────────────────
-  if (pathname.startsWith("/dashboard")) {
-    if (!token) {
-      return NextResponse.redirect(new URL("/auth/login", req.url));
-    }
+  // ── Protect /dashboard/seller ──────────────────────────────────────────────
+  if (pathname.startsWith("/dashboard/seller")) {
+    if (!token)
+      return NextResponse.redirect(
+        new URL("/auth/login?callbackUrl=" + encodeURIComponent(pathname), req.url)
+      );
+    if (token.role !== "seller")
+      return NextResponse.redirect(
+        new URL(ROLE_DASHBOARD[token.role as string] ?? "/", req.url)
+      );
+    return NextResponse.next();
+  }
 
-    const role = token.role as string;
-    const correctBase = ROLE_HOME[role];
-
-    // Redirect wrong-role access (except admin is handled above)
-    if (role !== "admin" && correctBase && !pathname.startsWith(correctBase)) {
-      return NextResponse.redirect(new URL(correctBase, req.url));
-    }
+  // ── Protect /dashboard/buyer ───────────────────────────────────────────────
+  if (pathname.startsWith("/dashboard/buyer")) {
+    if (!token)
+      return NextResponse.redirect(
+        new URL("/auth/login?callbackUrl=" + encodeURIComponent(pathname), req.url)
+      );
+    if (token.role !== "buyer")
+      return NextResponse.redirect(
+        new URL(ROLE_DASHBOARD[token.role as string] ?? "/", req.url)
+      );
+    return NextResponse.next();
   }
 
   // ── Protect checkout ──────────────────────────────────────────────────────
   if (pathname.startsWith("/checkout")) {
-    if (!token) {
+    if (!token)
       return NextResponse.redirect(
         new URL("/auth/login?callbackUrl=/checkout", req.url)
       );
-    }
-    if (token.role !== "buyer") {
+    if (token.role !== "buyer")
       return NextResponse.redirect(
-        new URL(ROLE_HOME[token.role as string] ?? "/", req.url)
+        new URL(ROLE_DASHBOARD[token.role as string] ?? "/", req.url)
       );
-    }
+    return NextResponse.next();
   }
 
-  // ── Redirect logged-in users away from auth pages ────────────────────────
+  // ── Redirect logged-in users away from auth pages ─────────────────────────
   if (pathname.startsWith("/auth/") && token) {
     return NextResponse.redirect(
       new URL(ROLE_HOME[token.role as string] ?? "/", req.url)
@@ -79,5 +97,10 @@ export async function proxy(req: NextRequest) {
 }
 
 export const config = {
-  matcher: ["/admin", "/dashboard/:path*", "/checkout/:path*", "/auth/:path*"],
+  matcher: [
+    "/admin",
+    "/dashboard/:path*",
+    "/checkout/:path*",
+    "/auth/:path*",
+  ],
 };

@@ -411,7 +411,21 @@ export default function Navbar() {
         {/* Scrollable body */}
         <div className="flex-1 overflow-y-auto">
 
-          {/* ── ACCOUNT SECTION ── */}
+          {/* ── 1. NAVIGATION — always first ── */}
+          <div className="border-b border-gray-100 py-2">
+            {PUBLIC_NAV.map((link) => {
+              const isActive = pathname === link.href || (link.href !== "/" && pathname.startsWith(link.href));
+              return (
+                <Link key={link.href} href={link.href} onClick={() => setDrawerOpen(false)}
+                  className={`flex items-center gap-3 px-4 py-3 text-sm font-medium transition-colors ${isActive ? "text-teal-700 bg-teal-50 font-semibold" : "text-gray-700 hover:bg-gray-50"}`}>
+                  <i className={`fa-solid ${link.href === "/" ? "fa-house" : "fa-bag-shopping"} w-5 text-center ${isActive ? "text-teal-500" : "text-gray-400"}`} />
+                  {link.label}
+                </Link>
+              );
+            })}
+          </div>
+
+          {/* ── 2. ACCOUNT SECTION ── */}
           {session ? (
             <div className="border-b border-gray-100">
               {/* Account header — tappable to go to dashboard */}
@@ -436,7 +450,7 @@ export default function Navbar() {
                 </svg>
               </Link>
 
-              {/* Buyer-specific links */}
+              {/* Buyer links */}
               {isbuyer && (
                 <>
                   <DrawerLink icon="fa-box" label="Orders" href="/dashboard/buyer/orders" onClose={() => setDrawerOpen(false)} />
@@ -495,9 +509,8 @@ export default function Navbar() {
               </button>
             </div>
           ) : (
-            /* Guest account section */
+            /* Guest — Sign In / Get Started */
             <div className="border-b border-gray-100 p-4 flex flex-col gap-2">
-              <p className="text-xs font-bold text-gray-400 uppercase tracking-wide mb-1">Account</p>
               <Link href="/auth/login" onClick={() => setDrawerOpen(false)}
                 className="flex items-center justify-center gap-2 py-2.5 rounded-xl border border-gray-200 text-gray-700 font-semibold text-sm hover:bg-gray-50 transition-colors">
                 Sign In
@@ -509,21 +522,7 @@ export default function Navbar() {
             </div>
           )}
 
-          {/* ── NAVIGATION ── */}
-          <div className="border-b border-gray-100 py-2">
-            {PUBLIC_NAV.map((link) => {
-              const isActive = pathname === link.href || (link.href !== "/" && pathname.startsWith(link.href));
-              return (
-                <Link key={link.href} href={link.href} onClick={() => setDrawerOpen(false)}
-                  className={`flex items-center gap-3 px-4 py-3 text-sm font-medium transition-colors ${isActive ? "text-teal-700 bg-teal-50" : "text-gray-700 hover:bg-gray-50"}`}>
-                  <i className={`fa-solid ${link.href === "/" ? "fa-house" : "fa-bag-shopping"} w-5 text-center text-gray-400`} />
-                  {link.label}
-                </Link>
-              );
-            })}
-          </div>
-
-          {/* ── CATEGORIES SECTION ── */}
+          {/* ── 3. CATEGORIES ── */}
           {categories.length > 0 && (
             <div className="py-2">
               <div className="flex items-center justify-between px-4 py-2">
@@ -548,6 +547,7 @@ export default function Navbar() {
           )}
         </div>
       </div>
+
 
       {/* ─────────────────────────────────────────────────────── CART DRAWER */}
       <CartDrawer open={cartOpen} onClose={() => setCartOpen(false)} />

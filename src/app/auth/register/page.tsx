@@ -16,6 +16,7 @@ function RegisterForm() {
     name: "",
     email: "",
     password: "",
+    confirmPassword: "",
     phone: "",
     hearAboutUs: "",
     school: "",
@@ -44,6 +45,8 @@ function RegisterForm() {
 
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [isRegistered, setIsRegistered] = useState(false);
   const [isAutoVerified, setIsAutoVerified] = useState(false);
   const [devToken, setDevToken] = useState("");
@@ -52,8 +55,12 @@ function RegisterForm() {
     setError("");
     // Basic validation before moving to next step
     if (step === 2) {
-      if (!form.name || !form.email || !form.password || !form.phone) {
+      if (!form.name || !form.email || !form.password || !form.confirmPassword || !form.phone) {
         setError("Please fill out all fields.");
+        return;
+      }
+      if (form.password !== form.confirmPassword) {
+        setError("Passwords do not match.");
         return;
       }
     }
@@ -265,10 +272,39 @@ function RegisterForm() {
                     <span className="absolute inset-y-0 left-0 pl-3.5 flex items-center text-gray-400 group-focus-within:text-green-600 transition-colors text-sm">
                       <i className="fa-solid fa-key" />
                     </span>
-                    <input type="password" required value={form.password}
+                    <input type={showPassword ? "text" : "password"} required value={form.password}
                       onChange={(e) => setForm((f) => ({ ...f, password: e.target.value }))}
                       placeholder="Min. 6 characters"
-                      className="w-full pl-10 pr-4 py-3 rounded-xl border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent bg-gray-50/50 focus:bg-white transition-all shadow-inner" />
+                      className="w-full pl-10 pr-10 py-3 rounded-xl border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent bg-gray-50/50 focus:bg-white transition-all shadow-inner" />
+                    <button 
+                      type="button" 
+                      onClick={() => setShowPassword(!showPassword)}
+                      className="absolute inset-y-0 right-0 pr-3.5 flex items-center text-gray-400 hover:text-green-600 transition-colors text-sm"
+                      tabIndex={-1}
+                    >
+                      <i className={`fa-solid ${showPassword ? "fa-eye-slash" : "fa-eye"}`} />
+                    </button>
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1.5 ml-1">Confirm Password <span className="text-red-500">*</span></label>
+                  <div className="relative group">
+                    <span className="absolute inset-y-0 left-0 pl-3.5 flex items-center text-gray-400 group-focus-within:text-green-600 transition-colors text-sm">
+                      <i className="fa-solid fa-check-double" />
+                    </span>
+                    <input type={showConfirmPassword ? "text" : "password"} required value={form.confirmPassword}
+                      onChange={(e) => setForm((f) => ({ ...f, confirmPassword: e.target.value }))}
+                      placeholder="Repeat your password"
+                      className="w-full pl-10 pr-10 py-3 rounded-xl border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent bg-gray-50/50 focus:bg-white transition-all shadow-inner" />
+                    <button 
+                      type="button" 
+                      onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                      className="absolute inset-y-0 right-0 pr-3.5 flex items-center text-gray-400 hover:text-green-600 transition-colors text-sm"
+                      tabIndex={-1}
+                    >
+                      <i className={`fa-solid ${showConfirmPassword ? "fa-eye-slash" : "fa-eye"}`} />
+                    </button>
                   </div>
                 </div>
 
