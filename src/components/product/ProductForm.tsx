@@ -17,6 +17,7 @@ interface ProductFormProps {
     category?: string;
     stock?: number;
     images?: string[];
+    tags?: string[];
     status?: string;
   };
   mode: "create" | "edit";
@@ -38,6 +39,7 @@ export default function ProductForm({ initialData = {}, mode }: ProductFormProps
     condition: (initialData.condition ?? "new") as "new" | "used",
     category: initialData.category ?? "",
     stock: initialData.stock ?? 1,
+    tags: initialData.tags?.join(", ") ?? "",
     status: initialData.status ?? "active",
   });
 
@@ -149,6 +151,7 @@ export default function ProductForm({ initialData = {}, mode }: ProductFormProps
       price: Number(form.price),
       stock: Number(form.stock),
       images: allImages,
+      tags: form.tags.split(",").map((t) => t.trim()).filter(Boolean),
     };
 
     const parsed = productSchema.safeParse(payload);
@@ -317,6 +320,15 @@ export default function ProductForm({ initialData = {}, mode }: ProductFormProps
             onChange={(e) => setForm((f) => ({ ...f, description: e.target.value }))}
             placeholder="Describe your product in detail — condition, specs, what's included..."
             className="w-full px-4 py-3 rounded-xl border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-green-500 transition resize-none" />
+        </div>
+
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-1.5">Search Tags (Optional)</label>
+          <input type="text" value={form.tags}
+            onChange={(e) => setForm((f) => ({ ...f, tags: e.target.value }))}
+            placeholder="e.g. iphone, apple, mobile, used"
+            className="w-full px-4 py-3 rounded-xl border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-green-500 transition" />
+          <p className="text-xs text-gray-400 mt-1">Separate tags with commas to help buyers find your product.</p>
         </div>
 
         <div className="grid grid-cols-2 gap-4">

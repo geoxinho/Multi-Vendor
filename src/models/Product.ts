@@ -13,6 +13,8 @@ export interface IProduct extends Document {
   rating: number;
   numReviews: number;
   status: "active" | "inactive";
+  isFeatured: boolean;
+  tags: string[];
   createdAt: Date;
 }
 
@@ -30,10 +32,12 @@ const ProductSchema = new Schema<IProduct>(
     rating: { type: Number, default: 0 },
     numReviews: { type: Number, default: 0 },
     status: { type: String, enum: ["active", "inactive"], default: "active" },
+    isFeatured: { type: Boolean, default: false },
+    tags: [{ type: String, trim: true }],
   },
   { timestamps: true }
 );
 
-ProductSchema.index({ title: "text", description: "text" });
+ProductSchema.index({ title: "text", description: "text", tags: "text" });
 
 export const Product = models.Product || model<IProduct>("Product", ProductSchema);

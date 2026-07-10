@@ -23,7 +23,12 @@ export async function GET(req: NextRequest) {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const query: any = { status: "active" };
 
-    if (search) query.$text = { $search: search };
+    if (search) {
+      query.$or = [
+        { title: { $regex: search, $options: "i" } },
+        { tags: { $regex: search, $options: "i" } },
+      ];
+    }
     if (category) query.category = category;
     if (condition) query.condition = condition;
     if (minPrice || maxPrice < 999999999) query.price = { $gte: minPrice, $lte: maxPrice };

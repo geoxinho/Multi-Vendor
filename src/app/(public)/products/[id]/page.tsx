@@ -19,7 +19,8 @@ async function getProduct(id: string) {
       .populate("category", "name slug")
       .lean();
     return p ? JSON.parse(JSON.stringify(p)) : null;
-  } catch {
+  } catch (error) {
+    console.error("[PRODUCT_PAGE_ERROR] Failed to fetch product:", id, error);
     return null;
   }
 }
