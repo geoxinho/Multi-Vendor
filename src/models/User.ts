@@ -53,6 +53,7 @@ const UserSchema = new Schema<IUser>(
     school: { type: String, default: "" },
     bankDetails: {
       bankName: { type: String, default: "" },
+      bankCode: { type: String, default: "" },
       accountNumber: { type: String, default: "" },
       accountName: { type: String, default: "" },
     },

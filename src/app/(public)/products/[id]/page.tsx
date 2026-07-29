@@ -1,4 +1,11 @@
 import { notFound } from "next/navigation";
+import mongoose from "mongoose";
+
+// Force this page to always be server-rendered on demand.
+// Without this, Next.js may try to statically pre-render at build time
+// when there is no DB connection, cache a null result, and serve 404 forever.
+export const dynamic = "force-dynamic";
+export const dynamicParams = true;
 import { connectDB } from "@/lib/db";
 import { Product } from "@/models/Product";
 import RatingStars from "@/components/shared/RatingStars";
@@ -12,16 +19,22 @@ import type { Metadata } from "next";
 type Props = { params: Promise<{ id: string }> };
 
 async function getProduct(id: string) {
-  await connectDB();
+  // Guard: reject non-ObjectId strings immediately (avoids a Mongoose CastError
+  // that would be silently caught and returned as null → 404 in production)
+  if (!mongoose.isValidObjectId(id)) return null;
+
   try {
+    await connectDB();
     const p = await Product.findById(id)
       .populate("seller", "name storeName avatar storeDescription")
       .populate("category", "name slug")
       .lean();
     return p ? JSON.parse(JSON.stringify(p)) : null;
   } catch (error) {
-    console.error("[PRODUCT_PAGE_ERROR] Failed to fetch product:", id, error);
-    return null;
+    // Log the full error so it appears in Vercel's Function Logs
+    console.error("[PRODUCT_PAGE_ERROR] id=%s error=%s", id, String(error));
+    // Re-throw so the page renders a 500 instead of a misleading 404
+    throw error;
   }
 }
 
