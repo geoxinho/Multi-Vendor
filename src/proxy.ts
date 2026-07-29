@@ -22,8 +22,8 @@ export const proxy = auth((req) => {
   const { pathname } = req.nextUrl;
   const token = req.auth?.user;
 
-  // ── /admin login page ─────────────────────────────────────────────────────
-  if (pathname === "/admin") {
+  // ── /mystartup login page ──────────────────────────────────────────────────
+  if (pathname === "/mystartup") {
     if (token?.role === "admin")
       return NextResponse.redirect(new URL("/dashboard/admin", req.url));
     if (token && token.role !== "admin")
@@ -36,7 +36,7 @@ export const proxy = auth((req) => {
   // ── Protect /dashboard/admin ───────────────────────────────────────────────
   if (pathname.startsWith("/dashboard/admin")) {
     if (!token)
-      return NextResponse.redirect(new URL("/admin", req.url));
+      return NextResponse.redirect(new URL("/mystartup", req.url));
     if (token.role !== "admin")
       return NextResponse.redirect(
         new URL(ROLE_HOME[token.role as string] ?? "/", req.url)
@@ -95,7 +95,7 @@ export const proxy = auth((req) => {
 
 export const config = {
   matcher: [
-    "/admin",
+    "/mystartup",
     "/dashboard/:path*",
     "/checkout/:path*",
     "/auth/:path*",

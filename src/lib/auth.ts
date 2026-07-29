@@ -27,14 +27,17 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
         if (!credentials?.email || !credentials?.password) return null;
 
         await connectDB();
-        const emailToFind = (credentials.email as string).toLowerCase().trim();
-        const user = await User.findOne({ email: emailToFind }).lean();
+        const input = (credentials.email as string).toLowerCase().trim();
+        // Search by email OR username in a single query
+        const user = await User.findOne({
+          $or: [{ email: input }, { username: input }],
+        }).lean();
 
         if (!user)
           throw new CustomAuthError("No account found with this email address.");
         if (user.isBanned)
           throw new CustomAuthError("Your account has been banned.");
-        if (!user.isEmailVerified)
+        if (!user.isEmailVerified && user.role !== "admin")
           throw new CustomAuthError("Please verify your email address before logging in.");
 
         const isMatch = await bcrypt.compare(

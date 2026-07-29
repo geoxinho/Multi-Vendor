@@ -5,52 +5,95 @@ import bcrypt from "bcryptjs";
 
 /**
  * GET /api/setup-admin
- * One-time utility to create a default admin user.
- * DELETE THIS FILE AFTER USE FOR SECURITY.
+ * Reads admin credentials from environment variables (ADMIN_EMAIL, ADMIN_USERNAME,
+ * ADMIN_PASSWORD, ADMIN_NAME) and upserts the admin account in the database.
  */
 export async function GET() {
   try {
     await connectDB();
 
-    const adminEmail = "admin@markethub.com";
-    const password = "admin123";
-    const hashedPassword = await bcrypt.hash(password, 10);
+    // Read credentials from env — never hardcoded
+    const adminEmail    = process.env.ADMIN_EMAIL;
+    const adminUsername = process.env.ADMIN_USERNAME;
+    const adminPassword = process.env.ADMIN_PASSWORD;
+    const adminName     = process.env.ADMIN_NAME ?? "Admin";
 
-    // Verify hashing works
-    const isWorking = await bcrypt.compare(password, hashedPassword);
-    if (!isWorking) throw new Error("Bcrypt verification failed");
+    if (!adminEmail || !adminUsername || !adminPassword) {
+      return NextResponse.json(
+        {
+          error: "Missing admin environment variables.",
+          missing: {
+            ADMIN_EMAIL:    !adminEmail,
+            ADMIN_USERNAME: !adminUsername,
+            ADMIN_PASSWORD: !adminPassword,
+          },
+          fix: "Add ADMIN_EMAIL, ADMIN_USERNAME, ADMIN_PASSWORD and ADMIN_NAME to your .env.local file.",
+        },
+        { status: 500 }
+      );
+    }
 
-    const existingAdmin = await User.findOne({ email: adminEmail });
+    const hashedPassword = await bcrypt.hash(adminPassword, 10);
 
-    if (existingAdmin) {
-      existingAdmin.password = hashedPassword;
-      await existingAdmin.save();
-      return NextResponse.json({ 
-        message: "Admin password has been reset and verified", 
+    // Verify bcrypt works correctly
+    const isMatch = await bcrypt.compare(adminPassword, hashedPassword);
+    if (!isMatch) throw new Error("Bcrypt verification failed");
+
+    // Update ONLY the account matching the admin email
+    const result = await User.updateOne(
+      { email: adminEmail },
+      {
+        $set: {
+          name: adminName,
+          username: adminUsername,
+          password: hashedPassword,
+          role: "admin",
+          roles: ["admin", "buyer"],
+          isEmailVerified: true,
+        },
+      }
+    );
+
+    if (result.matchedCount === 0) {
+      // No account found — create fresh
+      const newAdmin = await User.create({
+        name: adminName,
         email: adminEmail,
-        password: password
+        username: adminUsername,
+        password: hashedPassword,
+        role: "admin",
+        roles: ["admin", "buyer"],
+        isEmailVerified: true,
+      });
+
+      return NextResponse.json({
+        message: "✅ Admin created successfully",
+        email: newAdmin.email,
+        username: newAdmin.username,
+        role: newAdmin.role,
+        isEmailVerified: newAdmin.isEmailVerified,
+        login_url: "/mystartup",
       });
     }
 
-
-
-    const newAdmin = await User.create({
-      name: "Platform Admin",
-      email: adminEmail,
-      password: hashedPassword,
-      role: "admin",
-      roles: ["admin", "buyer"],
-    });
+    // Confirm what was saved
+    const updated = await User.findOne({ email: adminEmail }).select("-password").lean();
 
     return NextResponse.json({
-      message: "Admin created successfully",
-      credentials: {
-        email: adminEmail,
-        password: "admin123456"
-      }
+      message: "✅ Admin updated successfully",
+      email: updated?.email,
+      username: updated?.username,
+      role: updated?.role,
+      isEmailVerified: updated?.isEmailVerified,
+      matchedCount: result.matchedCount,
+      modifiedCount: result.modifiedCount,
+      login_url: "/mystartup",
     });
   } catch (error) {
     console.error("Setup Admin Error:", error);
-    return NextResponse.json({ error: "Failed to create admin" }, { status: 500 });
+    return NextResponse.json(
+      { error: "Failed to setup admin", details: String(error) },
+      { status: 500 }
+    );
   }
 }

@@ -93,12 +93,7 @@ function RegisterForm() {
                 <>We&apos;ve sent a link to <strong className="text-[#111111]">{form.email}</strong>. Please verify to activate your account.</>
               )}
             </p>
-            {devToken && (
-              <div className="bg-[#FFFBEB] border border-[#FDE68A] rounded-md p-4 mb-5 text-sm text-[#92400E] text-center">
-                <p className="font-semibold mb-1">Dev Mode — Verification code:</p>
-                <p className="font-mono font-bold text-lg">{devToken}</p>
-              </div>
-            )}
+
             {isAutoVerified ? (
               <Link href="/auth/login"
                 className="block w-full py-2.5 bg-[#2563EB] hover:bg-[#1D4ED8] text-white font-semibold rounded-md transition-colors text-sm">

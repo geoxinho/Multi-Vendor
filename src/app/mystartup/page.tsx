@@ -24,32 +24,31 @@ function AdminLoginForm() {
 
     setLoading(false);
 
-    if (res?.error) {
-      const code = (res as { code?: string }).code;
-      const knownMessages = [
-        "No account found with this email address.",
-        "Your account has been banned.",
-        "Please verify your email address before logging in.",
-        "Incorrect password. Please try again.",
-      ];
-      if (code && knownMessages.includes(code)) {
-        setError(code);
+    if (!res || res.error) {
+      // NextAuth v5 does not expose custom error codes client-side via res.code.
+      // Show a helpful message based on the generic error type.
+      const errType = res?.error ?? "";
+      if (errType === "CredentialsSignin") {
+        setError("Incorrect username or password. Please try again.");
+      } else if (errType) {
+        setError("Login failed: " + errType);
       } else {
-        setError("Invalid credentials. Access denied.");
+        setError("Something went wrong. Please try again.");
       }
-    } else {
-      // Verify this is actually an admin account
-      const sessionRes = await fetch("/api/auth/session");
-      const session = await sessionRes.json();
-      if (session?.user?.role !== "admin") {
-        setError("Access denied. This portal is for administrators only.");
-        // Sign them out since they're not admin
-        await fetch("/api/auth/signout", { method: "POST" });
-        return;
-      }
-      router.push("/dashboard/admin");
-      router.refresh();
+      return;
     }
+
+    // Sign-in succeeded — verify this is actually an admin account
+    const sessionRes = await fetch("/api/auth/session");
+    const session = await sessionRes.json();
+    if (session?.user?.role !== "admin") {
+      setError("Access denied. This portal is for administrators only.");
+      await fetch("/api/auth/signout", { method: "POST" });
+      return;
+    }
+
+    router.push("/dashboard/admin");
+    router.refresh();
   };
 
   return (
@@ -102,7 +101,7 @@ function AdminLoginForm() {
           <form onSubmit={handleSubmit} className="space-y-5">
             <div>
               <label className="block text-xs font-bold text-gray-400 uppercase tracking-wider mb-1.5">
-                Admin Email
+                Username or Email
               </label>
               <div className="relative">
                 <span className="absolute inset-y-0 left-0 pl-3.5 flex items-center text-gray-500 text-xs">
@@ -111,12 +110,12 @@ function AdminLoginForm() {
                   </svg>
                 </span>
                 <input
-                  type="email"
+                  type="text"
                   required
                   autoComplete="username"
                   value={form.email}
                   onChange={(e) => setForm((f) => ({ ...f, email: e.target.value }))}
-                  placeholder="admin@markethub.com"
+                  placeholder="geoxinho"
                   className="w-full pl-10 pr-4 py-3 rounded-xl border border-gray-700 bg-gray-800/80 text-white placeholder-gray-600 text-sm focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all"
                 />
               </div>
