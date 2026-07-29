@@ -9,7 +9,8 @@ import type { Metadata } from "next";
 const HOME_DESCRIPTION =
   "The safest campus marketplace for college students to buy and sell textbooks, electronics, clothing, and hostel items. Trade new or used products easily.";
 
-const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? "https://closevenders.vercel.app";
+const SITE_URL =
+  process.env.NEXT_PUBLIC_SITE_URL ?? "https://closevenders.vercel.app";
 
 export const metadata: Metadata = {
   title: "MarketHub — Campus Marketplace for Students",
@@ -64,25 +65,117 @@ const CAT_STYLING: Record<
     iconBg: string;
   }
 > = {
-  electronics: { icon: "fa-laptop", bg: "bg-[#EFF6FF]", border: "border-[#BFDBFE]/60", text: "text-[#1E40AF]", iconBg: "bg-[#DBEAFE]" },
-  fashion: { icon: "fa-shirt", bg: "bg-[#FDF2F8]", border: "border-[#FBCFE8]/60", text: "text-[#9D174D]", iconBg: "bg-[#FCE7F3]" },
-  phones: { icon: "fa-mobile-screen", bg: "bg-[#F5F3FF]", border: "border-[#DDD6FE]/60", text: "text-[#5B21B6]", iconBg: "bg-[#EDE9FE]" },
-  shoes: { icon: "fa-shoe-prints", bg: "bg-[#FFF7ED]", border: "border-[#FFEDD5]/60", text: "text-[#9A3412]", iconBg: "bg-[#FFD8A8]" },
-  books: { icon: "fa-book", bg: "bg-[#ECFDF5]", border: "border-[#A7F3D0]/60", text: "text-[#065F46]", iconBg: "bg-[#D1FAE5]" },
-  beauty: { icon: "fa-spray-can-sparkles", bg: "bg-[#FFF5F5]", border: "border-[#FED7D7]/60", text: "text-[#9B2C2C]", iconBg: "bg-[#FEE2E2]" },
-  furniture: { icon: "fa-couch", bg: "bg-[#FFFBEB]", border: "border-[#FEF3C7]/60", text: "text-[#92400E]", iconBg: "bg-[#FEF08A]" },
-  sports: { icon: "fa-futbol", bg: "bg-[#F0FDF4]", border: "border-[#BBF7D0]/60", text: "text-[#166534]", iconBg: "bg-[#DCFCE7]" },
-  food: { icon: "fa-apple-whole", bg: "bg-[#FFF5F5]", border: "border-[#FED7D7]/60", text: "text-[#9B2C2C]", iconBg: "bg-[#FEE2E2]" },
-  gaming: { icon: "fa-gamepad", bg: "bg-[#F5F3FF]", border: "border-[#DDD6FE]/60", text: "text-[#5B21B6]", iconBg: "bg-[#EDE9FE]" },
-  toys: { icon: "fa-child-reaching", bg: "bg-[#FFFBEB]", border: "border-[#FEF3C7]/60", text: "text-[#92400E]", iconBg: "bg-[#FEF08A]" },
-  health: { icon: "fa-pills", bg: "bg-[#ECFDF5]", border: "border-[#A7F3D0]/60", text: "text-[#065F46]", iconBg: "bg-[#D1FAE5]" },
+  electronics: {
+    icon: "fa-laptop",
+    bg: "bg-[#EFF6FF]",
+    border: "border-[#BFDBFE]/60",
+    text: "text-[#1E40AF]",
+    iconBg: "bg-[#DBEAFE]",
+  },
+  fashion: {
+    icon: "fa-shirt",
+    bg: "bg-[#FDF2F8]",
+    border: "border-[#FBCFE8]/60",
+    text: "text-[#9D174D]",
+    iconBg: "bg-[#FCE7F3]",
+  },
+  phones: {
+    icon: "fa-mobile-screen",
+    bg: "bg-[#F5F3FF]",
+    border: "border-[#DDD6FE]/60",
+    text: "text-[#5B21B6]",
+    iconBg: "bg-[#EDE9FE]",
+  },
+  shoes: {
+    icon: "fa-shoe-prints",
+    bg: "bg-[#FFF7ED]",
+    border: "border-[#FFEDD5]/60",
+    text: "text-[#9A3412]",
+    iconBg: "bg-[#FFD8A8]",
+  },
+  books: {
+    icon: "fa-book",
+    bg: "bg-[#ECFDF5]",
+    border: "border-[#A7F3D0]/60",
+    text: "text-[#065F46]",
+    iconBg: "bg-[#D1FAE5]",
+  },
+  beauty: {
+    icon: "fa-spray-can-sparkles",
+    bg: "bg-[#FFF5F5]",
+    border: "border-[#FED7D7]/60",
+    text: "text-[#9B2C2C]",
+    iconBg: "bg-[#FEE2E2]",
+  },
+  furniture: {
+    icon: "fa-couch",
+    bg: "bg-[#FFFBEB]",
+    border: "border-[#FEF3C7]/60",
+    text: "text-[#92400E]",
+    iconBg: "bg-[#FEF08A]",
+  },
+  sports: {
+    icon: "fa-futbol",
+    bg: "bg-[#F0FDF4]",
+    border: "border-[#BBF7D0]/60",
+    text: "text-[#166534]",
+    iconBg: "bg-[#DCFCE7]",
+  },
+  food: {
+    icon: "fa-apple-whole",
+    bg: "bg-[#FFF5F5]",
+    border: "border-[#FED7D7]/60",
+    text: "text-[#9B2C2C]",
+    iconBg: "bg-[#FEE2E2]",
+  },
+  gaming: {
+    icon: "fa-gamepad",
+    bg: "bg-[#F5F3FF]",
+    border: "border-[#DDD6FE]/60",
+    text: "text-[#5B21B6]",
+    iconBg: "bg-[#EDE9FE]",
+  },
+  toys: {
+    icon: "fa-child-reaching",
+    bg: "bg-[#FFFBEB]",
+    border: "border-[#FEF3C7]/60",
+    text: "text-[#92400E]",
+    iconBg: "bg-[#FEF08A]",
+  },
+  health: {
+    icon: "fa-pills",
+    bg: "bg-[#ECFDF5]",
+    border: "border-[#A7F3D0]/60",
+    text: "text-[#065F46]",
+    iconBg: "bg-[#D1FAE5]",
+  },
 };
 
 const FALLBACK_STYLES = [
-  { bg: "bg-[#EFF6FF]", border: "border-[#BFDBFE]/60", text: "text-[#1E40AF]", iconBg: "bg-[#DBEAFE]" },
-  { bg: "bg-[#F5F3FF]", border: "border-[#DDD6FE]/60", text: "text-[#5B21B6]", iconBg: "bg-[#EDE9FE]" },
-  { bg: "bg-[#FDF2F8]", border: "border-[#FBCFE8]/60", text: "text-[#9D174D]", iconBg: "bg-[#FCE7F3]" },
-  { bg: "bg-[#FFF7ED]", border: "border-[#FFEDD5]/60", text: "text-[#9A3412]", iconBg: "bg-[#FFD8A8]" },
+  {
+    bg: "bg-[#EFF6FF]",
+    border: "border-[#BFDBFE]/60",
+    text: "text-[#1E40AF]",
+    iconBg: "bg-[#DBEAFE]",
+  },
+  {
+    bg: "bg-[#F5F3FF]",
+    border: "border-[#DDD6FE]/60",
+    text: "text-[#5B21B6]",
+    iconBg: "bg-[#EDE9FE]",
+  },
+  {
+    bg: "bg-[#FDF2F8]",
+    border: "border-[#FBCFE8]/60",
+    text: "text-[#9D174D]",
+    iconBg: "bg-[#FCE7F3]",
+  },
+  {
+    bg: "bg-[#FFF7ED]",
+    border: "border-[#FFEDD5]/60",
+    text: "text-[#9A3412]",
+    iconBg: "bg-[#FFD8A8]",
+  },
 ];
 
 function getCategoryStyle(name: string, index: number) {
@@ -137,12 +230,17 @@ export default async function HomePage() {
               </span>
 
               <h1 className="text-4xl md:text-5xl lg:text-6xl font-extrabold text-[#111111] leading-[1.15] tracking-tight mb-6">
-                Buy & Sell,<br />
-                <span className="bg-gradient-to-r from-[#2563EB] to-[#4F46E5] bg-clip-text text-transparent">Trade on Campus.</span>
+                Buy & Sell,
+                <br />
+                <span className="bg-gradient-to-r from-[#2563EB] to-[#4F46E5] bg-clip-text text-transparent">
+                  Trade on Campus.
+                </span>
               </h1>
 
               <p className="text-[#6B6B6B] text-base md:text-lg leading-relaxed mb-10 max-w-lg">
-                The safest way for students to buy and sell textbooks, hostel appliances, electronics, and fashion. Trade new or used products directly with peers on campus.
+                The safest way for students to buy and sell textbooks, hostel
+                appliances, electronics, and fashion. Trade new or used products
+                directly with peers on campus.
               </p>
 
               <div className="flex flex-col sm:flex-row gap-4 mb-8">
@@ -158,7 +256,11 @@ export default async function HomePage() {
                     stroke="currentColor"
                     strokeWidth={2.5}
                   >
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M13 7l5 5m0 0l-5 5m5-5H6" />
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      d="M13 7l5 5m0 0l-5 5m5-5H6"
+                    />
                   </svg>
                 </Link>
               </div>
@@ -170,7 +272,10 @@ export default async function HomePage() {
                   { icon: "fa-shield-halved", label: "Secure Payments" },
                   { icon: "fa-handshake", label: "On-Campus Handover" },
                 ].map((b) => (
-                  <div key={b.label} className="flex items-center gap-2 text-sm text-[#6B6B6B]">
+                  <div
+                    key={b.label}
+                    className="flex items-center gap-2 text-sm text-[#6B6B6B]"
+                  >
                     <i className={`fa-solid ${b.icon} text-[#2563EB]`} />
                     <span>{b.label}</span>
                   </div>
@@ -182,7 +287,7 @@ export default async function HomePage() {
             <div className="hidden lg:block lg:col-span-5 animate-in fade-in slide-in-from-right-6 duration-700">
               <div className="relative aspect-[4/3] w-full rounded-2xl overflow-hidden shadow-2xl border border-[#E5E5E5]/50 bg-white group">
                 <Image
-                  src="/hero-campus.jpg"
+                  src="/hero_campus.png"
                   alt="MarketHub student trading illustration"
                   fill
                   className="object-cover group-hover:scale-102 transition-transform duration-700"
@@ -199,16 +304,38 @@ export default async function HomePage() {
       <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
           {[
-            { icon: "fa-shield-halved", title: "Buyer Protection", desc: "Escrow system until handshake", color: "text-[#16A34A] bg-[#F0FDF4] border-[#BBF7D0]/60" },
-            { icon: "fa-handshake", title: "Campus Handover", desc: "Inspect items before paying", color: "text-[#D97706] bg-[#FFFBEB] border-[#FEF3C7]/60" },
-            { icon: "fa-graduation-cap", title: "Student Verified", desc: "Profiles linked to school email", color: "text-[#2563EB] bg-[#EFF6FF] border-[#BFDBFE]/60" },
-            { icon: "fa-rotate-left", title: "Easy Returns", desc: "Trade backed by our policy", color: "text-[#DB2777] bg-[#FDF2F8] border-[#FBCFE8]/60" },
+            {
+              icon: "fa-shield-halved",
+              title: "Buyer Protection",
+              desc: "Escrow system until handshake",
+              color: "text-[#16A34A] bg-[#F0FDF4] border-[#BBF7D0]/60",
+            },
+            {
+              icon: "fa-handshake",
+              title: "Campus Handover",
+              desc: "Inspect items before paying",
+              color: "text-[#D97706] bg-[#FFFBEB] border-[#FEF3C7]/60",
+            },
+            {
+              icon: "fa-graduation-cap",
+              title: "Student Verified",
+              desc: "Profiles linked to school email",
+              color: "text-[#2563EB] bg-[#EFF6FF] border-[#BFDBFE]/60",
+            },
+            {
+              icon: "fa-rotate-left",
+              title: "Easy Returns",
+              desc: "Trade backed by our policy",
+              color: "text-[#DB2777] bg-[#FDF2F8] border-[#FBCFE8]/60",
+            },
           ].map((f) => (
             <div
               key={f.title}
               className="bg-white rounded-xl border border-[#E5E5E5]/60 p-5 flex items-center gap-4 shadow-[0_2px_8px_rgba(0,0,0,0.03)] hover:shadow-[0_12px_24px_rgba(0,0,0,0.06)] hover:-translate-y-1 transition-all duration-300"
             >
-              <span className={`w-10 h-10 rounded-lg flex items-center justify-center border ${f.color} text-lg shrink-0`}>
+              <span
+                className={`w-10 h-10 rounded-lg flex items-center justify-center border ${f.color} text-lg shrink-0`}
+              >
                 <i className={`fa-solid ${f.icon}`} />
               </span>
               <div>
@@ -233,8 +360,18 @@ export default async function HomePage() {
                 className="inline-flex items-center gap-1 text-sm font-medium text-[#2563EB] hover:underline"
               >
                 View all categories
-                <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
+                <svg
+                  className="w-3.5 h-3.5"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                  strokeWidth={2.5}
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    d="M9 5l7 7-7 7"
+                  />
                 </svg>
               </Link>
             </div>
@@ -244,40 +381,50 @@ export default async function HomePage() {
               className="flex gap-3 overflow-x-auto pb-2 -mx-4 px-4 sm:hidden"
               style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}
             >
-              {categories.map((cat: { _id: string; name: string }, idx: number) => {
-                const style = getCategoryStyle(cat.name, idx);
-                return (
-                  <Link
-                    key={cat._id}
-                    href={`/products?category=${cat._id}`}
-                    className={`shrink-0 flex items-center gap-2 px-4 py-2 rounded-full border ${style.bg} ${style.border} text-xs font-bold ${style.text}`}
-                  >
-                    <i className={`fa-solid ${style.icon}`} />
-                    <span>{cat.name}</span>
-                  </Link>
-                );
-              })}
+              {categories.map(
+                (cat: { _id: string; name: string }, idx: number) => {
+                  const style = getCategoryStyle(cat.name, idx);
+                  return (
+                    <Link
+                      key={cat._id}
+                      href={`/products?category=${cat._id}`}
+                      className={`shrink-0 flex items-center gap-2 px-4 py-2 rounded-full border ${style.bg} ${style.border} text-xs font-bold ${style.text}`}
+                    >
+                      <i className={`fa-solid ${style.icon}`} />
+                      <span>{cat.name}</span>
+                    </Link>
+                  );
+                },
+              )}
             </div>
 
             {/* Desktop Categories grid */}
             <div className="hidden sm:grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4">
-              {categories.map((cat: { _id: string; name: string }, idx: number) => {
-                const style = getCategoryStyle(cat.name, idx);
-                return (
-                  <Link
-                    key={cat._id}
-                    href={`/products?category=${cat._id}`}
-                    className={`flex items-center gap-3.5 p-3.5 rounded-xl border ${style.bg} ${style.border} hover:shadow-md hover:scale-[1.02] hover:-translate-y-0.5 transition-all duration-300`}
-                  >
-                    <div className={`w-9 h-9 shrink-0 rounded-lg ${style.iconBg} flex items-center justify-center border border-[#E5E5E5]/20`}>
-                      <i className={`fa-solid ${style.icon} ${style.text} text-sm`} />
-                    </div>
-                    <span className={`text-sm font-bold ${style.text} truncate`}>
-                      {cat.name}
-                    </span>
-                  </Link>
-                );
-              })}
+              {categories.map(
+                (cat: { _id: string; name: string }, idx: number) => {
+                  const style = getCategoryStyle(cat.name, idx);
+                  return (
+                    <Link
+                      key={cat._id}
+                      href={`/products?category=${cat._id}`}
+                      className={`flex items-center gap-3.5 p-3.5 rounded-xl border ${style.bg} ${style.border} hover:shadow-md hover:scale-[1.02] hover:-translate-y-0.5 transition-all duration-300`}
+                    >
+                      <div
+                        className={`w-9 h-9 shrink-0 rounded-lg ${style.iconBg} flex items-center justify-center border border-[#E5E5E5]/20`}
+                      >
+                        <i
+                          className={`fa-solid ${style.icon} ${style.text} text-sm`}
+                        />
+                      </div>
+                      <span
+                        className={`text-sm font-bold ${style.text} truncate`}
+                      >
+                        {cat.name}
+                      </span>
+                    </Link>
+                  );
+                },
+              )}
             </div>
           </div>
         </section>
@@ -299,8 +446,18 @@ export default async function HomePage() {
             className="text-[#2563EB] hover:underline text-sm font-medium flex items-center gap-1"
           >
             See all products
-            <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
-              <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
+            <svg
+              className="w-3.5 h-3.5"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+              strokeWidth={2.5}
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                d="M9 5l7 7-7 7"
+              />
             </svg>
           </Link>
         </div>
@@ -335,13 +492,16 @@ export default async function HomePage() {
             <div className="relative grid md:grid-cols-2 gap-12 items-center">
               <div>
                 <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-md bg-white/10 text-white text-xs font-semibold border border-white/20 mb-4">
-                  <i className="fa-solid fa-graduation-cap text-blue-400" /> Start Selling
+                  <i className="fa-solid fa-graduation-cap text-blue-400" />{" "}
+                  Start Selling
                 </span>
                 <h2 className="text-2xl md:text-3xl font-bold leading-tight mb-4">
                   Turn your old hostel items into cash.
                 </h2>
                 <p className="text-gray-400 text-sm leading-relaxed mb-8">
-                  Clear out textbooks, notes, hostel items, clothes, or appliances you don&apos;t need anymore. List them in minutes and sell to fellow students on campus.
+                  Clear out textbooks, notes, hostel items, clothes, or
+                  appliances you don&apos;t need anymore. List them in minutes
+                  and sell to fellow students on campus.
                 </p>
                 <div className="flex flex-col sm:flex-row gap-3.5">
                   <Link
@@ -349,8 +509,18 @@ export default async function HomePage() {
                     className="inline-flex items-center justify-center gap-2 px-5 py-2.5 bg-[#2563EB] text-white font-bold rounded-md hover:bg-[#1D4ED8] transition-colors text-sm shadow-sm"
                   >
                     Start Selling on Campus
-                    <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M13 7l5 5m0 0l-5 5m5-5H6" />
+                    <svg
+                      className="w-4 h-4"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      stroke="currentColor"
+                      strokeWidth={2.5}
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        d="M13 7l5 5m0 0l-5 5m5-5H6"
+                      />
                     </svg>
                   </Link>
                   <Link
@@ -366,12 +536,25 @@ export default async function HomePage() {
               <div className="grid grid-cols-2 gap-4">
                 {[
                   { value: "10K+", label: "Products Traded", faIcon: "fa-box" },
-                  { value: "2K+", label: "Student Sellers", faIcon: "fa-graduation-cap" },
-                  { value: "50K+", label: "Successful Swaps", faIcon: "fa-handshake" },
+                  {
+                    value: "2K+",
+                    label: "Student Sellers",
+                    faIcon: "fa-graduation-cap",
+                  },
+                  {
+                    value: "50K+",
+                    label: "Successful Swaps",
+                    faIcon: "fa-handshake",
+                  },
                   { value: "100%", label: "Secure Escrow", faIcon: "fa-lock" },
                 ].map((s, idx) => (
-                  <div key={idx} className="bg-white/5 border border-white/10 rounded-xl p-5 hover:bg-white/10 transition-colors duration-300">
-                    <i className={`fa-solid ${s.faIcon} text-lg mb-2 block text-blue-400`} />
+                  <div
+                    key={idx}
+                    className="bg-white/5 border border-white/10 rounded-xl p-5 hover:bg-white/10 transition-colors duration-300"
+                  >
+                    <i
+                      className={`fa-solid ${s.faIcon} text-lg mb-2 block text-blue-400`}
+                    />
                     <p className="text-xl font-bold text-white">{s.value}</p>
                     <p className="text-gray-400 text-xs mt-0.5">{s.label}</p>
                   </div>

@@ -141,6 +141,19 @@ export default async function ProductDetailPage({ params }: Props) {
             {product.description}
           </p>
 
+          {/* Stock Warning Banners for User UI */}
+          {product.stock === 0 ? (
+            <div className="mb-6 px-4 py-3 bg-[#FEF2F2] border border-[#FEE2E2] rounded-xl flex items-center gap-2.5 text-[#991B1B] text-sm font-semibold">
+              <i className="fa-solid fa-circle-exclamation text-[#DC2626] text-base" />
+              <span>Out of Stock: This item is currently unavailable.</span>
+            </div>
+          ) : product.stock <= 3 ? (
+            <div className="mb-6 px-4 py-3 bg-[#FFF7ED] border border-[#FFEDD5] rounded-xl flex items-center gap-2.5 text-[#9A3412] text-sm font-semibold animate-pulse">
+              <i className="fa-solid fa-triangle-exclamation text-[#EA580C] text-base" />
+              <span>Hurry! Only {product.stock} left in stock - order soon.</span>
+            </div>
+          ) : null}
+
           <div className="flex items-center gap-3 mb-6">
             <span
               className={`text-sm font-medium ${product.stock > 0 ? "text-[#16A34A]" : "text-[#DC2626]"}`}

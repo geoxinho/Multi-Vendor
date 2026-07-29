@@ -30,6 +30,12 @@ export async function GET(req: NextRequest) {
       return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }
 
+    // Mark messages as read where current user is receiver
+    await Message.updateMany(
+      { order: orderId, receiver: session.user.id, read: false },
+      { $set: { read: true } }
+    );
+
     const messages = await Message.find({ order: orderId })
       .populate("sender", "name avatar role")
       .sort("createdAt")

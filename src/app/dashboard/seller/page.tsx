@@ -62,6 +62,10 @@ export default async function SellerDashboardPage() {
       );
     }, 0);
 
+  const newOrdersCount = orders.filter((o) => o.deliveryStatus === "processing").length;
+  const undeliveredCount = orders.filter((o) => o.deliveryStatus !== "delivered").length;
+  const lowStockAlerts = products.filter((p) => p.status === "active" && p.stock <= 3);
+
   return (
     <div>
       <div className="flex items-center justify-between mb-8">
@@ -73,11 +77,69 @@ export default async function SellerDashboardPage() {
         </div>
         <Link
           href="/dashboard/seller/products/new"
-          className="px-5 py-2.5 bg-green-600 text-white font-semibold rounded-xl hover:bg-green-700 transition-colors text-sm"
+          className="px-5 py-2.5 bg-[#2563EB] text-white font-bold rounded-md hover:bg-[#1D4ED8] transition-colors text-sm shadow-sm"
         >
           + New Product
         </Link>
       </div>
+
+      {/* Seller Notifications */}
+      {(newOrdersCount > 0 || undeliveredCount > 0 || lowStockAlerts.length > 0) && (
+        <div className="mb-8 space-y-3">
+          {newOrdersCount > 0 && (
+            <div className="bg-[#EFF6FF] border border-[#BFDBFE]/60 rounded-xl p-4 flex items-center justify-between shadow-[0_2px_8px_rgba(37,99,235,0.03)] animate-pulse">
+              <div className="flex items-center gap-3">
+                <div className="w-9 h-9 rounded-lg bg-[#DBEAFE] flex items-center justify-center text-[#2563EB] border border-[#BFDBFE]/40">
+                  <i className="fa-solid fa-bell text-sm" />
+                </div>
+                <div>
+                  <h4 className="text-sm font-bold text-[#1E40AF]">New Orders Received</h4>
+                  <p className="text-xs text-[#2563EB] mt-0.5">You have {newOrdersCount} new order{newOrdersCount > 1 ? "s" : ""} awaiting processing.</p>
+                </div>
+              </div>
+              <Link href="/dashboard/seller/orders" className="text-xs font-bold text-[#2563EB] bg-white border border-[#BFDBFE] hover:bg-[#EFF6FF] px-3.5 py-2 rounded-md transition-colors shadow-sm">
+                Process Orders
+              </Link>
+            </div>
+          )}
+
+          {undeliveredCount > 0 && (
+            <div className="bg-[#FFF7ED] border border-[#FFEDD5]/60 rounded-xl p-4 flex items-center justify-between shadow-[0_2px_8px_rgba(217,119,6,0.03)]">
+              <div className="flex items-center gap-3">
+                <div className="w-9 h-9 rounded-lg bg-[#FFE4E6]/10 bg-[#FFEDD5] flex items-center justify-center text-[#D97706] border border-[#FEF3C7]/40">
+                  <i className="fa-solid fa-truck-fast text-sm" />
+                </div>
+                <div>
+                  <h4 className="text-sm font-bold text-[#9A3412]">Undelivered Orders</h4>
+                  <p className="text-xs text-[#9A3412] mt-0.5">You have {undeliveredCount} order{undeliveredCount > 1 ? "s" : ""} that {undeliveredCount === 1 ? "has" : "have"} not been delivered to buyers yet.</p>
+                </div>
+              </div>
+              <Link href="/dashboard/seller/orders" className="text-xs font-bold text-[#D97706] bg-white border border-[#FFEDD5] hover:bg-[#FFFBEB] px-3.5 py-2 rounded-md transition-colors shadow-sm">
+                View Deliveries
+              </Link>
+            </div>
+          )}
+
+          {lowStockAlerts.length > 0 && (
+            <div className="bg-[#FFF5F5] border border-[#FED7D7]/60 rounded-xl p-4 shadow-[0_2px_8px_rgba(220,38,38,0.03)]">
+              <div className="flex items-center gap-3">
+                <div className="w-9 h-9 rounded-lg bg-[#FEE2E2] flex items-center justify-center text-[#DC2626] border border-[#FCA5A5]/40">
+                  <i className="fa-solid fa-triangle-exclamation text-sm" />
+                </div>
+                <div>
+                  <h4 className="text-sm font-bold text-[#9B2C2C]">Inventory Alert</h4>
+                  <p className="text-xs text-[#9B2C2C] mt-0.5">
+                    {lowStockAlerts.length} of your active product{lowStockAlerts.length > 1 ? "s are" : " is"} out of stock or running low (3 or less remaining).
+                  </p>
+                </div>
+              </div>
+              <Link href="/dashboard/seller/products" className="text-xs font-bold text-[#DC2626] bg-white border border-[#FED7D7] hover:bg-[#FFF5F5] px-3.5 py-2 rounded-md transition-colors shadow-sm ml-auto shrink-0 block sm:inline-block text-center mt-3 sm:mt-0">
+                Update Stock
+              </Link>
+            </div>
+          )}
+        </div>
+      )}
 
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
         <StatCard

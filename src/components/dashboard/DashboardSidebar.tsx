@@ -2,7 +2,6 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useState } from "react";
 
 interface NavItem {
   href: string;
@@ -17,10 +16,13 @@ interface DashboardSidebarProps {
 
 export default function DashboardSidebar({ title, navItems }: DashboardSidebarProps) {
   const pathname = usePathname();
-  const [mobileOpen, setMobileOpen] = useState(false);
 
-  const isActive = (href: string) =>
-    pathname === href || (href !== "/dashboard" && pathname.startsWith(href + "/"));
+  const isActive = (href: string) => {
+    if (href === "/dashboard/buyer" || href === "/dashboard/seller" || href === "/dashboard/admin") {
+      return pathname === href;
+    }
+    return pathname === href || pathname.startsWith(href + "/");
+  };
 
   return (
     <>
@@ -37,11 +39,11 @@ export default function DashboardSidebar({ title, navItems }: DashboardSidebarPr
                   href={item.href}
                   className={`flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-colors ${
                     active
-                      ? "bg-green-50 text-green-700"
+                      ? "bg-blue-50 text-[#2563EB]"
                       : "text-gray-600 hover:bg-gray-50 hover:text-gray-900"
                   }`}
                 >
-                  <span className={active ? "text-green-600" : "text-gray-400"}>{item.icon}</span>
+                  <span className={active ? "text-[#2563EB]" : "text-gray-400"}>{item.icon}</span>
                   {item.label}
                 </Link>
               );
@@ -50,7 +52,7 @@ export default function DashboardSidebar({ title, navItems }: DashboardSidebarPr
         </div>
       </aside>
 
-      {/* ── Mobile: hamburger button (top-right of content) ── */}
+      {/* ── Mobile Tab Bar ── */}
       <div className="md:hidden fixed bottom-0 left-0 right-0 z-50 bg-white border-t border-gray-100 shadow-lg">
         <nav className="flex items-center justify-around px-2 py-2">
           {navItems.map((item) => {
@@ -60,17 +62,17 @@ export default function DashboardSidebar({ title, navItems }: DashboardSidebarPr
                 key={item.href}
                 href={item.href}
                 className={`flex flex-col items-center gap-0.5 px-3 py-1.5 rounded-xl transition-colors min-w-0 ${
-                  active ? "text-green-600" : "text-gray-400"
+                  active ? "text-[#2563EB]" : "text-gray-400"
                 }`}
               >
-                <span className={`${active ? "text-green-600" : "text-gray-400"}`}>
+                <span className={`${active ? "text-[#2563EB]" : "text-gray-400"}`}>
                   {item.icon}
                 </span>
-                <span className={`text-[10px] font-medium truncate max-w-[60px] ${active ? "text-green-600" : "text-gray-500"}`}>
+                <span className={`text-[10px] font-medium truncate max-w-[60px] ${active ? "text-[#2563EB]" : "text-gray-500"}`}>
                   {item.label}
                 </span>
                 {active && (
-                  <span className="w-1 h-1 rounded-full bg-green-500" />
+                  <span className="w-1 h-1 rounded-full bg-[#2563EB]" />
                 )}
               </Link>
             );

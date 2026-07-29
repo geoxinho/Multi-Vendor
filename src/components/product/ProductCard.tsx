@@ -92,10 +92,15 @@ export default function ProductCard({ product, priority = false, wishlisted: ini
           />
 
           {/* Condition Badge - Golden/Amber variant for NEW for contrast */}
-          <div className="absolute top-3 left-3 z-10">
+          <div className="absolute top-3 left-3 z-10 flex flex-col gap-1.5">
             <Badge variant={product.condition === "new" ? "gold" : "neutral"}>
               {product.condition === "new" ? "New" : "Used"}
             </Badge>
+            {product.stock > 0 && product.stock <= 3 && (
+              <span className="px-2 py-0.5 rounded-md text-[10px] font-bold bg-[#FFF7ED] text-[#D97706] border border-[#FFEDD5] text-center shadow-sm">
+                Only {product.stock} left
+              </span>
+            )}
           </div>
 
           {/* Wishlist button appearing with elegant slide/fade overlay on hover */}

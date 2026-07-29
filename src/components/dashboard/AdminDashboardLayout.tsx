@@ -227,6 +227,33 @@ export default function AdminDashboardLayout({ navItems, children }: AdminDashbo
           </div>
         </div>
       )}
+      {/* ── Mobile Tab Bar ── */}
+      <div className="md:hidden fixed bottom-0 left-0 right-0 z-50 bg-white border-t border-gray-100 shadow-lg">
+        <nav className="flex items-center justify-around px-2 py-2">
+          {navItems.map((item) => {
+            const active = isActive(item.href);
+            return (
+              <Link
+                key={item.href}
+                href={item.href}
+                className={`flex flex-col items-center gap-0.5 px-3 py-1.5 rounded-xl transition-colors min-w-0 ${
+                  active ? "text-[#2563EB]" : "text-gray-400"
+                }`}
+              >
+                <span className={`${active ? "text-[#2563EB]" : "text-gray-400"}`}>
+                  {item.icon}
+                </span>
+                <span className={`text-[10px] font-medium truncate max-w-[50px] ${active ? "text-[#2563EB]" : "text-gray-500"}`}>
+                  {item.label.split(" ")[0]} {/* Show single word labels for admin on mobile */}
+                </span>
+                {active && (
+                  <span className="w-1 h-1 rounded-full bg-[#2563EB]" />
+                )}
+              </Link>
+            );
+          })}
+        </nav>
+      </div>
     </div>
   );
 }

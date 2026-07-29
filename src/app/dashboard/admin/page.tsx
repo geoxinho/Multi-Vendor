@@ -12,11 +12,15 @@ export default async function AdminDashboardPage() {
   const session = await auth();
   await connectDB();
 
-  const [userCount, productCount, orderCount, orders] = await Promise.all([
+  const [userCount, productCount, orderCount, orders, lowStockProducts] = await Promise.all([
     User.countDocuments(),
     Product.countDocuments(),
     Order.countDocuments(),
     Order.find({ paymentStatus: "paid" }).lean(),
+    Product.find({ status: "active", stock: { $lte: 3 } })
+      .populate("seller", "name email storeName")
+      .limit(10)
+      .lean(),
   ]);
 
   const totalRevenue = orders.reduce((sum, o) => sum + o.totalAmount, 0);
@@ -30,6 +34,33 @@ export default async function AdminDashboardPage() {
         <h1 className="text-2xl font-bold text-gray-900">Admin Overview</h1>
         <p className="text-gray-500 mt-1">Platform-wide statistics and management.</p>
       </div>
+
+      {/* Inventory Warnings for Admin */}
+      {lowStockProducts.length > 0 && (
+        <div className="mb-6 bg-[#FFF5F5] border border-[#FED7D7]/60 rounded-xl p-5 shadow-[0_2px_8px_rgba(220,38,38,0.02)]">
+          <div className="flex items-center gap-2 mb-3">
+            <div className="w-8 h-8 rounded-lg bg-[#FEE2E2] flex items-center justify-center text-[#DC2626] border border-[#FCA5A5]/40 text-sm">
+              <i className="fa-solid fa-triangle-exclamation" />
+            </div>
+            <h3 className="font-bold text-[#9B2C2C] text-sm">Inventory Stock Warnings</h3>
+          </div>
+          <div className="max-h-48 overflow-y-auto space-y-2 divide-y divide-[#FED7D7]/40 pr-2">
+            {lowStockProducts.map((p: any) => (
+              <div key={p._id.toString()} className="flex justify-between items-center text-xs pt-2 first:pt-0">
+                <div>
+                  <span className="font-bold text-gray-900 text-sm">{p.title}</span>
+                  <span className="text-[#6B6B6B] block mt-0.5">
+                    Seller: <span className="font-medium text-[#111111]">{p.seller?.storeName || p.seller?.name || "Unknown"}</span> ({p.seller?.email || "N/A"})
+                  </span>
+                </div>
+                <span className={`px-2.5 py-1 rounded-md font-bold text-[10px] uppercase tracking-wider ${p.stock === 0 ? "bg-[#FFF5F5] text-[#DC2626] border border-[#FED7D7]" : "bg-[#FFF7ED] text-[#D97706] border border-[#FFEDD5]"}`}>
+                  {p.stock === 0 ? "Out of Stock" : `Low Stock: ${p.stock} left`}
+                </span>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
 
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-10">
         <StatCard label="Total Users" value={userCount} color="green"

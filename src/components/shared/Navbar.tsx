@@ -437,26 +437,9 @@ export default function Navbar() {
                 </>
               )}
 
-              <button
-                onClick={() => { setDrawerOpen(false); setConfirmLogout(true); }}
-                className="flex items-center gap-3 w-full px-4 py-3 text-sm text-[#DC2626] hover:bg-[#FEF2F2] transition-colors border-t border-[#E5E5E5]"
-              >
-                <i className="fa-solid fa-right-from-bracket w-4 text-center" />
-                Sign Out
-              </button>
+              {/* Sign Out has been moved to the fixed bottom panel */}
             </div>
-          ) : (
-            <div className="border-b border-[#E5E5E5] p-4 flex flex-col gap-2">
-              <Link href="/auth/login" onClick={() => setDrawerOpen(false)}
-                className="flex items-center justify-center py-2.5 rounded-md border border-[#E5E5E5] text-[#111111] font-medium text-sm hover:bg-[#F5F5F5] transition-colors">
-                Sign In
-              </Link>
-              <Link href="/auth/register" onClick={() => setDrawerOpen(false)}
-                className="flex items-center justify-center py-2.5 rounded-md bg-[#2563EB] text-white font-semibold text-sm hover:bg-[#1D4ED8] transition-colors">
-                Get Started
-              </Link>
-            </div>
-          )}
+          ) : null}
 
           {/* Categories */}
           {categories.length > 0 && (
@@ -475,6 +458,30 @@ export default function Navbar() {
                   {cat.name}
                 </Link>
               ))}
+            </div>
+          )}
+        </div>
+
+        {/* Fixed Bottom Action Panel */}
+        <div className="p-4 border-t border-[#E5E5E5] bg-[#FAFAFA] shrink-0 mt-auto">
+          {session ? (
+            <button
+              onClick={() => { setDrawerOpen(false); setConfirmLogout(true); }}
+              className="flex items-center justify-center gap-2.5 w-full py-2.5 text-sm text-[#DC2626] bg-red-50 border border-red-200/60 rounded-md font-bold hover:bg-red-100 transition-colors shadow-sm cursor-pointer"
+            >
+              <i className="fa-solid fa-right-from-bracket" />
+              Sign Out
+            </button>
+          ) : (
+            <div className="flex flex-col gap-2">
+              <Link href="/auth/login" onClick={() => setDrawerOpen(false)}
+                className="flex items-center justify-center py-2.5 rounded-md border border-[#E5E5E5] text-[#111111] font-medium text-sm hover:bg-[#F5F5F5] transition-colors">
+                Sign In
+              </Link>
+              <Link href="/auth/register" onClick={() => setDrawerOpen(false)}
+                className="flex items-center justify-center py-2.5 rounded-md bg-[#2563EB] text-white font-semibold text-sm hover:bg-[#1D4ED8] transition-colors">
+                Get Started
+              </Link>
             </div>
           )}
         </div>

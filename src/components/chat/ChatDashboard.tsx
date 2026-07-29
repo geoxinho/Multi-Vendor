@@ -135,10 +135,12 @@ export default function ChatDashboard({ currentUserId, role }: ChatDashboardProp
   };
 
   return (
-    <div className="bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden flex h-[700px] max-h-[80vh]">
+    <div className="bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden flex h-[600px] md:h-[700px] max-h-[80vh]">
       
       {/* ─── Sidebar: Conversation List ─── */}
-      <div className="w-1/3 min-w-[280px] border-r border-gray-200 flex flex-col bg-gray-50/50">
+      <div className={`w-full md:w-1/3 min-w-[280px] border-r border-gray-200 flex flex-col bg-gray-50/50 ${
+        activeConv ? "hidden md:flex" : "flex"
+      }`}>
         <div className="p-4 border-b border-gray-200 bg-white">
           <h2 className="text-lg font-bold text-gray-900">Messages</h2>
           <p className="text-xs text-gray-500 mt-0.5">Chat about your orders</p>
@@ -147,7 +149,7 @@ export default function ChatDashboard({ currentUserId, role }: ChatDashboardProp
         <div className="flex-1 overflow-y-auto">
           {loading ? (
             <div className="flex justify-center p-8">
-              <div className="w-6 h-6 border-2 border-gray-300 border-t-teal-600 rounded-full animate-spin"></div>
+              <div className="w-6 h-6 border-2 border-gray-300 border-t-[#2563EB] rounded-full animate-spin"></div>
             </div>
           ) : conversations.length === 0 ? (
             <div className="p-8 text-center">
@@ -162,15 +164,15 @@ export default function ChatDashboard({ currentUserId, role }: ChatDashboardProp
                     key={conv.orderId}
                     onClick={() => setActiveConv(conv)}
                     className={`w-full text-left p-4 transition-colors hover:bg-white flex items-start gap-3 ${
-                      isActive ? "bg-teal-50 hover:bg-teal-50 border-l-4 border-teal-500" : "border-l-4 border-transparent"
+                      isActive ? "bg-blue-50 hover:bg-blue-50 border-l-4 border-[#2563EB]" : "border-l-4 border-transparent"
                     }`}
                   >
-                    <div className="w-10 h-10 rounded-full bg-gradient-to-br from-teal-400 to-teal-600 flex items-center justify-center text-white font-bold shrink-0">
+                    <div className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-400 to-indigo-600 flex items-center justify-center text-white font-bold shrink-0">
                       {conv.otherParty.name?.[0]?.toUpperCase()}
                     </div>
                     <div className="flex-1 min-w-0">
                       <div className="flex justify-between items-baseline mb-0.5">
-                        <p className={`text-sm truncate ${isActive ? "font-bold text-teal-900" : "font-semibold text-gray-900"}`}>
+                        <p className={`text-sm truncate ${isActive ? "font-bold text-blue-900" : "font-semibold text-gray-900"}`}>
                           {conv.otherParty.name}
                         </p>
                         <span className="text-[10px] text-gray-400 whitespace-nowrap ml-2">
@@ -185,7 +187,7 @@ export default function ChatDashboard({ currentUserId, role }: ChatDashboardProp
                           {conv.latestMessage || "No messages yet."}
                         </p>
                         {conv.unreadCount > 0 && (
-                          <span className="bg-teal-600 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full min-w-[1.25rem] text-center shrink-0 ml-2">
+                          <span className="bg-[#2563EB] text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full min-w-[1.25rem] text-center shrink-0 ml-2">
                             {conv.unreadCount}
                           </span>
                         )}
@@ -200,21 +202,39 @@ export default function ChatDashboard({ currentUserId, role }: ChatDashboardProp
       </div>
 
       {/* ─── Main: Chat Window ─── */}
-      <div className="flex-1 flex flex-col bg-white">
+      <div className={`flex-1 flex flex-col bg-white ${
+        activeConv ? "flex" : "hidden md:flex"
+      }`}>
         {activeConv ? (
           <>
             {/* Chat Header */}
             <div className="p-4 border-b border-gray-200 flex items-center justify-between bg-white shadow-sm z-10">
               <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-full bg-gradient-to-br from-teal-400 to-teal-600 flex items-center justify-center text-white font-bold shrink-0">
+                {/* Back button on mobile */}
+                <button
+                  type="button"
+                  onClick={() => {
+                    setActiveConv(null);
+                    const params = new URLSearchParams(window.location.search);
+                    params.delete("orderId");
+                    router.replace(`?${params.toString()}`, { scroll: false });
+                  }}
+                  className="md:hidden mr-1 p-1.5 rounded-lg hover:bg-gray-100 text-gray-500 hover:text-gray-900 transition-colors"
+                >
+                  <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
+                  </svg>
+                </button>
+
+                <div className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-400 to-indigo-600 flex items-center justify-center text-white font-bold shrink-0">
                   {activeConv.otherParty.name?.[0]?.toUpperCase()}
                 </div>
                 <div>
-                  <h3 className="font-bold text-gray-900">{activeConv.otherParty.name}</h3>
+                  <h3 className="font-bold text-gray-900 text-sm md:text-base">{activeConv.otherParty.name}</h3>
                   <p className="text-xs text-gray-500">Order: {activeConv.orderTitle}</p>
                 </div>
               </div>
-              <span className="bg-gray-100 text-gray-600 text-[10px] uppercase tracking-widest font-bold px-2 py-1 rounded-lg">
+              <span className="bg-gray-100 text-gray-600 text-[10px] uppercase tracking-widest font-bold px-2.5 py-1 rounded-lg">
                 Secure Chat
               </span>
             </div>
@@ -235,7 +255,7 @@ export default function ChatDashboard({ currentUserId, role }: ChatDashboardProp
 
               {loadingMessages ? (
                 <div className="flex justify-center py-8">
-                  <div className="w-6 h-6 border-2 border-gray-300 border-t-teal-600 rounded-full animate-spin"></div>
+                  <div className="w-6 h-6 border-2 border-gray-300 border-t-[#2563EB] rounded-full animate-spin"></div>
                 </div>
               ) : messages.length === 0 ? (
                 <div className="flex flex-col items-center justify-center h-40 text-gray-400">
@@ -262,11 +282,11 @@ export default function ChatDashboard({ currentUserId, role }: ChatDashboardProp
                       )}
                       <div className={`max-w-[75%] rounded-2xl px-4 py-2 text-sm shadow-sm ${
                         isMe 
-                          ? "bg-teal-600 text-white rounded-br-sm" 
+                          ? "bg-[#2563EB] text-white rounded-br-sm" 
                           : "bg-white border border-gray-100 text-gray-800 rounded-bl-sm"
                       }`}>
                         <p className="leading-relaxed">{msg.text}</p>
-                        <p className={`text-[9px] mt-1 text-right ${isMe ? "text-teal-200" : "text-gray-400"}`}>
+                        <p className={`text-[9px] mt-1 text-right ${isMe ? "text-blue-200" : "text-gray-400"}`}>
                           {new Date(msg.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                         </p>
                       </div>
@@ -284,12 +304,12 @@ export default function ChatDashboard({ currentUserId, role }: ChatDashboardProp
                 value={newMessage}
                 onChange={(e) => setNewMessage(e.target.value)}
                 placeholder="Type your message..."
-                className="flex-1 px-4 py-2.5 rounded-xl border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-teal-500 bg-gray-50 focus:bg-white transition-colors"
+                className="flex-1 px-4 py-2.5 rounded-xl border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-[#2563EB] bg-gray-50 focus:bg-white transition-colors"
               />
               <button
                 type="submit"
                 disabled={!newMessage.trim()}
-                className="px-5 py-2.5 bg-teal-600 hover:bg-teal-700 active:scale-95 text-white rounded-xl text-sm font-semibold transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-sm"
+                className="px-5 py-2.5 bg-[#2563EB] hover:bg-[#1D4ED8] active:scale-95 text-white rounded-xl text-sm font-semibold transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-sm cursor-pointer"
               >
                 Send
               </button>
