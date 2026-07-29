@@ -109,7 +109,7 @@ export default async function ProductDetailPage({ params }: Props) {
         {/* Info panel */}
         <div className="flex flex-col">
           <div className="flex items-center gap-2 mb-3">
-            <Badge variant={product.condition === "new" ? "success" : "gold"}>
+            <Badge variant={product.condition === "new" ? "success" : "neutral"}>
               {product.condition === "new" ? "New" : "Used"}
             </Badge>
             {product.category && (
@@ -133,7 +133,7 @@ export default async function ProductDetailPage({ params }: Props) {
             <span className="text-sm text-gray-400">{product.sold} sold</span>
           </div>
 
-          <div className="text-3xl font-extrabold text-green-700 mb-6">
+          <div className="text-3xl font-bold text-[#111111] mb-6">
             ₦{product.price.toLocaleString()}
           </div>
 
@@ -143,7 +143,7 @@ export default async function ProductDetailPage({ params }: Props) {
 
           <div className="flex items-center gap-3 mb-6">
             <span
-              className={`text-sm font-medium ${product.stock > 0 ? "text-green-600" : "text-red-500"}`}
+              className={`text-sm font-medium ${product.stock > 0 ? "text-[#16A34A]" : "text-[#DC2626]"}`}
             >
               {product.stock > 0 ? (
                 <>
@@ -159,13 +159,13 @@ export default async function ProductDetailPage({ params }: Props) {
           <BuyNowButton product={product} />
 
           {/* Seller info */}
-          <div className="mt-8 p-4 bg-gray-50 rounded-2xl border border-gray-100">
-            <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">
+          <div className="mt-8 p-4 bg-[#FAFAFA] rounded-md border border-[#E5E5E5]">
+            <p className="text-xs font-semibold text-[#9B9B9B] uppercase tracking-wider mb-2">
               Sold By
             </p>
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-full bg-green-100 flex items-center justify-center shrink-0">
-                <span className="text-green-700 font-bold">
+              <div className="w-10 h-10 rounded-full bg-[#EFF6FF] flex items-center justify-center shrink-0">
+                <span className="text-[#2563EB] font-bold">
                   {product.seller?.name?.[0]?.toUpperCase()}
                 </span>
               </div>

@@ -54,7 +54,6 @@ function LoginForm() {
         setError("Invalid email or password. Please try again.");
       }
     } else {
-      // Redirect to callbackUrl if present, otherwise role-based home
       if (callbackUrl) {
         router.push(callbackUrl);
         router.refresh();
@@ -69,64 +68,60 @@ function LoginForm() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-green-50/70 via-white to-amber-50/50 flex items-center justify-center px-4 py-12 font-sans">
-      <div className="w-full max-w-md">
-        {/* Premium card design with soft gold/green shadow */}
-        <div className="bg-white/90 backdrop-blur-md rounded-3xl shadow-xl shadow-green-950/5 p-8 border border-green-100/50 hover:shadow-2xl hover:shadow-green-950/10 transition-all duration-300">
-          {/* Logo */}
-          <div className="text-center mb-8">
-            <Link href="/" className="inline-flex items-center gap-2 group">
-              <div className="w-10 h-10 rounded-xl bg-green-600 group-hover:bg-green-700 flex items-center justify-center transition-colors shadow-md shadow-green-600/20">
-                <span className="text-white font-black text-lg">M</span>
-              </div>
-              <span className="font-bold text-2xl text-gray-900">
-                Market<span className="text-green-600 transition-colors group-hover:text-green-700">Hub</span>
-              </span>
-            </Link>
-            <p className="text-gray-500 mt-3 text-sm">Welcome back! Sign in to your account.</p>
-          </div>
+    <div className="min-h-screen bg-white flex items-center justify-center px-4 py-12">
+      <div className="w-full max-w-sm">
+        {/* Logo */}
+        <div className="text-center mb-8">
+          <Link href="/" className="inline-flex items-center gap-2">
+            <div className="w-8 h-8 rounded-md bg-[#2563EB] flex items-center justify-center">
+              <span className="text-white font-black text-sm">M</span>
+            </div>
+            <span className="font-bold text-xl text-[#111111]">
+              Market<span className="text-[#2563EB]">Hub</span>
+            </span>
+          </Link>
+          <h1 className="text-xl font-bold text-[#111111] mt-6 mb-1">Sign in</h1>
+          <p className="text-sm text-[#6B6B6B]">Welcome back.</p>
+        </div>
 
-          <form onSubmit={handleSubmit} className="space-y-5">
+        <div className="border border-[#E5E5E5] rounded-lg p-6">
+          <form onSubmit={handleSubmit} className="space-y-4">
             <div>
-              <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1.5 ml-1">Email Address</label>
-              <div className="relative group">
-                <span className="absolute inset-y-0 left-0 pl-3.5 flex items-center text-gray-400 group-focus-within:text-green-600 transition-colors text-xs">
-                  <i className="fa-solid fa-envelope"></i>
-                </span>
+              <label className="block text-xs font-medium text-[#111111] mb-1.5">Email</label>
+              <div className="relative">
+                <i className="fa-solid fa-envelope absolute left-3 top-1/2 -translate-y-1/2 text-[#9B9B9B] text-xs" />
                 <input
                   type="email"
                   required
                   value={form.email}
                   onChange={(e) => setForm((f) => ({ ...f, email: e.target.value }))}
                   placeholder="you@example.com"
-                  className="w-full pl-10 pr-4 py-3 rounded-xl border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent bg-gray-50/50 focus:bg-white transition-all shadow-inner"
+                  className="w-full pl-9 pr-4 py-2.5 rounded-md border border-[#E5E5E5] text-sm text-[#111111] placeholder:text-[#9B9B9B] focus:outline-none focus:border-[#2563EB] transition-colors bg-white"
                 />
               </div>
             </div>
 
             <div>
-              <div className="flex items-center justify-between mb-1.5 ml-1 pr-1">
-                <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider">Password</label>
-                <Link href="/auth/forgot-password" className="text-xs font-bold text-green-600 hover:underline">
-                  Forgot?
+              <div className="flex items-center justify-between mb-1.5">
+                <label className="text-xs font-medium text-[#111111]">Password</label>
+                <Link href="/auth/forgot-password" className="text-xs text-[#2563EB] hover:underline">
+                  Forgot password?
                 </Link>
               </div>
-              <div className="relative group">
-                <span className="absolute inset-y-0 left-0 pl-3.5 flex items-center text-gray-400 group-focus-within:text-green-600 transition-colors text-xs">
-                  <i className="fa-solid fa-key"></i>
-                </span>
+              <div className="relative">
+                <i className="fa-solid fa-key absolute left-3 top-1/2 -translate-y-1/2 text-[#9B9B9B] text-xs" />
                 <input
                   type={showPassword ? "text" : "password"}
                   required
                   value={form.password}
                   onChange={(e) => setForm((f) => ({ ...f, password: e.target.value }))}
                   placeholder="••••••••"
-                  className="w-full pl-10 pr-10 py-3 rounded-xl border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent bg-gray-50/50 focus:bg-white transition-all shadow-inner"
+                  className="w-full pl-9 pr-10 py-2.5 rounded-md border border-[#E5E5E5] text-sm text-[#111111] focus:outline-none focus:border-[#2563EB] transition-colors bg-white"
                 />
-                <button 
-                  type="button" 
+                <button
+                  type="button"
                   onClick={() => setShowPassword(!showPassword)}
-                  className="absolute inset-y-0 right-0 pr-3.5 flex items-center text-gray-400 hover:text-green-600 transition-colors text-sm"
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-[#9B9B9B] hover:text-[#6B6B6B] text-xs"
                   tabIndex={-1}
                 >
                   <i className={`fa-solid ${showPassword ? "fa-eye-slash" : "fa-eye"}`} />
@@ -135,10 +130,8 @@ function LoginForm() {
             </div>
 
             {error && (
-              <div className="flex items-start gap-2.5 p-3.5 bg-red-50 border border-red-100 rounded-xl text-xs text-red-600 font-medium">
-                <svg className="w-4 h-4 shrink-0 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
-                  <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
-                </svg>
+              <div className="flex items-start gap-2 p-3 bg-[#FEF2F2] border border-[#FCA5A5] rounded-md text-xs text-[#DC2626]">
+                <i className="fa-solid fa-circle-exclamation mt-0.5 shrink-0" />
                 <span>{error}</span>
               </div>
             )}
@@ -146,19 +139,19 @@ function LoginForm() {
             <button
               type="submit"
               disabled={loading}
-              className="w-full py-3.5 bg-green-600 hover:bg-green-700 text-white font-bold rounded-xl transition-all duration-200 disabled:opacity-60 disabled:cursor-not-allowed shadow-md shadow-green-600/10 active:scale-[0.99] cursor-pointer"
+              className="w-full py-2.5 bg-[#2563EB] hover:bg-[#1D4ED8] text-white font-semibold rounded-md transition-colors text-sm disabled:opacity-60 disabled:cursor-not-allowed mt-2"
             >
-              {loading ? "Signing in..." : "Sign In"}
+              {loading ? "Signing in…" : "Sign In"}
             </button>
           </form>
-
-          <p className="text-center text-sm text-gray-500 mt-8">
-            Don&apos;t have an account?{" "}
-            <Link href="/auth/register" className="text-green-600 font-bold hover:underline">
-              Create one
-            </Link>
-          </p>
         </div>
+
+        <p className="text-center text-sm text-[#6B6B6B] mt-6">
+          Don&apos;t have an account?{" "}
+          <Link href="/auth/register" className="text-[#2563EB] font-medium hover:underline">
+            Create one
+          </Link>
+        </p>
       </div>
     </div>
   );
@@ -167,8 +160,8 @@ function LoginForm() {
 export default function LoginPage() {
   return (
     <Suspense fallback={
-      <div className="min-h-screen bg-gradient-to-br from-green-50 to-yellow-50 flex items-center justify-center">
-        <div className="w-12 h-12 border-4 border-green-200 border-t-green-600 rounded-full animate-spin"></div>
+      <div className="min-h-screen bg-white flex items-center justify-center">
+        <div className="w-8 h-8 border-2 border-[#E5E5E5] border-t-[#2563EB] rounded-full animate-spin" />
       </div>
     }>
       <LoginForm />

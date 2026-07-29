@@ -16,12 +16,12 @@ export default function ImageGallery({ images, title }: ImageGalleryProps) {
   return (
     <div className="space-y-3">
       {/* Main image */}
-      <div className="relative aspect-square rounded-2xl overflow-hidden bg-gray-50 border border-gray-100 group">
+      <div className="relative aspect-square rounded-md overflow-hidden bg-[#FAFAFA] border border-[#E5E5E5] group">
         <Image
           src={all[active]}
           alt={title}
           fill
-          className="object-contain transition-opacity duration-200"
+          className="object-cover transition-opacity duration-200"
           priority
           sizes="(max-width: 768px) 100vw, 50vw"
         />
@@ -30,17 +30,17 @@ export default function ImageGallery({ images, title }: ImageGalleryProps) {
           <>
             <button
               onClick={() => setActive((p) => (p - 1 + all.length) % all.length)}
-              className="absolute left-2 top-1/2 -translate-y-1/2 w-8 h-8 bg-white/80 rounded-full flex items-center justify-center shadow hover:bg-white transition-colors opacity-0 group-hover:opacity-100"
+              className="absolute left-2 top-1/2 -translate-y-1/2 w-8 h-8 bg-white/80 rounded-full flex items-center justify-center border border-[#E5E5E5] hover:bg-white transition-colors opacity-0 group-hover:opacity-100"
             >
-              <svg className="w-4 h-4 text-gray-700" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <svg className="w-4 h-4 text-[#111111]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
               </svg>
             </button>
             <button
               onClick={() => setActive((p) => (p + 1) % all.length)}
-              className="absolute right-2 top-1/2 -translate-y-1/2 w-8 h-8 bg-white/80 rounded-full flex items-center justify-center shadow hover:bg-white transition-colors opacity-0 group-hover:opacity-100"
+              className="absolute right-2 top-1/2 -translate-y-1/2 w-8 h-8 bg-white/80 rounded-full flex items-center justify-center border border-[#E5E5E5] hover:bg-white transition-colors opacity-0 group-hover:opacity-100"
             >
-              <svg className="w-4 h-4 text-gray-700" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <svg className="w-4 h-4 text-[#111111]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
               </svg>
             </button>
@@ -48,7 +48,7 @@ export default function ImageGallery({ images, title }: ImageGalleryProps) {
         )}
         {/* Image counter */}
         {all.length > 1 && (
-          <span className="absolute bottom-2 right-2 text-xs bg-black/50 text-white px-2 py-0.5 rounded-full">
+          <span className="absolute bottom-2 right-2 text-xs bg-black/60 text-white px-2 py-0.5 rounded">
             {active + 1} / {all.length}
           </span>
         )}
@@ -61,10 +61,10 @@ export default function ImageGallery({ images, title }: ImageGalleryProps) {
             <button
               key={i}
               onClick={() => setActive(i)}
-              className={`relative shrink-0 w-16 h-16 rounded-xl overflow-hidden border-2 transition-all ${
+              className={`relative shrink-0 w-16 h-16 rounded-md overflow-hidden border transition-all ${
                 i === active
-                  ? "border-green-500 shadow-md scale-105"
-                  : "border-gray-100 hover:border-gray-300"
+                  ? "border-[#2563EB]"
+                  : "border-[#E5E5E5] hover:border-[#D0D0D0]"
               }`}
             >
               <Image
@@ -81,3 +81,4 @@ export default function ImageGallery({ images, title }: ImageGalleryProps) {
     </div>
   );
 }
+

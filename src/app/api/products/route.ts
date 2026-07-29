@@ -45,12 +45,14 @@ export async function GET(req: NextRequest) {
       .limit(limit)
       .lean();
 
-    return NextResponse.json({
-      products,
-      total,
-      page,
-      pages: Math.ceil(total / limit),
-    });
+    return NextResponse.json(
+      { products, total, page, pages: Math.ceil(total / limit) },
+      {
+        headers: {
+          "Cache-Control": "public, s-maxage=60, stale-while-revalidate=300",
+        },
+      }
+    );
   } catch (err) {
     console.error("[PRODUCTS GET]", err);
     return NextResponse.json({ error: "Internal server error" }, { status: 500 });

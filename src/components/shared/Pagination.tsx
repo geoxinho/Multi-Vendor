@@ -19,26 +19,26 @@ export default function Pagination({ page, pages, onPageChange }: PaginationProp
   });
 
   return (
-    <div className="flex items-center justify-center gap-1 mt-8">
+    <div className="flex items-center justify-center gap-1 mt-10">
       <button
         onClick={() => onPageChange(page - 1)}
         disabled={page === 1}
-        className="px-3 py-1.5 rounded-lg text-sm font-medium text-gray-600 hover:bg-gray-100 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+        className="px-3 py-1.5 rounded-md text-sm font-medium text-[#6B6B6B] hover:bg-[#F5F5F5] disabled:opacity-40 disabled:cursor-not-allowed transition-colors border border-[#E5E5E5]"
       >
         ← Prev
       </button>
 
       {rendered.map((n, i) =>
         n === "..." ? (
-          <span key={`ellipsis-${i}`} className="px-2 text-gray-400">…</span>
+          <span key={`ellipsis-${i}`} className="px-2 text-[#9B9B9B]">…</span>
         ) : (
           <button
             key={n}
             onClick={() => onPageChange(n)}
-            className={`w-9 h-9 rounded-lg text-sm font-medium transition-colors ${
+            className={`w-9 h-9 rounded-md text-sm font-medium transition-colors ${
               n === page
-                ? "bg-green-600 text-white"
-                : "text-gray-600 hover:bg-gray-100"
+                ? "bg-[#2563EB] text-white"
+                : "text-[#6B6B6B] hover:bg-[#F5F5F5] border border-[#E5E5E5]"
             }`}
           >
             {n}
@@ -49,7 +49,7 @@ export default function Pagination({ page, pages, onPageChange }: PaginationProp
       <button
         onClick={() => onPageChange(page + 1)}
         disabled={page === pages}
-        className="px-3 py-1.5 rounded-lg text-sm font-medium text-gray-600 hover:bg-gray-100 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+        className="px-3 py-1.5 rounded-md text-sm font-medium text-[#6B6B6B] hover:bg-[#F5F5F5] disabled:opacity-40 disabled:cursor-not-allowed transition-colors border border-[#E5E5E5]"
       >
         Next →
       </button>

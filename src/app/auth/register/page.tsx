@@ -11,35 +11,18 @@ function RegisterForm() {
   const defaultRole = (searchParams.get("role") as "buyer" | "seller") ?? "buyer";
 
   const [step, setStep] = useState(1);
-  
   const [form, setForm] = useState({
-    name: "",
-    email: "",
-    password: "",
-    confirmPassword: "",
-    phone: "",
-    hearAboutUs: "",
-    school: "",
-    nin: "",
-    sellerCategory: "",
-    role: defaultRole,
-    storeName: "",
-    storeDescription: "",
-    bankName: "",
-    accountNumber: "",
-    accountName: "",
+    name: "", email: "", password: "", confirmPassword: "", phone: "",
+    hearAboutUs: "", school: "", nin: "", sellerCategory: "",
+    role: defaultRole, storeName: "", storeDescription: "",
+    bankName: "", accountNumber: "", accountName: "",
   });
-  
   const [categories, setCategories] = useState<{ _id: string; name: string }[]>([]);
 
   useEffect(() => {
     fetch("/api/categories")
       .then((res) => res.json())
-      .then((data) => {
-        if (Array.isArray(data)) {
-          setCategories(data);
-        }
-      })
+      .then((data) => { if (Array.isArray(data)) setCategories(data); })
       .catch((err) => console.error("Failed to load categories:", err));
   }, []);
 
@@ -53,7 +36,6 @@ function RegisterForm() {
 
   const handleNext = () => {
     setError("");
-    // Basic validation before moving to next step
     if (step === 2) {
       if (!form.name || !form.email || !form.password || !form.confirmPassword || !form.phone) {
         setError("Please fill out all fields.");
@@ -67,21 +49,13 @@ function RegisterForm() {
     setStep((prev) => prev + 1);
   };
 
-  const handleBack = () => {
-    setError("");
-    setStep((prev) => prev - 1);
-  };
+  const handleBack = () => { setError(""); setStep((prev) => prev - 1); };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
-
     const parsed = registerSchema.safeParse(form);
-    if (!parsed.success) {
-      setError(parsed.error.issues[0].message);
-      return;
-    }
-
+    if (!parsed.success) { setError(parsed.error.issues[0].message); return; }
     setLoading(true);
     try {
       const res = await fetch("/api/auth/register", {
@@ -91,13 +65,8 @@ function RegisterForm() {
       });
       const data = await res.json();
       if (!res.ok) { setError(data.error); setLoading(false); return; }
-
-      if (data.devToken) {
-        setDevToken(data.devToken);
-      }
-      if (data.autoVerified) {
-        setIsAutoVerified(true);
-      }
+      if (data.devToken) setDevToken(data.devToken);
+      if (data.autoVerified) setIsAutoVerified(true);
       setIsRegistered(true);
       setLoading(false);
     } catch {
@@ -108,49 +77,36 @@ function RegisterForm() {
 
   if (isRegistered) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-green-50 to-yellow-50 flex items-center justify-center px-4 py-12">
-        <div className="w-full max-w-md">
-          <div className="bg-white rounded-3xl shadow-xl p-8 border border-green-100 text-center">
-            <div className="w-16 h-16 bg-green-100 text-green-600 rounded-full flex items-center justify-center mx-auto mb-6 text-3xl">
-              <i className={isAutoVerified ? "fa-solid fa-check" : "fa-solid fa-envelope"} />
+      <div className="min-h-screen bg-white flex items-center justify-center px-4 py-12">
+        <div className="w-full max-w-sm text-center">
+          <div className="border border-[#E5E5E5] rounded-lg p-8">
+            <div className="w-14 h-14 bg-[#F0FDF4] rounded-full flex items-center justify-center mx-auto mb-5">
+              <i className={`${isAutoVerified ? "fa-solid fa-check" : "fa-solid fa-envelope"} text-[#16A34A] text-xl`} />
             </div>
-            <h2 className="text-2xl font-bold text-gray-900 mb-2">
-              {isAutoVerified ? "Account Created!" : "Verify your Email"}
+            <h2 className="text-xl font-bold text-[#111111] mb-2">
+              {isAutoVerified ? "Account Created!" : "Check your email"}
             </h2>
-            <p className="text-sm text-gray-500 mb-6 leading-relaxed">
+            <p className="text-sm text-[#6B6B6B] mb-6 leading-relaxed">
               {isAutoVerified ? (
-                <>Your account <strong className="text-gray-900">{form.email}</strong> is ready to use.</>
+                <>Your account <strong className="text-[#111111]">{form.email}</strong> is ready to use.</>
               ) : (
-                <>We've sent a verification link to <strong className="text-gray-900">{form.email}</strong>. Please check your email to activate your account.</>
+                <>We&apos;ve sent a link to <strong className="text-[#111111]">{form.email}</strong>. Please verify to activate your account.</>
               )}
             </p>
-            {!isAutoVerified && (
-              <div className="bg-green-50/50 border border-green-100 rounded-2xl p-4 mb-6 text-xs text-green-800 text-left">
-                <p className="font-bold mb-1"><i className="fa-solid fa-lightbulb" /> What&apos;s next?</p>
-                <ul className="list-disc pl-4 space-y-1">
-                  <li>Check your spam/junk folder if you don't see it</li>
-                  <li>Enter the 6-digit code on the verification page</li>
-                </ul>
-              </div>
-            )}
             {devToken && (
-              <div className="bg-amber-50 border border-amber-200 rounded-2xl p-4 mb-6 text-sm text-amber-900 text-center shadow-sm">
-                <p className="font-bold mb-2"><i className="fa-solid fa-code" /> Development Mode</p>
-                <p>Your mock verification code is: <strong>{devToken}</strong></p>
+              <div className="bg-[#FFFBEB] border border-[#FDE68A] rounded-md p-4 mb-5 text-sm text-[#92400E] text-center">
+                <p className="font-semibold mb-1">Dev Mode — Verification code:</p>
+                <p className="font-mono font-bold text-lg">{devToken}</p>
               </div>
             )}
             {isAutoVerified ? (
-              <Link
-                href="/auth/login"
-                className="inline-block w-full py-3 bg-green-600 hover:bg-green-700 text-white font-semibold rounded-xl transition-colors shadow-sm"
-              >
-                Proceed to Sign In
+              <Link href="/auth/login"
+                className="block w-full py-2.5 bg-[#2563EB] hover:bg-[#1D4ED8] text-white font-semibold rounded-md transition-colors text-sm">
+                Sign In
               </Link>
             ) : (
-              <Link
-                href={`/auth/verify-email?email=${encodeURIComponent(form.email)}`}
-                className="inline-block w-full py-3 bg-green-600 hover:bg-green-700 text-white font-semibold rounded-xl transition-colors shadow-sm"
-              >
+              <Link href={`/auth/verify-email?email=${encodeURIComponent(form.email)}`}
+                className="block w-full py-2.5 bg-[#2563EB] hover:bg-[#1D4ED8] text-white font-semibold rounded-md transition-colors text-sm">
                 Enter Verification Code
               </Link>
             )}
@@ -160,281 +116,204 @@ function RegisterForm() {
     );
   }
 
+  const inputClass = "w-full pl-9 pr-4 py-2.5 rounded-md border border-[#E5E5E5] text-sm text-[#111111] placeholder:text-[#9B9B9B] focus:outline-none focus:border-[#2563EB] transition-colors bg-white";
+  const inputClassBare = "w-full px-4 py-2.5 rounded-md border border-[#E5E5E5] text-sm text-[#111111] placeholder:text-[#9B9B9B] focus:outline-none focus:border-[#2563EB] transition-colors bg-white";
+  const labelClass = "block text-xs font-medium text-[#111111] mb-1.5";
+
   return (
-    <div className="min-h-screen bg-gradient-to-br from-green-50/70 via-white to-amber-50/50 flex items-center justify-center px-4 py-12 font-sans">
-      <div className="w-full max-w-md">
-        {/* Premium glassmorphism card */}
-        <div className="bg-white/90 backdrop-blur-md rounded-3xl shadow-xl shadow-green-950/5 p-8 border border-green-100/50 transition-all duration-300">
-          
-          {/* Header */}
-          <div className="text-center mb-6">
-            <Link href="/" className="inline-flex items-center gap-2 group">
-              <div className="w-10 h-10 rounded-xl bg-green-600 group-hover:bg-green-700 flex items-center justify-center transition-colors shadow-md shadow-green-600/20">
-                <span className="text-white font-black text-lg">M</span>
-              </div>
-              <span className="font-bold text-2xl text-gray-900">Market<span className="text-green-600">Hub</span></span>
-            </Link>
-            <p className="text-gray-500 mt-3 text-sm">Create your account and start today.</p>
-          </div>
+    <div className="min-h-screen bg-white flex items-center justify-center px-4 py-12">
+      <div className="w-full max-w-sm">
+        {/* Logo */}
+        <div className="text-center mb-8">
+          <Link href="/" className="inline-flex items-center gap-2">
+            <div className="w-8 h-8 rounded-md bg-[#2563EB] flex items-center justify-center">
+              <span className="text-white font-black text-sm">M</span>
+            </div>
+            <span className="font-bold text-xl text-[#111111]">
+              Market<span className="text-[#2563EB]">Hub</span>
+            </span>
+          </Link>
+          <h1 className="text-xl font-bold text-[#111111] mt-6 mb-1">Create account</h1>
+          <p className="text-sm text-[#6B6B6B]">Step {step} of 3</p>
+        </div>
 
-          {/* Progress Indicator */}
-          <div className="flex items-center justify-center gap-2 mb-8">
-            {[1, 2, 3].map((s) => (
-              <div key={s} className="flex items-center">
-                <div className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold transition-all ${
-                  step === s ? "bg-green-600 text-white shadow-md shadow-green-600/30 scale-110" :
-                  step > s ? "bg-green-200 text-green-700" : "bg-gray-100 text-gray-400"
-                }`}>
-                  {step > s ? <i className="fa-solid fa-check" /> : s}
-                </div>
-                {s < 3 && (
-                  <div className={`w-10 h-1 transition-all mx-1 rounded-full ${
-                    step > s ? "bg-green-200" : "bg-gray-100"
-                  }`} />
-                )}
+        {/* Step progress */}
+        <div className="flex items-center justify-center gap-2 mb-6">
+          {[1, 2, 3].map((s) => (
+            <div key={s} className="flex items-center">
+              <div className={`w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold transition-all ${
+                step === s ? "bg-[#2563EB] text-white" :
+                step > s ? "bg-[#EFF6FF] text-[#2563EB]" : "bg-[#F5F5F5] text-[#9B9B9B]"
+              }`}>
+                {step > s ? <i className="fa-solid fa-check text-[10px]" /> : s}
               </div>
-            ))}
-          </div>
+              {s < 3 && <div className={`w-8 h-px mx-1 ${step > s ? "bg-[#2563EB]" : "bg-[#E5E5E5]"}`} />}
+            </div>
+          ))}
+        </div>
 
+        <div className="border border-[#E5E5E5] rounded-lg p-6">
           {error && (
-            <div className="flex items-start gap-2.5 p-3.5 mb-6 bg-red-50 border border-red-100 rounded-xl text-xs text-red-600 font-medium">
-              <svg className="w-4 h-4 shrink-0 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
-                <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
-              </svg>
+            <div className="flex items-start gap-2 p-3 bg-[#FEF2F2] border border-[#FCA5A5] rounded-md text-xs text-[#DC2626] mb-4">
+              <i className="fa-solid fa-circle-exclamation mt-0.5 shrink-0" />
               <span>{error}</span>
             </div>
           )}
 
           <form onSubmit={step === 3 ? handleSubmit : (e) => { e.preventDefault(); handleNext(); }} className="space-y-4">
-            
-            {/* Step 1: Role Selection */}
+
+            {/* Step 1: Role */}
             {step === 1 && (
-              <div className="space-y-6">
-                <h3 className="text-lg font-bold text-gray-900 text-center mb-2">How do you want to use MarketHub?</h3>
-                <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-4">
+                <p className="text-sm font-semibold text-[#111111] text-center">How will you use MarketHub?</p>
+                <div className="grid grid-cols-2 gap-3">
                   {(["buyer", "seller"] as const).map((r) => (
-                    <button
-                      key={r}
-                      type="button"
-                      onClick={() => setForm((f) => ({ ...f, role: r }))}
-                      className={`p-4 rounded-2xl border-2 text-center transition-all cursor-pointer ${
-                        form.role === r 
-                          ? "border-green-600 bg-green-50 shadow-md shadow-green-600/10" 
-                          : "border-gray-100 hover:border-gray-200 bg-white"
-                      }`}
-                    >
-                      <div className={`w-12 h-12 mx-auto rounded-full flex items-center justify-center text-xl mb-3 transition-colors ${
-                        form.role === r ? "bg-green-600 text-white" : "bg-gray-50 text-gray-400"
+                    <button key={r} type="button" onClick={() => setForm((f) => ({ ...f, role: r }))}
+                      className={`p-4 rounded-md border-2 text-center transition-all ${
+                        form.role === r
+                          ? "border-[#2563EB] bg-[#EFF6FF]"
+                          : "border-[#E5E5E5] hover:border-[#D0D0D0] bg-white"
+                      }`}>
+                      <div className={`w-10 h-10 mx-auto rounded-full flex items-center justify-center text-lg mb-2 ${
+                        form.role === r ? "bg-[#2563EB] text-white" : "bg-[#F5F5F5] text-[#9B9B9B]"
                       }`}>
                         <i className={`fa-solid ${r === "buyer" ? "fa-cart-shopping" : "fa-store"}`} />
                       </div>
-                      <p className={`font-bold capitalize ${form.role === r ? "text-green-800" : "text-gray-600"}`}>
-                        {r}
-                      </p>
+                      <p className={`text-sm font-semibold capitalize ${form.role === r ? "text-[#2563EB]" : "text-[#111111]"}`}>{r}</p>
                     </button>
                   ))}
                 </div>
               </div>
             )}
 
-            {/* Step 2: Basic Info */}
+            {/* Step 2: Basic info */}
             {step === 2 && (
-              <div className="space-y-4 animate-in fade-in slide-in-from-right-4 duration-300">
+              <div className="space-y-4">
                 <div>
-                  <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1.5 ml-1">Full Name <span className="text-red-500">*</span></label>
-                  <div className="relative group">
-                    <span className="absolute inset-y-0 left-0 pl-3.5 flex items-center text-gray-400 group-focus-within:text-green-600 transition-colors text-sm">
-                      <i className="fa-solid fa-user" />
-                    </span>
+                  <label className={labelClass}>Full Name <span className="text-[#DC2626]">*</span></label>
+                  <div className="relative">
+                    <i className="fa-solid fa-user absolute left-3 top-1/2 -translate-y-1/2 text-[#9B9B9B] text-xs" />
                     <input type="text" required value={form.name}
                       onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))}
-                      placeholder="John Doe"
-                      className="w-full pl-10 pr-4 py-3 rounded-xl border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent bg-gray-50/50 focus:bg-white transition-all shadow-inner" />
+                      placeholder="John Doe" className={inputClass} />
                   </div>
                 </div>
-
                 <div>
-                  <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1.5 ml-1">Email Address <span className="text-red-500">*</span></label>
-                  <div className="relative group">
-                    <span className="absolute inset-y-0 left-0 pl-3.5 flex items-center text-gray-400 group-focus-within:text-green-600 transition-colors text-sm">
-                      <i className="fa-solid fa-envelope" />
-                    </span>
+                  <label className={labelClass}>Email Address <span className="text-[#DC2626]">*</span></label>
+                  <div className="relative">
+                    <i className="fa-solid fa-envelope absolute left-3 top-1/2 -translate-y-1/2 text-[#9B9B9B] text-xs" />
                     <input type="email" required value={form.email}
                       onChange={(e) => setForm((f) => ({ ...f, email: e.target.value }))}
-                      placeholder="you@example.com"
-                      className="w-full pl-10 pr-4 py-3 rounded-xl border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent bg-gray-50/50 focus:bg-white transition-all shadow-inner" />
+                      placeholder="you@example.com" className={inputClass} />
                   </div>
                 </div>
-
                 <div>
-                  <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1.5 ml-1">Password <span className="text-red-500">*</span></label>
-                  <div className="relative group">
-                    <span className="absolute inset-y-0 left-0 pl-3.5 flex items-center text-gray-400 group-focus-within:text-green-600 transition-colors text-sm">
-                      <i className="fa-solid fa-key" />
-                    </span>
+                  <label className={labelClass}>Password <span className="text-[#DC2626]">*</span></label>
+                  <div className="relative">
+                    <i className="fa-solid fa-key absolute left-3 top-1/2 -translate-y-1/2 text-[#9B9B9B] text-xs" />
                     <input type={showPassword ? "text" : "password"} required value={form.password}
                       onChange={(e) => setForm((f) => ({ ...f, password: e.target.value }))}
                       placeholder="Min. 6 characters"
-                      className="w-full pl-10 pr-10 py-3 rounded-xl border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent bg-gray-50/50 focus:bg-white transition-all shadow-inner" />
-                    <button 
-                      type="button" 
-                      onClick={() => setShowPassword(!showPassword)}
-                      className="absolute inset-y-0 right-0 pr-3.5 flex items-center text-gray-400 hover:text-green-600 transition-colors text-sm"
-                      tabIndex={-1}
-                    >
+                      className="w-full pl-9 pr-10 py-2.5 rounded-md border border-[#E5E5E5] text-sm text-[#111111] placeholder:text-[#9B9B9B] focus:outline-none focus:border-[#2563EB] transition-colors bg-white" />
+                    <button type="button" onClick={() => setShowPassword(!showPassword)}
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-[#9B9B9B] hover:text-[#6B6B6B] text-xs" tabIndex={-1}>
                       <i className={`fa-solid ${showPassword ? "fa-eye-slash" : "fa-eye"}`} />
                     </button>
                   </div>
                 </div>
-
                 <div>
-                  <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1.5 ml-1">Confirm Password <span className="text-red-500">*</span></label>
-                  <div className="relative group">
-                    <span className="absolute inset-y-0 left-0 pl-3.5 flex items-center text-gray-400 group-focus-within:text-green-600 transition-colors text-sm">
-                      <i className="fa-solid fa-check-double" />
-                    </span>
+                  <label className={labelClass}>Confirm Password <span className="text-[#DC2626]">*</span></label>
+                  <div className="relative">
+                    <i className="fa-solid fa-check-double absolute left-3 top-1/2 -translate-y-1/2 text-[#9B9B9B] text-xs" />
                     <input type={showConfirmPassword ? "text" : "password"} required value={form.confirmPassword}
                       onChange={(e) => setForm((f) => ({ ...f, confirmPassword: e.target.value }))}
-                      placeholder="Repeat your password"
-                      className="w-full pl-10 pr-10 py-3 rounded-xl border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent bg-gray-50/50 focus:bg-white transition-all shadow-inner" />
-                    <button 
-                      type="button" 
-                      onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                      className="absolute inset-y-0 right-0 pr-3.5 flex items-center text-gray-400 hover:text-green-600 transition-colors text-sm"
-                      tabIndex={-1}
-                    >
+                      placeholder="Repeat password"
+                      className="w-full pl-9 pr-10 py-2.5 rounded-md border border-[#E5E5E5] text-sm text-[#111111] placeholder:text-[#9B9B9B] focus:outline-none focus:border-[#2563EB] transition-colors bg-white" />
+                    <button type="button" onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-[#9B9B9B] hover:text-[#6B6B6B] text-xs" tabIndex={-1}>
                       <i className={`fa-solid ${showConfirmPassword ? "fa-eye-slash" : "fa-eye"}`} />
                     </button>
                   </div>
                 </div>
-
                 <div>
-                  <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1.5 ml-1">Mobile Phone <span className="text-red-500">*</span></label>
-                  <div className="relative group">
-                    <span className="absolute inset-y-0 left-0 pl-3.5 flex items-center text-gray-400 group-focus-within:text-green-600 transition-colors text-sm">
-                      <i className="fa-solid fa-phone" />
-                    </span>
-                    <input
-                      type="tel"
-                      required
-                      value={form.phone}
+                  <label className={labelClass}>Mobile Phone <span className="text-[#DC2626]">*</span></label>
+                  <div className="relative">
+                    <i className="fa-solid fa-phone absolute left-3 top-1/2 -translate-y-1/2 text-[#9B9B9B] text-xs" />
+                    <input type="tel" required value={form.phone}
                       onChange={(e) => setForm((f) => ({ ...f, phone: e.target.value.replace(/[^\d+]/g, "") }))}
-                      placeholder="e.g. 08012345678"
-                      className="w-full pl-10 pr-4 py-3 rounded-xl border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent bg-gray-50/50 focus:bg-white transition-all shadow-inner"
-                    />
+                      placeholder="08012345678" className={inputClass} />
                   </div>
                 </div>
               </div>
             )}
 
-            {/* Step 3: Specific Info */}
+            {/* Step 3: Role-specific */}
             {step === 3 && (
-              <div className="space-y-4 animate-in fade-in slide-in-from-right-4 duration-300">
-                
+              <div className="space-y-4">
                 {form.role === "buyer" ? (
                   <>
                     <div>
-                      <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1.5 ml-1">Select your School <span className="text-red-500">*</span></label>
-                      <div className="relative group">
-                        <span className="absolute inset-y-0 left-0 pl-3.5 flex items-center text-gray-400 group-focus-within:text-green-600 transition-colors text-sm pointer-events-none">
-                          <i className="fa-solid fa-graduation-cap" />
-                        </span>
-                        <select
-                          required
-                          value={form.school}
-                          onChange={(e) => setForm((f) => ({ ...f, school: e.target.value }))}
-                          className="w-full pl-10 pr-4 py-3 rounded-xl border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent bg-gray-50/50 focus:bg-white transition-all shadow-inner appearance-none cursor-pointer"
-                        >
-                          <option value="" disabled>Select your school</option>
-                          <option value="Adeleke University">Adeleke University</option>
-                        </select>
-                        <span className="absolute inset-y-0 right-0 pr-3.5 flex items-center text-gray-400 pointer-events-none text-xs">
-                          ▼
-                        </span>
-                      </div>
+                      <label className={labelClass}>School <span className="text-[#DC2626]">*</span></label>
+                      <select required value={form.school}
+                        onChange={(e) => setForm((f) => ({ ...f, school: e.target.value }))}
+                        className={inputClassBare}>
+                        <option value="" disabled>Select your school</option>
+                        <option value="Adeleke University">Adeleke University</option>
+                      </select>
                     </div>
-
                     <div>
-                      <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1.5 ml-1">How did you hear about us? <span className="text-red-500">*</span></label>
-                      <div className="relative group">
-                        <span className="absolute inset-y-0 left-0 pl-3.5 flex items-center text-gray-400 group-focus-within:text-green-600 transition-colors text-sm pointer-events-none">
-                          <i className="fa-solid fa-bullhorn" />
-                        </span>
-                        <select
-                          required
-                          value={form.hearAboutUs}
-                          onChange={(e) => setForm((f) => ({ ...f, hearAboutUs: e.target.value }))}
-                          className="w-full pl-10 pr-4 py-3 rounded-xl border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent bg-gray-50/50 focus:bg-white transition-all shadow-inner appearance-none cursor-pointer"
-                        >
-                          <option value="" disabled>Select an option</option>
-                          <option value="Social Media">Social Media (Twitter, Instagram, etc.)</option>
-                          <option value="Friend/Referral">Friend / Referral</option>
-                          <option value="Google Search">Google Search</option>
-                          <option value="Advertisement">Advertisement</option>
-                          <option value="Other">Other</option>
-                        </select>
-                        <span className="absolute inset-y-0 right-0 pr-3.5 flex items-center text-gray-400 pointer-events-none text-xs">
-                          ▼
-                        </span>
-                      </div>
+                      <label className={labelClass}>How did you hear about us? <span className="text-[#DC2626]">*</span></label>
+                      <select required value={form.hearAboutUs}
+                        onChange={(e) => setForm((f) => ({ ...f, hearAboutUs: e.target.value }))}
+                        className={inputClassBare}>
+                        <option value="" disabled>Select an option</option>
+                        <option value="Social Media">Social Media</option>
+                        <option value="Friend/Referral">Friend / Referral</option>
+                        <option value="Google Search">Google Search</option>
+                        <option value="Advertisement">Advertisement</option>
+                        <option value="Other">Other</option>
+                      </select>
                     </div>
                   </>
                 ) : (
                   <>
-                    <div className="grid grid-cols-2 gap-4">
+                    <div className="grid grid-cols-2 gap-3">
                       <div>
-                        <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-1.5 ml-1">NIN <span className="text-red-500">*</span></label>
+                        <label className={labelClass}>NIN <span className="text-[#DC2626]">*</span></label>
                         <input type="text" required value={form.nin}
                           onChange={(e) => setForm((f) => ({ ...f, nin: e.target.value.replace(/\D/g, "") }))}
-                          placeholder="11-digit NIN"
-                          maxLength={11}
-                          className="w-full px-4 py-2.5 rounded-xl border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent bg-gray-50/50 focus:bg-white transition-all shadow-inner" />
+                          placeholder="11-digit NIN" maxLength={11} className={inputClassBare} />
                       </div>
                       <div>
-                        <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-1.5 ml-1">Category <span className="text-red-500">*</span></label>
-                        <select
-                          required
-                          value={form.sellerCategory}
+                        <label className={labelClass}>Category <span className="text-[#DC2626]">*</span></label>
+                        <select required value={form.sellerCategory}
                           onChange={(e) => setForm((f) => ({ ...f, sellerCategory: e.target.value }))}
-                          className="w-full px-4 py-2.5 rounded-xl border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent bg-gray-50/50 focus:bg-white transition-all shadow-inner appearance-none cursor-pointer"
-                        >
+                          className={inputClassBare}>
                           <option value="" disabled>Category</option>
-                          {categories.map((c) => (
-                            <option key={c._id} value={c.name}>{c.name}</option>
-                          ))}
+                          {categories.map((c) => (<option key={c._id} value={c.name}>{c.name}</option>))}
                           <option value="General/Other">General / Other</option>
                         </select>
                       </div>
                     </div>
-
                     <div>
-                      <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-1.5 ml-1">Store Name <span className="text-red-500">*</span></label>
+                      <label className={labelClass}>Store Name <span className="text-[#DC2626]">*</span></label>
                       <input type="text" required value={form.storeName}
                         onChange={(e) => setForm((f) => ({ ...f, storeName: e.target.value }))}
-                        placeholder="My Awesome Store"
-                        className="w-full px-4 py-2.5 rounded-xl border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-green-500 bg-gray-50/50 focus:bg-white transition shadow-inner" />
+                        placeholder="My Awesome Store" className={inputClassBare} />
                     </div>
-
-                    <div className="pt-3 border-t border-dashed border-gray-200">
-                      <p className="text-xs text-gray-600 font-bold mb-2">
-                        <i className="fa-solid fa-building-columns text-green-600 mr-1" />
-                        Bank Details
-                      </p>
+                    <div className="pt-3 border-t border-[#E5E5E5]">
+                      <p className="text-xs font-medium text-[#111111] mb-3">Bank Details</p>
                       <div className="space-y-3">
                         <input type="text" required value={form.bankName}
                           onChange={(e) => setForm((f) => ({ ...f, bankName: e.target.value }))}
-                          placeholder="Bank Name"
-                          className="w-full px-4 py-2.5 rounded-xl border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-green-500 bg-gray-50/50 focus:bg-white transition shadow-inner" />
+                          placeholder="Bank Name" className={inputClassBare} />
                         <div className="grid grid-cols-2 gap-3">
                           <input type="text" required value={form.accountNumber}
                             onChange={(e) => setForm((f) => ({ ...f, accountNumber: e.target.value.replace(/\D/g, "") }))}
-                            placeholder="Account Number"
-                            maxLength={10}
-                            className="w-full px-4 py-2.5 rounded-xl border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-green-500 bg-gray-50/50 focus:bg-white transition shadow-inner" />
+                            placeholder="Account Number" maxLength={10} className={inputClassBare} />
                           <input type="text" required value={form.accountName}
                             onChange={(e) => setForm((f) => ({ ...f, accountName: e.target.value }))}
-                            placeholder="Account Name"
-                            className="w-full px-4 py-2.5 rounded-xl border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-green-500 bg-gray-50/50 focus:bg-white transition shadow-inner" />
+                            placeholder="Account Name" className={inputClassBare} />
                         </div>
                       </div>
                     </div>
@@ -443,35 +322,26 @@ function RegisterForm() {
               </div>
             )}
 
-            {/* Form Actions */}
-            <div className="flex gap-3 pt-6 mt-6 border-t border-gray-100">
+            {/* Actions */}
+            <div className="flex gap-3 pt-4 border-t border-[#E5E5E5] mt-4">
               {step > 1 && (
-                <button
-                  type="button"
-                  onClick={handleBack}
-                  disabled={loading}
-                  className="px-5 py-3.5 bg-white text-gray-600 hover:text-gray-900 font-bold rounded-xl border border-gray-200 transition-all shadow-sm w-1/3"
-                >
+                <button type="button" onClick={handleBack} disabled={loading}
+                  className="px-4 py-2.5 bg-white text-[#111111] font-medium rounded-md border border-[#E5E5E5] hover:bg-[#F5F5F5] transition-colors text-sm">
                   Back
                 </button>
               )}
-              
-              <button 
-                type="submit" 
-                disabled={loading}
-                className={`py-3.5 bg-green-600 hover:bg-green-700 text-white font-bold rounded-xl transition-all duration-200 shadow-md shadow-green-600/10 active:scale-[0.99] flex-1 ${loading ? 'opacity-60 cursor-not-allowed' : ''}`}
-              >
-                {step < 3 ? "Continue" : (loading ? "Creating account..." : "Create Account")}
+              <button type="submit" disabled={loading}
+                className={`py-2.5 bg-[#2563EB] hover:bg-[#1D4ED8] text-white font-semibold rounded-md transition-colors text-sm flex-1 disabled:opacity-60 disabled:cursor-not-allowed`}>
+                {step < 3 ? "Continue →" : (loading ? "Creating…" : "Create Account")}
               </button>
             </div>
-
           </form>
-
-          <p className="text-center text-sm text-gray-500 mt-8">
-            Already have an account?{" "}
-            <Link href="/auth/login" className="text-green-600 font-bold hover:underline">Sign in</Link>
-          </p>
         </div>
+
+        <p className="text-center text-sm text-[#6B6B6B] mt-6">
+          Already have an account?{" "}
+          <Link href="/auth/login" className="text-[#2563EB] font-medium hover:underline">Sign in</Link>
+        </p>
       </div>
     </div>
   );
@@ -480,8 +350,8 @@ function RegisterForm() {
 export default function RegisterPage() {
   return (
     <Suspense fallback={
-      <div className="min-h-screen bg-gradient-to-br from-green-50 to-yellow-50 flex items-center justify-center">
-        <div className="w-12 h-12 border-4 border-green-200 border-t-green-600 rounded-full animate-spin"></div>
+      <div className="min-h-screen bg-white flex items-center justify-center">
+        <div className="w-8 h-8 border-2 border-[#E5E5E5] border-t-[#2563EB] rounded-full animate-spin" />
       </div>
     }>
       <RegisterForm />

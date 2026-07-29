@@ -59,10 +59,10 @@ export default function WishlistButton({ productId }: { productId: string }) {
       onClick={toggle}
       disabled={loading}
       title={wishlisted ? "Remove from wishlist" : "Add to wishlist"}
-      className={`flex items-center justify-center w-10 h-10 rounded-full border-2 transition-all duration-200 ${
+      className={`flex items-center justify-center w-10 h-10 rounded-full border transition-colors ${
         wishlisted
-          ? "border-red-400 bg-red-50 text-red-500"
-          : "border-gray-200 bg-white text-gray-400 hover:border-red-300 hover:text-red-400"
+          ? "border-[#DC2626] bg-[#FEF2F2] text-[#DC2626]"
+          : "border-[#E5E5E5] bg-white text-[#9B9B9B] hover:border-[#DC2626] hover:text-[#DC2626]"
       } ${loading ? "opacity-50" : ""}`}
     >
       <svg
@@ -81,3 +81,4 @@ export default function WishlistButton({ productId }: { productId: string }) {
     </button>
   );
 }
+

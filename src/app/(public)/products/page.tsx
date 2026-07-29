@@ -4,10 +4,30 @@ import { useEffect, useState, useCallback, Suspense } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import ProductGrid from "@/components/product/ProductGrid";
 import Pagination from "@/components/shared/Pagination";
-import LoadingSpinner from "@/components/ui/LoadingSpinner";
 import EmptyState from "@/components/ui/EmptyState";
 import SearchBar from "@/components/shared/SearchBar";
 import { ProductSummary } from "@/types";
+
+function ProductSkeletonGrid() {
+  return (
+    <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
+      {Array.from({ length: 12 }).map((_, i) => (
+        <div key={i} className="bg-white rounded-md border border-[#E5E5E5] overflow-hidden animate-pulse">
+          <div className="aspect-square bg-gray-200" />
+          <div className="p-3 space-y-2">
+            <div className="h-3 bg-gray-200 rounded w-2/3" />
+            <div className="h-4 bg-gray-200 rounded w-full" />
+            <div className="h-4 bg-gray-200 rounded w-4/5" />
+            <div className="flex justify-between items-center pt-1">
+              <div className="h-5 bg-gray-200 rounded w-1/3" />
+              <div className="h-7 bg-gray-200 rounded w-1/4" />
+            </div>
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+}
 
 interface Category { _id: string; name: string; slug: string }
 
@@ -58,12 +78,12 @@ function ProductsContent() {
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
       {/* Mobile Filter Toggle */}
       <div className="lg:hidden flex justify-between items-center mb-4">
-        <h1 className="text-2xl font-bold text-gray-900">Products</h1>
+        <h1 className="text-xl font-bold text-[#111111] uppercase tracking-wider">Products</h1>
         <button
           onClick={() => setIsFilterOpen(!isFilterOpen)}
-          className="flex items-center gap-2 px-4 py-2 bg-gray-100 text-gray-700 rounded-xl font-medium"
+          className="flex items-center gap-2 px-4 py-2 bg-[#FAFAFA] text-[#111111] border border-[#E5E5E5] rounded-md font-medium text-sm"
         >
-          <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z" />
           </svg>
           Filters
@@ -73,10 +93,10 @@ function ProductsContent() {
       <div className="flex flex-col lg:flex-row gap-8">
         {/* Sidebar filters */}
         <aside className={`w-full lg:w-56 shrink-0 ${isFilterOpen ? "block" : "hidden lg:block"}`}>
-          <div className="bg-white rounded-2xl border border-gray-100 p-5 space-y-6 sticky top-20">
-            <div className="flex justify-between items-center">
-              <h2 className="font-bold text-gray-900">Filters</h2>
-              <button className="lg:hidden p-1 text-gray-500" onClick={() => setIsFilterOpen(false)}>
+          <div className="bg-white rounded-md border border-[#E5E5E5] p-5 space-y-6 sticky top-20">
+            <div className="flex justify-between items-center pb-2 border-b border-[#E5E5E5]">
+              <h2 className="font-bold text-[#111111] text-sm uppercase tracking-wider">Filters</h2>
+              <button className="lg:hidden p-1 text-[#6B6B6B]" onClick={() => setIsFilterOpen(false)}>
                 <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                 </svg>
@@ -85,11 +105,11 @@ function ProductsContent() {
 
             {/* Condition */}
             <div>
-              <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">Condition</p>
+              <p className="text-xs font-semibold text-[#9B9B9B] uppercase tracking-wider mb-2">Condition</p>
               {["", "new", "used"].map((c) => (
                 <button key={c}
                   onClick={() => updateParam("condition", c)}
-                  className={`block w-full text-left px-3 py-2 rounded-lg text-sm mb-1 transition-colors ${condition === c ? "bg-green-50 text-green-700 font-semibold" : "text-gray-600 hover:bg-gray-50"}`}>
+                  className={`block w-full text-left px-3 py-2 rounded-md text-sm mb-1 transition-colors ${condition === c ? "bg-[#EFF6FF] text-[#2563EB] font-semibold" : "text-[#6B6B6B] hover:bg-[#F5F5F5]"}`}>
                   {c === "" ? "All" : c.charAt(0).toUpperCase() + c.slice(1)}
                 </button>
               ))}
@@ -98,16 +118,16 @@ function ProductsContent() {
             {/* Category */}
             {categories.length > 0 && (
               <div>
-                <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">Category</p>
+                <p className="text-xs font-semibold text-[#9B9B9B] uppercase tracking-wider mb-2">Category</p>
                 <button
                   onClick={() => updateParam("category", "")}
-                  className={`block w-full text-left px-3 py-2 rounded-lg text-sm mb-1 transition-colors ${!category ? "bg-green-50 text-green-700 font-semibold" : "text-gray-600 hover:bg-gray-50"}`}>
+                  className={`block w-full text-left px-3 py-2 rounded-md text-sm mb-1 transition-colors ${!category ? "bg-[#EFF6FF] text-[#2563EB] font-semibold" : "text-[#6B6B6B] hover:bg-[#F5F5F5]"}`}>
                   All Categories
                 </button>
                 {categories.map((cat) => (
                   <button key={cat._id}
                     onClick={() => updateParam("category", cat._id)}
-                    className={`block w-full text-left px-3 py-2 rounded-lg text-sm mb-1 transition-colors truncate ${category === cat._id ? "bg-green-50 text-green-700 font-semibold" : "text-gray-600 hover:bg-gray-50"}`}>
+                    className={`block w-full text-left px-3 py-2 rounded-md text-sm mb-1 transition-colors truncate ${category === cat._id ? "bg-[#EFF6FF] text-[#2563EB] font-semibold" : "text-[#6B6B6B] hover:bg-[#F5F5F5]"}`}>
                     {cat.name}
                   </button>
                 ))}
@@ -116,7 +136,7 @@ function ProductsContent() {
 
             {/* Sort */}
             <div>
-              <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">Sort By</p>
+              <p className="text-xs font-semibold text-[#9B9B9B] uppercase tracking-wider mb-2">Sort By</p>
               {[
                 { value: "-createdAt", label: "Newest" },
                 { value: "price", label: "Price: Low to High" },
@@ -125,7 +145,7 @@ function ProductsContent() {
               ].map((s) => (
                 <button key={s.value}
                   onClick={() => updateParam("sort", s.value)}
-                  className={`block w-full text-left px-3 py-2 rounded-lg text-sm mb-1 transition-colors ${sort === s.value ? "bg-green-50 text-green-700 font-semibold" : "text-gray-600 hover:bg-gray-50"}`}>
+                  className={`block w-full text-left px-3 py-2 rounded-md text-sm mb-1 transition-colors ${sort === s.value ? "bg-[#EFF6FF] text-[#2563EB] font-semibold" : "text-[#6B6B6B] hover:bg-[#F5F5F5]"}`}>
                   {s.label}
                 </button>
               ))}
@@ -140,25 +160,25 @@ function ProductsContent() {
           </div>
 
           <div className="flex items-center justify-between mb-4">
-            <p className="text-sm text-gray-500">
+            <p className="text-sm text-[#6B6B6B]">
               {loading ? "Loading..." : `${total} product${total !== 1 ? "s" : ""} found`}
             </p>
             {(search || category || condition) && (
               <button
                 onClick={() => router.push("/products")}
-                className="text-sm text-red-500 hover:underline">
+                className="text-sm text-[#DC2626] hover:underline font-medium">
                 Clear filters
               </button>
             )}
           </div>
 
           {loading ? (
-            <LoadingSpinner className="py-32" size="lg" />
+            <ProductSkeletonGrid />
           ) : products.length === 0 ? (
             <EmptyState
               title="No products found"
               description="Try adjusting your filters or search terms."
-              icon={<svg className="w-16 h-16" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>}
+              icon={<svg className="w-12 h-12" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>}
             />
           ) : (
             <>
@@ -175,9 +195,12 @@ function ProductsContent() {
 
 export default function ProductsPage() {
   return (
-    <Suspense fallback={<LoadingSpinner className="py-32" size="lg" />}>
+    <Suspense fallback={
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <ProductSkeletonGrid />
+      </div>
+    }>
       <ProductsContent />
     </Suspense>
   );
 }
-
