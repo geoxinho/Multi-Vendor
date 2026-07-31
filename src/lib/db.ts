@@ -1,11 +1,5 @@
 import mongoose from "mongoose";
 
-const MONGODB_URI = process.env.MONGODB_URI as string;
-
-if (!MONGODB_URI) {
-  throw new Error("Please define MONGODB_URI in .env.local");
-}
-
 interface MongooseCache {
   conn: typeof mongoose | null;
   promise: Promise<typeof mongoose> | null;
@@ -20,6 +14,17 @@ const cached: MongooseCache = global.mongoose ?? { conn: null, promise: null };
 global.mongoose = cached;
 
 export async function connectDB() {
+  // Check inside the function (not at module level) so a missing env var
+  // throws a proper error inside the route handler, not at cold-start import time.
+  const MONGODB_URI = process.env.MONGODB_URI;
+
+  if (!MONGODB_URI) {
+    throw new Error(
+      "MONGODB_URI environment variable is not defined. " +
+      "Add it to your Vercel project settings under Environment Variables."
+    );
+  }
+
   if (cached.conn) return cached.conn;
 
   if (!cached.promise) {
