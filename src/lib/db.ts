@@ -1,4 +1,7 @@
 import mongoose from "mongoose";
+import "@/models/User";
+import "@/models/Category";
+import "@/models/Product";
 
 interface MongooseCache {
   conn: typeof mongoose | null;
