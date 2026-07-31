@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { connectDB } from "@/lib/db";
 import { Wishlist } from "@/models/Wishlist";
+import { Product } from "@/models/Product";
+import { User } from "@/models/User";
 
 /** GET /api/wishlist — list all wishlisted product IDs for current buyer */
 export async function GET() {

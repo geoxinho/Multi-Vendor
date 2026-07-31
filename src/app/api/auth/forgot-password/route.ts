@@ -25,7 +25,7 @@ export async function POST(req: NextRequest) {
     user.passwordResetTokenExpires = expires;
     await user.save();
 
-    const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "https://closevenders.vercel.app";
+    const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "https://closevendors.vercel.app";
     const resetUrl = `${siteUrl}/auth/reset-password?token=${token}&email=${encodeURIComponent(user.email)}`;
 
     await sendMail({

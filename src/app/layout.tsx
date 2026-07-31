@@ -11,7 +11,7 @@ const inter = Inter({
 
 export const metadataBase = process.env.NEXT_PUBLIC_SITE_URL
   ? new URL(process.env.NEXT_PUBLIC_SITE_URL)
-  : new URL("https://closevenders.vercel.app");
+  : new URL("https://closevendors.vercel.app");
 
 const ROOT_DESCRIPTION =
   "Buy and sell new & used products from verified sellers. Nigeria's modern multi-vendor marketplace.";

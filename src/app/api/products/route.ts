@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { connectDB } from "@/lib/db";
 import { Product } from "@/models/Product";
+import { User } from "@/models/User";
+import { Category } from "@/models/Category";
 import { auth } from "@/lib/auth";
 import { productSchema } from "@/utils/validators";
 

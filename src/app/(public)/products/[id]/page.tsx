@@ -8,6 +8,8 @@ export const dynamic = "force-dynamic";
 export const dynamicParams = true;
 import { connectDB } from "@/lib/db";
 import { Product } from "@/models/Product";
+import { User } from "@/models/User";
+import { Category } from "@/models/Category";
 import RatingStars from "@/components/shared/RatingStars";
 import Badge from "@/components/ui/Badge";
 import BuyNowButton from "@/components/product/BuyNowButton";
@@ -44,7 +46,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   if (!p) return { title: "Product Not Found" };
 
   const description = p.description.slice(0, 155);
-  const productUrl = `${process.env.NEXT_PUBLIC_SITE_URL ?? "https://closevenders.vercel.app"}/products/${p._id}`;
+  const productUrl = `${process.env.NEXT_PUBLIC_SITE_URL ?? "https://closevendors.vercel.app"}/products/${p._id}`;
 
   return {
     title: p.title,
@@ -71,7 +73,7 @@ export default async function ProductDetailPage({ params }: Props) {
   const product = await getProduct(id);
   if (!product) notFound();
 
-  const pageUrl = `${process.env.NEXT_PUBLIC_SITE_URL ?? "https://closevenders.vercel.app"}/products/${product._id}`;
+  const pageUrl = `${process.env.NEXT_PUBLIC_SITE_URL ?? "https://closevendors.vercel.app"}/products/${product._id}`;
   const productSchema: Record<string, unknown> = {
     "@context": "https://schema.org",
     "@type": "Product",

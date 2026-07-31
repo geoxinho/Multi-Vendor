@@ -2,6 +2,8 @@ import { auth } from "@/lib/auth";
 import { notFound } from "next/navigation";
 import { connectDB } from "@/lib/db";
 import { Wishlist } from "@/models/Wishlist";
+import { Product } from "@/models/Product";
+import { User } from "@/models/User";
 import Link from "next/link";
 import Image from "next/image";
 import type { Metadata } from "next";

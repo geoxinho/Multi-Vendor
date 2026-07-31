@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { connectDB } from "@/lib/db";
 import { Order } from "@/models/Order";
+import { User } from "@/models/User";
 import { auth } from "@/lib/auth";
 import { sendMail } from "@/lib/email";
 
@@ -77,7 +78,7 @@ export async function PATCH(req: NextRequest, { params }: Params) {
     const buyer = order.buyer as any;
     const firstSeller = order.items[0]?.seller as any;
 
-    const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? "https://closevenders.vercel.app";
+    const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? "https://closevendors.vercel.app";
 
     // ── Email to BUYER ──────────────────────────────────────────────
     const buyerHtml = `

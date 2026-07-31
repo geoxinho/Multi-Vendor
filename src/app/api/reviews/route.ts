@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { connectDB } from "@/lib/db";
 import { Review } from "@/models/Review";
 import { Product } from "@/models/Product";
+import { User } from "@/models/User";
 import { auth } from "@/lib/auth";
 import { reviewSchema } from "@/utils/validators";
 

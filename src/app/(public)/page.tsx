@@ -2,6 +2,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { connectDB } from "@/lib/db";
 import { Product } from "@/models/Product";
+import { User } from "@/models/User";
 import { Category } from "@/models/Category";
 import ProductGrid from "@/components/product/ProductGrid";
 import type { Metadata } from "next";
@@ -10,7 +11,7 @@ const HOME_DESCRIPTION =
   "The safest campus marketplace for college students to buy and sell textbooks, electronics, clothing, and hostel items. Trade new or used products easily.";
 
 const SITE_URL =
-  process.env.NEXT_PUBLIC_SITE_URL ?? "https://closevenders.vercel.app";
+  process.env.NEXT_PUBLIC_SITE_URL ?? "https://closevendors.vercel.app";
 
 export const metadata: Metadata = {
   title: "MarketHub — Campus Marketplace for Students",

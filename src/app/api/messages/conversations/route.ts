@@ -2,6 +2,8 @@ import { NextResponse } from "next/server";
 import { connectDB } from "@/lib/db";
 import { Order } from "@/models/Order";
 import { Message } from "@/models/Message";
+import { User } from "@/models/User";
+import { Product } from "@/models/Product";
 import { auth } from "@/lib/auth";
 import { Types } from "mongoose";
 

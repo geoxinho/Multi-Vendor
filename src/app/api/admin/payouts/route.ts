@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { connectDB } from "@/lib/db";
 import { Order } from "@/models/Order";
+import { User } from "@/models/User";
 import { auth } from "@/lib/auth";
 
 // GET /api/admin/payouts — list orders eligible or pending payout
