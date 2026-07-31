@@ -55,7 +55,10 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
       type: "website",
       url: productUrl,
       images: p.images?.length
-        ? p.images.map((image: string) => ({ url: image, alt: p.title || "Product" }))
+        ? p.images.map((image: string) => ({
+            url: image,
+            alt: p.title || "Product",
+          }))
         : [{ url: "/favicon.ico", alt: p.title || "Product" }],
     },
     twitter: {
@@ -117,12 +120,17 @@ export default async function ProductDetailPage({ params }: Props) {
       />
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-10 mb-16">
         {/* Interactive image gallery — all images, full display, clickable */}
-        <ImageGallery images={product.images || []} title={product.title || "Product"} />
+        <ImageGallery
+          images={product.images || []}
+          title={product.title || "Product"}
+        />
 
         {/* Info panel */}
         <div className="flex flex-col">
           <div className="flex items-center gap-2 mb-3">
-            <Badge variant={product.condition === "new" ? "success" : "neutral"}>
+            <Badge
+              variant={product.condition === "new" ? "success" : "neutral"}
+            >
               {product.condition === "new" ? "New" : "Used"}
             </Badge>
             {product.category && (
@@ -143,7 +151,9 @@ export default async function ProductDetailPage({ params }: Props) {
               showValue
               count={product.numReviews ?? 0}
             />
-            <span className="text-sm text-gray-400">{(product.sold ?? 0)} sold</span>
+            <span className="text-sm text-gray-400">
+              {product.sold ?? 0} sold
+            </span>
           </div>
 
           <div className="text-3xl font-bold text-[#111111] mb-6">
@@ -163,7 +173,9 @@ export default async function ProductDetailPage({ params }: Props) {
           ) : (product.stock ?? 0) <= 3 ? (
             <div className="mb-6 px-4 py-3 bg-[#FFF7ED] border border-[#FFEDD5] rounded-xl flex items-center gap-2.5 text-[#9A3412] text-sm font-semibold animate-pulse">
               <i className="fa-solid fa-triangle-exclamation text-[#EA580C] text-base" />
-              <span>Hurry! Only {product.stock} left in stock - order soon.</span>
+              <span>
+                Hurry! Only {product.stock} left in stock - order soon.
+              </span>
             </div>
           ) : null}
 
@@ -197,7 +209,9 @@ export default async function ProductDetailPage({ params }: Props) {
               </div>
               <div>
                 <p className="font-semibold text-gray-900">
-                  {product.seller?.storeName || product.seller?.name || "Unknown Seller"}
+                  {product.seller?.storeName ||
+                    product.seller?.name ||
+                    "Unknown Seller"}
                 </p>
                 {product.seller?.storeDescription && (
                   <p className="text-xs text-gray-500 mt-0.5 line-clamp-2">
