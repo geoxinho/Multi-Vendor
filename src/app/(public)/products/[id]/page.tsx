@@ -45,24 +45,24 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const p = await getProduct(id);
   if (!p) return { title: "Product Not Found" };
 
-  const description = p.description.slice(0, 155);
+  const description = (p.description || "").slice(0, 155);
   const productUrl = `${process.env.NEXT_PUBLIC_SITE_URL ?? "https://closevendors.vercel.app"}/products/${p._id}`;
 
   return {
-    title: p.title,
+    title: p.title || "Product Details",
     description,
     openGraph: {
-      title: p.title,
+      title: p.title || "Product Details",
       description,
       type: "website",
       url: productUrl,
       images: p.images?.length
-        ? p.images.map((image: string) => ({ url: image, alt: p.title }))
-        : [{ url: "/favicon.ico", alt: p.title }],
+        ? p.images.map((image: string) => ({ url: image, alt: p.title || "Product" }))
+        : [{ url: "/favicon.ico", alt: p.title || "Product" }],
     },
     twitter: {
       card: "summary_large_image",
-      title: p.title,
+      title: p.title || "Product Details",
       description,
     },
   };
@@ -77,9 +77,9 @@ export default async function ProductDetailPage({ params }: Props) {
   const productSchema: Record<string, unknown> = {
     "@context": "https://schema.org",
     "@type": "Product",
-    name: product.title,
+    name: product.title || "Product",
     image: product.images?.length ? product.images : ["/favicon.ico"],
-    description: product.description,
+    description: product.description || "",
     sku: String(product._id),
     brand: {
       "@type": "Brand",
@@ -89,13 +89,13 @@ export default async function ProductDetailPage({ params }: Props) {
       "@type": "Offer",
       url: pageUrl,
       priceCurrency: "NGN",
-      price: String(product.price),
+      price: String(product.price ?? 0),
       itemCondition:
         product.condition === "new"
           ? "https://schema.org/NewCondition"
           : "https://schema.org/UsedCondition",
       availability:
-        product.stock > 0
+        (product.stock ?? 0) > 0
           ? "https://schema.org/InStock"
           : "https://schema.org/OutOfStock",
     },
@@ -104,7 +104,7 @@ export default async function ProductDetailPage({ params }: Props) {
     Object.assign(productSchema, {
       aggregateRating: {
         "@type": "AggregateRating",
-        ratingValue: Number(product.rating.toFixed(1)),
+        ratingValue: Number((product.rating ?? 0).toFixed(1)),
         reviewCount: product.numReviews,
       },
     });
@@ -119,7 +119,7 @@ export default async function ProductDetailPage({ params }: Props) {
       />
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-10 mb-16">
         {/* Interactive image gallery — all images, full display, clickable */}
-        <ImageGallery images={product.images} title={product.title} />
+        <ImageGallery images={product.images || []} title={product.title || "Product"} />
 
         {/* Info panel */}
         <div className="flex flex-col">
@@ -129,40 +129,40 @@ export default async function ProductDetailPage({ params }: Props) {
             </Badge>
             {product.category && (
               <span className="text-xs text-gray-400">
-                {product.category.name}
+                {product.category.name || "Category"}
               </span>
             )}
           </div>
 
           <h1 className="text-2xl md:text-3xl font-bold text-gray-900 mb-3">
-            {product.title}
+            {product.title || "Untitled Product"}
           </h1>
 
           <div className="flex items-center gap-3 mb-4">
             <RatingStars
-              rating={product.rating}
+              rating={product.rating ?? 0}
               size="md"
               showValue
-              count={product.numReviews}
+              count={product.numReviews ?? 0}
             />
-            <span className="text-sm text-gray-400">{product.sold} sold</span>
+            <span className="text-sm text-gray-400">{(product.sold ?? 0)} sold</span>
           </div>
 
           <div className="text-3xl font-bold text-[#111111] mb-6">
-            ₦{product.price.toLocaleString()}
+            ₦{(product.price ?? 0).toLocaleString()}
           </div>
 
           <p className="text-gray-600 text-sm leading-relaxed mb-6">
-            {product.description}
+            {product.description || "No description provided."}
           </p>
 
           {/* Stock Warning Banners for User UI */}
-          {product.stock === 0 ? (
+          {(product.stock ?? 0) === 0 ? (
             <div className="mb-6 px-4 py-3 bg-[#FEF2F2] border border-[#FEE2E2] rounded-xl flex items-center gap-2.5 text-[#991B1B] text-sm font-semibold">
               <i className="fa-solid fa-circle-exclamation text-[#DC2626] text-base" />
               <span>Out of Stock: This item is currently unavailable.</span>
             </div>
-          ) : product.stock <= 3 ? (
+          ) : (product.stock ?? 0) <= 3 ? (
             <div className="mb-6 px-4 py-3 bg-[#FFF7ED] border border-[#FFEDD5] rounded-xl flex items-center gap-2.5 text-[#9A3412] text-sm font-semibold animate-pulse">
               <i className="fa-solid fa-triangle-exclamation text-[#EA580C] text-base" />
               <span>Hurry! Only {product.stock} left in stock - order soon.</span>
@@ -171,9 +171,9 @@ export default async function ProductDetailPage({ params }: Props) {
 
           <div className="flex items-center gap-3 mb-6">
             <span
-              className={`text-sm font-medium ${product.stock > 0 ? "text-[#16A34A]" : "text-[#DC2626]"}`}
+              className={`text-sm font-medium ${(product.stock ?? 0) > 0 ? "text-[#16A34A]" : "text-[#DC2626]"}`}
             >
-              {product.stock > 0 ? (
+              {(product.stock ?? 0) > 0 ? (
                 <>
                   <i className="fa-solid fa-check" /> {product.stock} in stock
                 </>
@@ -194,12 +194,12 @@ export default async function ProductDetailPage({ params }: Props) {
             <div className="flex items-center gap-3">
               <div className="w-10 h-10 rounded-full bg-[#EFF6FF] flex items-center justify-center shrink-0">
                 <span className="text-[#2563EB] font-bold">
-                  {product.seller?.name?.[0]?.toUpperCase()}
+                  {product.seller?.name?.[0]?.toUpperCase() || "?"}
                 </span>
               </div>
               <div>
                 <p className="font-semibold text-gray-900">
-                  {product.seller?.storeName || product.seller?.name}
+                  {product.seller?.storeName || product.seller?.name || "Unknown Seller"}
                 </p>
                 {product.seller?.storeDescription && (
                   <p className="text-xs text-gray-500 mt-0.5 line-clamp-2">

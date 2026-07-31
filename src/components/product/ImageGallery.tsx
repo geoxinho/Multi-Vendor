@@ -11,7 +11,7 @@ interface ImageGalleryProps {
 export default function ImageGallery({ images, title }: ImageGalleryProps) {
   const [active, setActive] = useState(0);
 
-  const all = images.length > 0 ? images : ["/placeholder.png"];
+  const all = Array.isArray(images) && images.length > 0 ? images : ["/placeholder.png"];
 
   return (
     <div className="space-y-3">
