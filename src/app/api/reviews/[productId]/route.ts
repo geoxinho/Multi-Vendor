@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { connectDB } from "@/lib/db";
 import { Review } from "@/models/Review";
 import { User } from "@/models/User";
+import { Product } from "@/models/Product";
 
 type Params = { params: Promise<{ productId: string }> };
 

@@ -13,10 +13,11 @@ export default function RatingStars({
   showValue = false,
   count,
 }: RatingStarsProps) {
+  const safeRating = typeof rating === "number" && !isNaN(rating) ? rating : 0;
   const sizeClass = { sm: "w-3 h-3", md: "w-4 h-4", lg: "w-5 h-5" }[size];
   const stars = Array.from({ length: max }, (_, i) => {
-    const filled = i + 1 <= rating;
-    const halfFilled = !filled && i + 0.5 <= rating;
+    const filled = i + 1 <= safeRating;
+    const halfFilled = !filled && i + 0.5 <= safeRating;
     return { filled, halfFilled };
   });
 
@@ -32,7 +33,7 @@ export default function RatingStars({
       </div>
       {showValue && (
         <span className="text-sm text-gray-600 font-medium">
-          {rating.toFixed(1)}
+          {safeRating.toFixed(1)}
           {count !== undefined && <span className="text-gray-400 ml-1">({count})</span>}
         </span>
       )}

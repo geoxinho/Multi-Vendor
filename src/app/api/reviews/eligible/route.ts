@@ -3,6 +3,8 @@ import { auth } from "@/lib/auth";
 import { connectDB } from "@/lib/db";
 import { Order } from "@/models/Order";
 import { Review } from "@/models/Review";
+import { Product } from "@/models/Product";
+import { User } from "@/models/User";
 
 /**
  * GET /api/reviews/eligible?productId=xxx

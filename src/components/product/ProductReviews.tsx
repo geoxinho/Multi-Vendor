@@ -29,10 +29,17 @@ export default function ProductReviews({ productId }: { productId: string }) {
 
   const fetchReviews = async () => {
     setLoading(true);
-    const res = await fetch(`/api/reviews/${productId}`);
-    const data = await res.json();
-    setReviews(Array.isArray(data) ? data : []);
-    setLoading(false);
+    try {
+      const res = await fetch(`/api/reviews/${productId}`);
+      if (!res.ok) throw new Error("Failed to fetch reviews");
+      const data = await res.json();
+      setReviews(Array.isArray(data) ? data : []);
+    } catch (err) {
+      console.error("[FETCH_REVIEWS_ERROR]", err);
+      setReviews([]);
+    } finally {
+      setLoading(false);
+    }
   };
 
   useEffect(() => { fetchReviews(); }, [productId]);
