@@ -507,7 +507,7 @@ export default function Navbar() {
                 className="flex-1 py-2.5 rounded-md border border-[#E5E5E5] text-[#111111] font-medium text-sm hover:bg-[#F5F5F5] transition-colors">
                 Cancel
               </button>
-              <button onClick={() => signOut({ callbackUrl: window.location.origin })}
+              <button onClick={() => signOut({ callbackUrl: "/" })}
                 className="flex-1 py-2.5 rounded-md bg-[#DC2626] text-white font-semibold text-sm hover:bg-red-700 transition-colors">
                 Yes, Sign Out
               </button>
