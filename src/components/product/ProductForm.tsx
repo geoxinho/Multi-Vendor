@@ -39,9 +39,11 @@ export default function ProductForm({ initialData = {}, mode }: ProductFormProps
     condition: (initialData.condition ?? "new") as "new" | "used",
     category: initialData.category ?? "",
     stock: initialData.stock ?? 1,
-    tags: initialData.tags?.join(", ") ?? "",
+    tags: initialData.tags ?? ([] as string[]),
     status: initialData.status ?? "active",
   });
+  
+  const [tagInput, setTagInput] = useState("");
 
   // Already-uploaded image URLs (Cloudinary)
   const [uploadedImages, setUploadedImages] = useState<string[]>(initialData.images ?? []);
@@ -151,7 +153,7 @@ export default function ProductForm({ initialData = {}, mode }: ProductFormProps
       price: Number(form.price),
       stock: Number(form.stock),
       images: allImages,
-      tags: form.tags.split(",").map((t) => t.trim()).filter(Boolean),
+      tags: form.tags,
     };
 
     const parsed = productSchema.safeParse(payload);
@@ -178,6 +180,27 @@ export default function ProductForm({ initialData = {}, mode }: ProductFormProps
     if (!res.ok) { setError(data.error ?? "Something went wrong"); return; }
     router.push("/dashboard/seller/products");
     router.refresh();
+  };
+
+  const handleTagKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === "Enter" || e.key === ",") {
+      e.preventDefault();
+      const newTag = tagInput.trim().toLowerCase();
+      if (newTag && !form.tags.includes(newTag)) {
+        if (form.tags.length >= 15) {
+          setError("Maximum 15 tags allowed");
+          return;
+        }
+        setForm((f) => ({ ...f, tags: [...f.tags, newTag] }));
+        setError("");
+      }
+      setTagInput("");
+    }
+  };
+
+  const removeTag = (tagToRemove: string) => {
+    setForm((f) => ({ ...f, tags: f.tags.filter((t) => t !== tagToRemove) }));
+    setError("");
   };
 
   const totalImages = uploadedImages.length + pendingImages.length;
@@ -323,12 +346,33 @@ export default function ProductForm({ initialData = {}, mode }: ProductFormProps
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1.5">Search Tags (Optional)</label>
-          <input type="text" value={form.tags}
-            onChange={(e) => setForm((f) => ({ ...f, tags: e.target.value }))}
-            placeholder="e.g. iphone, apple, mobile, used"
-            className="w-full px-4 py-3 rounded-xl border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-green-500 transition" />
-          <p className="text-xs text-gray-400 mt-1">Separate tags with commas to help buyers find your product.</p>
+          <div className="flex items-center justify-between mb-1.5">
+            <label className="block text-sm font-medium text-gray-700">Search Tags (Optional)</label>
+            <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${form.tags.length >= 15 ? "bg-red-100 text-red-600" : "bg-gray-100 text-gray-500"}`}>
+              {form.tags.length}/15
+            </span>
+          </div>
+          
+          <div className={`w-full p-2 min-h-[52px] rounded-xl border bg-white focus-within:ring-2 focus-within:ring-green-500 transition flex flex-wrap gap-2 items-center ${form.tags.length >= 15 ? "border-red-200 bg-red-50" : "border-gray-200"}`}>
+            {form.tags.map((t, i) => (
+              <span key={i} className="inline-flex items-center gap-1.5 px-3 py-1 rounded-lg bg-green-50 text-green-700 text-sm font-medium border border-green-200 shadow-sm">
+                {t}
+                <button type="button" onClick={() => removeTag(t)} className="text-green-500 hover:text-green-800 transition-colors focus:outline-none flex items-center justify-center">
+                  <i className="fa-solid fa-xmark text-[10px]" />
+                </button>
+              </span>
+            ))}
+            <input
+              type="text"
+              value={tagInput}
+              onChange={(e) => setTagInput(e.target.value)}
+              onKeyDown={handleTagKeyDown}
+              disabled={form.tags.length >= 15}
+              placeholder={form.tags.length === 0 ? "e.g. iphone, apple (press Enter to add)" : form.tags.length >= 15 ? "Maximum tags reached" : "Add another tag..."}
+              className="flex-1 min-w-[150px] bg-transparent text-sm focus:outline-none disabled:cursor-not-allowed placeholder-gray-400"
+            />
+          </div>
+          <p className="text-xs text-gray-400 mt-1.5">These tags are hidden from buyers but help your product appear in search results. Press Enter or comma to add.</p>
         </div>
 
         <div className="grid grid-cols-2 gap-4">

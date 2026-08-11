@@ -104,18 +104,28 @@ export async function POST(req: NextRequest) {
 
     // Send emails
     try {
-      const sellerIds = [...new Set(orderItems.map((item) => item.seller))];
-      const sellers = await User.find({ _id: { $in: sellerIds } }).select("email").lean();
-      const sellerEmails = sellers.map((s) => s.email);
+      const sellerIds = [...new Set(orderItems.map((item) => item.seller.toString()))];
+      const sellers = await User.find({ _id: { $in: sellerIds } }).select("_id email").lean();
+
+      // Build Map<sellerEmail, items[]> so each seller gets their own personalised email
+      const sellerItemsMap = new Map<string, typeof orderItems>();
+      for (const seller of sellers) {
+        const email = seller.email as string;
+        if (!email) continue;
+        const items = orderItems.filter((i) => i.seller.toString() === (seller._id as { toString(): string }).toString());
+        if (items.length > 0) sellerItemsMap.set(email, items);
+      }
+
       const buyerEmail = session.user.email;
       const buyerName = session.user.name || "Buyer";
       if (!buyerEmail) {
         throw new Error("Buyer email not found in session");
       }
-      await sendOrderConfirmationEmails(order, buyerEmail, buyerName, sellerEmails);
+      await sendOrderConfirmationEmails(order, buyerEmail, buyerName, sellerItemsMap);
     } catch (e) {
       console.error("[ORDERS EMAIL ERROR]", e);
     }
+
 
     return NextResponse.json(order, { status: 201 });
   } catch (err) {

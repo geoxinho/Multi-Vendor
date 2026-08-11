@@ -17,7 +17,7 @@ export async function GET(req: NextRequest) {
 
     const [categories, products] = await Promise.all([
       Category.find({ name: regex }).select("name slug _id").limit(5).lean(),
-      Product.find({ status: "active", title: regex })
+      Product.find({ status: "active", $or: [{ title: regex }, { tags: regex }] })
         .select("title images price _id")
         .limit(6)
         .lean(),

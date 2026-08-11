@@ -75,7 +75,7 @@ export const productSchema = z.object({
   category: z.string().min(1, "Category is required"),
   stock: z.number().int().min(1, "Stock must be at least 1"),
   images: z.array(z.string()).min(1, "At least one image is required"),
-  tags: z.array(z.string()).optional(),
+  tags: z.array(z.string()).max(15, "Maximum 15 tags allowed").optional(),
 });
 
 export const reviewSchema = z.object({
