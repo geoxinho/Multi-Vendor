@@ -95,7 +95,7 @@ export async function PATCH(req: NextRequest, { params }: Params) {
             <div style="padding:32px;">
               <p style="color:#111111;font-size:15px;font-weight:600;margin:0 0 8px;">Hi ${buyer?.name || "there"} 👋</p>
               <p style="color:#6B6B6B;font-size:14px;line-height:1.6;margin:0 0 24px;">
-                Thank you so much for your purchase on <strong>MarketHub</strong>! We're thrilled to let you know that your order has been successfully delivered. We hope everything arrived in perfect condition!
+                Thank you so much for your purchase on <strong>CampusGo</strong>! We're thrilled to let you know that your order has been successfully delivered. We hope everything arrived in perfect condition!
               </p>
 
               <!-- Order summary box -->
@@ -117,7 +117,7 @@ export async function PATCH(req: NextRequest, { params }: Params) {
                 <a href="${SITE_URL}/products/${order.items[0]?.product?.toString() ?? ""}" style="display:inline-block;background:#D97706;color:#fff;font-size:13px;font-weight:700;padding:10px 24px;border-radius:8px;text-decoration:none;">Leave a Review →</a>
               </div>
 
-              <p style="color:#9B9B9B;font-size:12px;text-align:center;margin:0;">Thank you for shopping on MarketHub 💙<br>Nigeria's safest campus marketplace.</p>
+              <p style="color:#9B9B9B;font-size:12px;text-align:center;margin:0;">Thank you for shopping on CampusGo 💙<br>Nigeria's safest campus marketplace.</p>
             </div>
           </div>
         </div>
@@ -173,7 +173,7 @@ export async function PATCH(req: NextRequest, { params }: Params) {
 
               <a href="${SITE_URL}/dashboard/seller" style="display:block;background:#16A34A;color:#fff;font-size:14px;font-weight:700;padding:12px 24px;border-radius:10px;text-decoration:none;text-align:center;">View Your Dashboard →</a>
 
-              <p style="color:#9B9B9B;font-size:12px;text-align:center;margin:16px 0 0;">Thank you for selling on MarketHub 💚<br>Keep listing great products to earn more!</p>
+              <p style="color:#9B9B9B;font-size:12px;text-align:center;margin:16px 0 0;">Thank you for selling on CampusGo 💚<br>Keep listing great products to earn more!</p>
             </div>
           </div>
         </div>

@@ -7,6 +7,7 @@ import Image from "next/image";
 interface Suggestion {
   categories: { _id: string; name: string; slug: string }[];
   products: { _id: string; title: string; price: number; images: string[] }[];
+  tags: string[];
 }
 
 interface SearchBarProps {
@@ -16,7 +17,7 @@ interface SearchBarProps {
 export default function SearchBar({ defaultValue = "" }: SearchBarProps) {
   const router = useRouter();
   const [q, setQ] = useState(defaultValue);
-  const [suggestions, setSuggestions] = useState<Suggestion>({ categories: [], products: [] });
+  const [suggestions, setSuggestions] = useState<Suggestion>({ categories: [], products: [], tags: [] });
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(false);
   const wrapperRef = useRef<HTMLDivElement>(null);
@@ -25,7 +26,7 @@ export default function SearchBar({ defaultValue = "" }: SearchBarProps) {
   const fetchSuggestions = useCallback((value: string) => {
     if (debounceRef.current) clearTimeout(debounceRef.current);
     if (value.trim().length < 2) {
-      setSuggestions({ categories: [], products: [] });
+      setSuggestions({ categories: [], products: [], tags: [] });
       setOpen(false);
       return;
     }
@@ -35,9 +36,9 @@ export default function SearchBar({ defaultValue = "" }: SearchBarProps) {
         const res = await fetch(`/api/search/suggestions?q=${encodeURIComponent(value.trim())}`);
         const data = await res.json();
         setSuggestions(data);
-        setOpen(data.categories.length > 0 || data.products.length > 0);
+        setOpen(data.categories.length > 0 || data.products.length > 0 || data.tags.length > 0);
       } catch {
-        setSuggestions({ categories: [], products: [] });
+        setSuggestions({ categories: [], products: [], tags: [] });
       } finally {
         setLoading(false);
       }
@@ -71,7 +72,7 @@ export default function SearchBar({ defaultValue = "" }: SearchBarProps) {
     router.push(`/products/${id}`);
   };
 
-  const hasSuggestions = suggestions.categories.length > 0 || suggestions.products.length > 0;
+  const hasSuggestions = suggestions.categories.length > 0 || suggestions.products.length > 0 || suggestions.tags.length > 0;
 
   return (
     <div ref={wrapperRef} className="relative w-full">
@@ -108,8 +109,28 @@ export default function SearchBar({ defaultValue = "" }: SearchBarProps) {
       {/* Dropdown */}
       {open && hasSuggestions && (
         <div className="absolute top-full left-0 right-0 mt-1 bg-white border border-[#E5E5E5] rounded-md z-50 overflow-hidden">
-          {suggestions.categories.length > 0 && (
+          {suggestions.tags.length > 0 && (
             <div>
+              <p className="px-3 pt-2.5 pb-1 text-[10px] font-semibold text-[#9B9B9B] uppercase tracking-widest">Search Tags</p>
+              {suggestions.tags.map((tag) => (
+                <button key={tag} onMouseDown={() => {
+                  setQ(tag); setOpen(false);
+                  router.push(`/products?search=${encodeURIComponent(tag)}`);
+                }}
+                  className="w-full flex items-center gap-2.5 px-3 py-2 hover:bg-[#F5F5F5] text-left transition-colors">
+                  <div className="w-6 h-6 rounded bg-gray-100 flex items-center justify-center shrink-0">
+                    <svg className="w-3 h-3 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                    </svg>
+                  </div>
+                  <span className="text-sm font-medium text-[#111111]">{tag}</span>
+                </button>
+              ))}
+            </div>
+          )}
+
+          {suggestions.categories.length > 0 && (
+            <div className={suggestions.tags.length > 0 ? "border-t border-[#E5E5E5]" : ""}>
               <p className="px-3 pt-2.5 pb-1 text-[10px] font-semibold text-[#9B9B9B] uppercase tracking-widest">Categories</p>
               {suggestions.categories.map((cat) => (
                 <button key={cat._id} onMouseDown={() => goToCategory(cat._id, cat.name)}
@@ -128,7 +149,7 @@ export default function SearchBar({ defaultValue = "" }: SearchBarProps) {
           )}
 
           {suggestions.products.length > 0 && (
-            <div className={suggestions.categories.length > 0 ? "border-t border-[#E5E5E5]" : ""}>
+            <div className={suggestions.categories.length > 0 || suggestions.tags.length > 0 ? "border-t border-[#E5E5E5]" : ""}>
               <p className="px-3 pt-2.5 pb-1 text-[10px] font-semibold text-[#9B9B9B] uppercase tracking-widest">Products</p>
               {suggestions.products.map((p) => (
                 <button key={p._id} onMouseDown={() => goToProduct(p._id)}

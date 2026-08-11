@@ -8,12 +8,8 @@ export default function Footer() {
           {/* Brand */}
           <div>
             <div className="flex items-center gap-2 mb-4">
-              <div className="w-7 h-7 rounded-md bg-[#2563EB] flex items-center justify-center">
-                <span className="text-white font-black text-xs">M</span>
-              </div>
-              <span className="font-bold text-lg text-[#111111]">
-                Market<span className="text-[#2563EB]">Hub</span>
-              </span>
+              <img src="/logo.png" alt="CampusGo" className="h-7 w-auto object-contain" />
+              <span className="font-bold text-lg text-[#111111]">Campus<span className="text-[#2563EB]">Go</span></span>
             </div>
             <p className="text-sm text-[#6B6B6B] leading-relaxed">
               Nigeria&apos;s modern multi-vendor marketplace. Buy and sell new &amp; used products from verified sellers.
@@ -51,7 +47,7 @@ export default function Footer() {
 
         <div className="mt-10 pt-8 border-t border-[#E5E5E5] flex flex-col sm:flex-row justify-between items-center gap-4">
           <p className="text-sm text-[#9B9B9B]">
-            &copy; {new Date().getFullYear()} MarketHub. All rights reserved.
+            &copy; {new Date().getFullYear()} CampusGo. All rights reserved.
           </p>
           <p className="text-sm text-[#9B9B9B]">
             Payments secured by <span className="font-semibold text-[#6B6B6B]">Paystack</span>

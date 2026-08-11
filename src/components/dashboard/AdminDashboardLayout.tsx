@@ -41,7 +41,7 @@ export default function AdminDashboardLayout({ navItems, children }: AdminDashbo
               </svg>
             </div>
             <div>
-              <p className="font-black text-white text-base leading-tight">MarketHub</p>
+              <p className="font-black text-white text-base leading-tight">CampusGo</p>
               <p className="text-xs text-purple-400 leading-tight">Admin Panel</p>
             </div>
           </div>

@@ -84,7 +84,7 @@ export default async function ProductDetailPage({ params }: Props) {
     sku: String(product._id),
     brand: {
       "@type": "Brand",
-      name: product.category?.name || "MarketHub",
+      name: product.category?.name || "CampusGo",
     },
     offers: {
       "@type": "Offer",

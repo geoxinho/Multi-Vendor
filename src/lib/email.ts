@@ -20,7 +20,7 @@ export async function sendMail({
   html: string;
 }) {
   await transporter.sendMail({
-    from: process.env.SMTP_FROM ?? `"MarketHub" <${process.env.SMTP_USER}>`,
+    from: process.env.SMTP_FROM ?? `"CampusGo" <${process.env.SMTP_USER}>`,
     to,
     subject,
     html,

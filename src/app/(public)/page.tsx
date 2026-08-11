@@ -14,19 +14,19 @@ const SITE_URL =
   process.env.NEXT_PUBLIC_SITE_URL ?? "https://closevendors.vercel.app";
 
 export const metadata: Metadata = {
-  title: "MarketHub — Campus Marketplace for Students",
+  title: "CampusGo — Campus Marketplace for Students",
   description: HOME_DESCRIPTION,
   openGraph: {
-    title: "MarketHub — Campus Marketplace for Students",
+    title: "CampusGo — Campus Marketplace for Students",
     description: HOME_DESCRIPTION,
     type: "website",
-    siteName: "MarketHub",
+    siteName: "CampusGo",
     url: SITE_URL,
-    images: [{ url: "/favicon.ico", alt: "MarketHub homepage" }],
+    images: [{ url: "/favicon.ico", alt: "CampusGo homepage" }],
   },
   twitter: {
     card: "summary_large_image",
-    title: "MarketHub — Campus Marketplace for Students",
+    title: "CampusGo — Campus Marketplace for Students",
     description: HOME_DESCRIPTION,
   },
 };
@@ -200,7 +200,7 @@ export default async function HomePage() {
   const pageSchema = {
     "@context": "https://schema.org",
     "@type": "WebPage",
-    name: "MarketHub Homepage",
+    name: "CampusGo Homepage",
     url: SITE_URL,
     description: HOME_DESCRIPTION,
   };
@@ -289,7 +289,7 @@ export default async function HomePage() {
               <div className="relative aspect-[4/3] w-full rounded-2xl overflow-hidden shadow-2xl border border-[#E5E5E5]/50 bg-white group">
                 <Image
                   src="/hero_campus.png"
-                  alt="MarketHub student trading illustration"
+                  alt="CampusGo student trading illustration"
                   fill
                   className="object-cover group-hover:scale-102 transition-transform duration-700"
                   priority

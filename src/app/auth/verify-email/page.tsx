@@ -60,7 +60,7 @@ function VerifyEmailContent() {
               </div>
               <h2 className="text-2xl font-bold text-gray-900 mb-2">Email Verified!</h2>
               <p className="text-sm text-gray-500 mb-8 leading-relaxed">
-                Thank you for verifying your email address. Your MarketHub account is now fully active. You can now log in and explore.
+                Thank you for verifying your email address. Your CampusGo account is now fully active. You can now log in and explore.
               </p>
               <Link
                 href="/auth/login"

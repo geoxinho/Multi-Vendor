@@ -35,11 +35,9 @@ export default function SellerDashboardLayout({ navItems, title, children }: Sel
         {/* Brand */}
         <div className="px-5 py-5 border-b border-gray-800">
           <div className="flex items-center gap-2.5">
-            <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-teal-400 to-teal-600 flex items-center justify-center shadow">
-              <span className="text-white font-black text-sm">M</span>
-            </div>
+            <img src="/logo.png" alt="CampusGo" className="h-8 w-auto object-contain" />
             <div>
-              <p className="font-black text-white text-base leading-tight">MarketHub</p>
+              <p className="font-black text-white text-base leading-tight">CampusGo</p>
               <p className="text-xs text-gray-400 leading-tight">Seller Dashboard</p>
             </div>
           </div>
@@ -175,7 +173,7 @@ export default function SellerDashboardLayout({ navItems, title, children }: Sel
                 <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-teal-400 to-teal-600 flex items-center justify-center">
                   <span className="text-white font-black text-sm">M</span>
                 </div>
-                <span className="font-black text-white">MarketHub</span>
+                <span className="font-black text-white">CampusGo</span>
               </div>
               <button onClick={() => setMobileOpen(false)} className="p-1.5 rounded-xl hover:bg-gray-800 text-gray-400">
                 <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">

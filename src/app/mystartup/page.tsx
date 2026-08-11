@@ -71,7 +71,7 @@ function AdminLoginForm() {
             <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
             </svg>
-            Back to MarketHub
+            Back to CampusGo
           </Link>
         </div>
 
@@ -85,7 +85,7 @@ function AdminLoginForm() {
               </svg>
             </div>
             <h1 className="text-2xl font-black text-white tracking-tight">Admin Portal</h1>
-            <p className="text-sm text-gray-400 mt-1">MarketHub Control Panel · Restricted Access</p>
+            <p className="text-sm text-gray-400 mt-1">CampusGo Control Panel · Restricted Access</p>
           </div>
 
           {/* Security banner */}
@@ -185,7 +185,7 @@ function AdminLoginForm() {
         </div>
 
         <p className="text-center text-xs text-gray-700 mt-6">
-          © {new Date().getFullYear()} MarketHub · Admin Portal
+          © {new Date().getFullYear()} CampusGo · Admin Portal
         </p>
       </div>
     </div>

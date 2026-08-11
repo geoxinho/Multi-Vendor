@@ -139,13 +139,8 @@ export default function Navbar() {
             
             {/* Left: Logo */}
             <div className="flex-1 flex justify-start">
-              <Link href="/" className="flex items-center gap-3 shrink-0 group">
-                <div className="w-10 h-10 rounded-full bg-gradient-to-br from-gray-900 to-gray-800 flex items-center justify-center shadow-lg shadow-gray-900/20 group-hover:scale-105 transition-transform duration-300">
-                  <span className="text-white font-black text-sm tracking-tighter">MH</span>
-                </div>
-                <span className="font-extrabold text-xl text-gray-900 tracking-tight hidden sm:block">
-                  Market<span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-violet-600">Hub</span>
-                </span>
+              <Link href="/" className="flex items-center shrink-0 group">
+                <img src="/logo.png" alt="CampusGo" className="h-11 w-auto object-contain group-hover:scale-105 transition-transform duration-300" />
               </Link>
             </div>
 
@@ -281,85 +276,85 @@ export default function Navbar() {
       </div>
 
 
-      {/* ── MOBILE OVERLAY MENU ──────────────────────────────────────────── */}
-      <div className={`fixed inset-0 z-[100] transition-all duration-500 lg:hidden ${mobileMenuOpen ? "opacity-100 pointer-events-auto" : "opacity-0 pointer-events-none"}`}>
-        {/* Frosted Background */}
-        <div className="absolute inset-0 bg-white/70 backdrop-blur-3xl" onClick={() => setMobileMenuOpen(false)} />
+      {/* ── MOBILE SIDE DRAWER ──────────────────────────────────────────── */}
+      <div className={`fixed inset-0 z-[100] transition-all duration-300 lg:hidden ${mobileMenuOpen ? "opacity-100 pointer-events-auto" : "opacity-0 pointer-events-none"}`}>
+        {/* Dark Overlay Background */}
+        <div className="absolute inset-0 bg-black/40 backdrop-blur-sm transition-opacity" onClick={() => setMobileMenuOpen(false)} />
         
-        {/* Menu Content sliding up slightly */}
-        <div className={`absolute inset-0 flex flex-col transition-transform duration-500 delay-75 ${mobileMenuOpen ? "translate-y-0" : "translate-y-8"}`}>
+        {/* Drawer Content sliding from left */}
+        <div className={`absolute top-0 left-0 bottom-0 w-[85%] max-w-sm bg-white shadow-2xl flex flex-col transition-transform duration-300 ease-out ${mobileMenuOpen ? "translate-x-0" : "-translate-x-full"}`}>
+          
           {/* Header */}
-          <div className="flex items-center justify-between px-6 py-6 shrink-0">
-            <Link href="/" onClick={() => setMobileMenuOpen(false)} className="flex items-center gap-2">
-              <div className="w-10 h-10 rounded-full bg-gray-900 flex items-center justify-center">
-                <span className="text-white font-black text-sm tracking-tighter">MH</span>
-              </div>
+          <div className="flex items-center justify-between px-6 py-5 border-b border-gray-100 shrink-0">
+            <Link href="/" onClick={() => setMobileMenuOpen(false)} className="flex items-center">
+              <img src="/logo.png" alt="CampusGo" className="h-9 w-auto object-contain" />
             </Link>
-            <button onClick={() => setMobileMenuOpen(false)} className="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center text-gray-900 hover:bg-gray-200 transition-colors">
-              <i className="fa-solid fa-xmark text-lg" />
+            <button onClick={() => setMobileMenuOpen(false)} className="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center text-gray-900 hover:bg-gray-200 transition-colors">
+              <i className="fa-solid fa-xmark" />
             </button>
           </div>
 
-          <div className="flex-1 overflow-y-auto px-6 pb-24">
-            {/* Primary Nav */}
-            <div className="flex flex-col gap-4 mb-10 mt-4">
-              {PUBLIC_NAV.map(link => (
-                <Link key={link.href} href={link.href} onClick={() => setMobileMenuOpen(false)} className="text-3xl font-extrabold text-gray-900 tracking-tight flex items-center gap-4">
-                  <span className="w-10 h-10 rounded-2xl bg-gray-100 flex items-center justify-center text-[18px] text-gray-500 shrink-0">
-                    <i className={`fa-solid ${link.icon}`} />
-                  </span>
-                  {link.label}
-                </Link>
-              ))}
-            </div>
-
-            {/* Account Section */}
+          <div className="flex-1 overflow-y-auto">
+            {/* Account Section (if logged in) */}
             {session ? (
-              <div className="mb-10 p-5 rounded-3xl bg-gradient-to-br from-gray-50 to-gray-100 border border-gray-200/50">
-                <div className="flex items-center gap-4 mb-6">
-                  <div className={`w-14 h-14 rounded-full bg-gradient-to-br ${avatarGradient} flex items-center justify-center text-white font-bold text-xl ring-4 ring-white shadow-md`}>
+              <div className="px-6 py-6 border-b border-gray-100 bg-gray-50/50">
+                <div className="flex items-center gap-3 mb-4 text-left">
+                  <div className={`w-12 h-12 rounded-full bg-gradient-to-br ${avatarGradient} flex items-center justify-center text-white font-bold text-lg ring-2 ring-white shadow-sm shrink-0`}>
                     {avatarInitial}
                   </div>
                   <div className="min-w-0">
-                    <p className="text-lg font-black text-gray-900 truncate">{session.user.name}</p>
-                    <p className="text-sm text-gray-500 truncate">{session.user.email}</p>
-                    <span className="inline-block mt-1 text-[10px] font-bold px-2 py-0.5 bg-gray-200 text-gray-700 rounded-md uppercase">{role}</span>
+                    <p className="text-base font-bold text-gray-900 truncate">{session.user.name}</p>
+                    <p className="text-xs text-gray-500 truncate">{session.user.email}</p>
+                    <span className="inline-block mt-1 text-[9px] font-bold px-2 py-0.5 bg-gray-200 text-gray-700 rounded-md uppercase">{role}</span>
                   </div>
                 </div>
 
-                <div className="flex flex-col gap-1">
-                  <Link href={`/dashboard/${role}`} onClick={() => setMobileMenuOpen(false)} className="flex items-center gap-3 px-4 py-3 rounded-2xl bg-white text-gray-900 font-bold hover:bg-blue-50 transition-colors shadow-sm">
-                    <i className="fa-solid fa-grid-2 text-blue-600" />
+                <div className="flex flex-col gap-2 text-left">
+                  <Link href={`/dashboard/${role}`} onClick={() => setMobileMenuOpen(false)} className="flex items-center gap-3 px-3 py-2 rounded-xl text-sm font-bold text-gray-700 hover:text-blue-600 hover:bg-blue-50 transition-colors">
+                    <i className="fa-solid fa-grid-2 w-4 text-center" />
                     Dashboard
                   </Link>
                   {hasBothRoles && (
-                    <button onClick={() => switchRole(isSeller ? "buyer" : "seller")} disabled={switching} className="flex items-center gap-3 px-4 py-3 rounded-2xl bg-white text-gray-700 font-bold hover:bg-gray-50 transition-colors shadow-sm mt-2 text-left">
-                      <i className="fa-solid fa-arrow-right-arrow-left text-gray-400" />
+                    <button onClick={() => switchRole(isSeller ? "buyer" : "seller")} disabled={switching} className="flex items-center gap-3 px-3 py-2 rounded-xl text-sm font-bold text-gray-600 hover:text-gray-900 hover:bg-gray-100 transition-colors text-left">
+                      <i className="fa-solid fa-arrow-right-arrow-left w-4 text-center text-gray-400" />
                       {switching ? "Switching..." : `Switch to ${isSeller ? "Buyer" : "Seller"}`}
                     </button>
                   )}
                 </div>
               </div>
             ) : (
-              <div className="flex flex-col gap-3 mb-10">
-                <Link href="/auth/register" onClick={() => setMobileMenuOpen(false)} className="flex items-center justify-center py-4 rounded-full bg-gray-900 text-white text-lg font-bold shadow-xl shadow-gray-900/20">
+              <div className="px-6 py-6 border-b border-gray-100 flex flex-col gap-3">
+                <Link href="/auth/register" onClick={() => setMobileMenuOpen(false)} className="flex items-center justify-center py-3 rounded-full bg-gray-900 text-white text-sm font-bold shadow-md shadow-gray-900/20">
                   Create an account
                 </Link>
-                <Link href="/auth/login" onClick={() => setMobileMenuOpen(false)} className="flex items-center justify-center py-4 rounded-full bg-gray-100 text-gray-900 text-lg font-bold">
+                <Link href="/auth/login" onClick={() => setMobileMenuOpen(false)} className="flex items-center justify-center py-3 rounded-full bg-gray-100 text-gray-900 text-sm font-bold">
                   Log in
                 </Link>
               </div>
             )}
 
+            {/* Primary Nav */}
+            <div className="px-3 py-4">
+              <p className="px-4 text-xs font-bold uppercase tracking-widest text-gray-400 mb-2">Menu</p>
+              <div className="flex flex-col gap-1">
+                {PUBLIC_NAV.map(link => (
+                  <Link key={link.href} href={link.href} onClick={() => setMobileMenuOpen(false)} className="flex items-center gap-4 px-4 py-3 rounded-xl text-base font-bold text-gray-700 hover:bg-gray-100 transition-colors text-left">
+                    <i className={`fa-solid ${link.icon} w-5 text-center text-gray-400`} />
+                    {link.label}
+                  </Link>
+                ))}
+              </div>
+            </div>
+
             {/* Categories Mobile */}
             {categories.length > 0 && (
-              <div>
-                <p className="text-xs font-bold uppercase tracking-widest text-gray-400 mb-4 px-2">Shop by Category</p>
-                <div className="grid grid-cols-2 gap-2">
+              <div className="px-3 py-2 pb-6">
+                <p className="px-4 text-xs font-bold uppercase tracking-widest text-gray-400 mb-2">Categories</p>
+                <div className="flex flex-col gap-1">
                   {categories.map((cat) => (
-                    <Link key={cat._id} href={`/products?category=${cat._id}`} onClick={() => setMobileMenuOpen(false)} className="flex items-center gap-3 px-4 py-3 rounded-2xl bg-gray-50 hover:bg-gray-100 transition-colors">
-                      <i className={`fa-solid ${getCatIcon(cat.name)} text-gray-400`} />
-                      <span className="text-sm font-semibold text-gray-700">{cat.name}</span>
+                    <Link key={cat._id} href={`/products?category=${cat._id}`} onClick={() => setMobileMenuOpen(false)} className="flex items-center gap-4 px-4 py-3 rounded-xl text-sm font-semibold text-gray-600 hover:bg-gray-100 transition-colors text-left">
+                      <i className={`fa-solid ${getCatIcon(cat.name)} w-5 text-center text-gray-400`} />
+                      {cat.name}
                     </Link>
                   ))}
                 </div>
@@ -369,9 +364,9 @@ export default function Navbar() {
           
           {/* Mobile Footer logout */}
           {session && (
-            <div className="absolute bottom-0 left-0 right-0 p-6 bg-gradient-to-t from-white via-white to-transparent pt-12 pointer-events-none">
-              <button onClick={() => { setMobileMenuOpen(false); setConfirmLogout(true); }} className="w-full flex items-center justify-center gap-2 py-4 rounded-full bg-red-50 text-red-600 font-bold text-lg hover:bg-red-100 transition-colors pointer-events-auto">
-                <i className="fa-solid fa-arrow-right-from-bracket" />
+            <div className="p-4 border-t border-gray-100 shrink-0 bg-white">
+              <button onClick={() => { setMobileMenuOpen(false); setConfirmLogout(true); }} className="w-full flex items-center justify-start gap-3 px-4 py-3 rounded-xl text-sm font-bold text-red-600 hover:bg-red-50 transition-colors text-left">
+                <i className="fa-solid fa-arrow-right-from-bracket w-5 text-center" />
                 Sign Out
               </button>
             </div>

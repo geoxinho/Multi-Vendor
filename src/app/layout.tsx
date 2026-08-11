@@ -18,29 +18,29 @@ const ROOT_DESCRIPTION =
 
 export const metadata: Metadata = {
   title: {
-    default: "MarketHub — Multi-Vendor Marketplace",
-    template: "%s | MarketHub",
+    default: "CampusGo — Multi-Vendor Marketplace",
+    template: "%s | CampusGo",
   },
   description: ROOT_DESCRIPTION,
   keywords: ["marketplace", "buy", "sell", "ecommerce", "Nigeria"],
-  authors: [{ name: "MarketHub" }],
+  authors: [{ name: "CampusGo" }],
   openGraph: {
-    title: "MarketHub — Multi-Vendor Marketplace",
+    title: "CampusGo — Multi-Vendor Marketplace",
     description: ROOT_DESCRIPTION,
     type: "website",
-    siteName: "MarketHub",
+    siteName: "CampusGo",
     images: [
       {
         url: "/favicon.ico",
-        alt: "MarketHub logo",
+        alt: "CampusGo logo",
       },
     ],
   },
   twitter: {
     card: "summary_large_image",
-    title: "MarketHub — Multi-Vendor Marketplace",
+    title: "CampusGo — Multi-Vendor Marketplace",
     description: ROOT_DESCRIPTION,
-    creator: "@MarketHub",
+    creator: "@CampusGo",
   },
   icons: {
     icon: "/favicon.ico",
@@ -56,14 +56,14 @@ const ROOT_SCHEMA = {
   "@graph": [
     {
       "@type": "Organization",
-      name: "MarketHub",
+      name: "CampusGo",
       url: metadataBase.toString(),
       logo: new URL("/favicon.ico", metadataBase).toString(),
       sameAs: [],
     },
     {
       "@type": "WebSite",
-      name: "MarketHub",
+      name: "CampusGo",
       url: metadataBase.toString(),
       description: ROOT_DESCRIPTION,
     },

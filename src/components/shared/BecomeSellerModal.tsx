@@ -46,7 +46,7 @@ export default function BecomeSellerModal({ onClose }: BecomeSellerModalProps) {
           <div className="flex items-center justify-between">
             <div>
               <h2 className="text-lg font-bold text-white">Become a Seller</h2>
-              <p className="text-green-100 text-xs mt-0.5">Start selling products on MarketHub</p>
+              <p className="text-green-100 text-xs mt-0.5">Start selling products on CampusGo</p>
             </div>
             <button onClick={onClose} className="text-white/70 hover:text-white transition-colors">
               <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">

@@ -73,12 +73,8 @@ function LoginForm() {
         {/* Logo */}
         <div className="text-center mb-8">
           <Link href="/" className="inline-flex items-center gap-2">
-            <div className="w-8 h-8 rounded-md bg-[#2563EB] flex items-center justify-center">
-              <span className="text-white font-black text-sm">M</span>
-            </div>
-            <span className="font-bold text-xl text-[#111111]">
-              Market<span className="text-[#2563EB]">Hub</span>
-            </span>
+            <img src="/logo.png" alt="CampusGo" className="h-8 w-auto object-contain" />
+            <span className="font-bold text-xl text-[#111111]">Campus<span className="text-[#2563EB]">Go</span></span>
           </Link>
           <h1 className="text-xl font-bold text-[#111111] mt-6 mb-1">Sign in</h1>
           <p className="text-sm text-[#6B6B6B]">Welcome back.</p>
@@ -121,7 +117,7 @@ function LoginForm() {
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-[#9B9B9B] hover:text-[#6B6B6B] text-xs"
+                  className="absolute right-2 top-1/2 -translate-y-1/2 p-2 text-[#9B9B9B] hover:text-[#6B6B6B] transition-colors z-10"
                   tabIndex={-1}
                 >
                   <i className={`fa-solid ${showPassword ? "fa-eye-slash" : "fa-eye"}`} />

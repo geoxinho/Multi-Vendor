@@ -11,19 +11,19 @@ const HOME_DESCRIPTION =
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? "https://closevenders.vercel.app";
 
 export const metadata: Metadata = {
-  title: "MarketHub — Buy & Sell New and Used Products",
+  title: "CampusGo — Buy & Sell New and Used Products",
   description: HOME_DESCRIPTION,
   openGraph: {
-    title: "MarketHub — Buy & Sell New and Used Products",
+    title: "CampusGo — Buy & Sell New and Used Products",
     description: HOME_DESCRIPTION,
     type: "website",
-    siteName: "MarketHub",
+    siteName: "CampusGo",
     url: SITE_URL,
-    images: [{ url: "/favicon.ico", alt: "MarketHub homepage" }],
+    images: [{ url: "/favicon.ico", alt: "CampusGo homepage" }],
   },
   twitter: {
     card: "summary_large_image",
-    title: "MarketHub — Buy & Sell New and Used Products",
+    title: "CampusGo — Buy & Sell New and Used Products",
     description: HOME_DESCRIPTION,
   },
 };
@@ -79,7 +79,7 @@ export default async function HomePage() {
   const pageSchema = {
     "@context": "https://schema.org",
     "@type": "WebPage",
-    name: "MarketHub Homepage",
+    name: "CampusGo Homepage",
     url: SITE_URL,
     description: HOME_DESCRIPTION,
   };

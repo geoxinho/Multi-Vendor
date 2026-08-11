@@ -29,6 +29,7 @@ export async function GET(req: NextRequest) {
       query.$or = [
         { title: { $regex: search, $options: "i" } },
         { tags: { $regex: search, $options: "i" } },
+        { description: { $regex: search, $options: "i" } },
       ];
     }
     if (category) query.category = category;

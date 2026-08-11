@@ -30,17 +30,17 @@ export async function POST(req: NextRequest) {
 
     await sendMail({
       to: user.email,
-      subject: "Reset your MarketHub password",
+      subject: "Reset your CampusGo password",
       html: `
         <div style="font-family: Arial, sans-serif; max-width: 520px; margin: 0 auto; background: #f9fafb; border-radius: 16px; overflow: hidden;">
           <div style="background: #059669; padding: 32px 40px; text-align: center;">
-            <h1 style="color: white; margin: 0; font-size: 24px; font-weight: 900; letter-spacing: -0.5px;">MarketHub</h1>
+            <h1 style="color: white; margin: 0; font-size: 24px; font-weight: 900; letter-spacing: -0.5px;">CampusGo</h1>
           </div>
           <div style="padding: 40px;">
             <h2 style="font-size: 20px; font-weight: 700; color: #111827; margin: 0 0 12px;">Password Reset Request</h2>
             <p style="color: #6b7280; font-size: 15px; line-height: 1.6; margin: 0 0 28px;">
               Hi <strong style="color: #111827;">${user.name}</strong>,<br/><br/>
-              We received a request to reset the password for your MarketHub account. Click the button below to choose a new password. This link expires in <strong>1 hour</strong>.
+              We received a request to reset the password for your CampusGo account. Click the button below to choose a new password. This link expires in <strong>1 hour</strong>.
             </p>
             <a href="${resetUrl}"
               style="display: inline-block; background: #059669; color: white; text-decoration: none; font-weight: 700; font-size: 15px; padding: 14px 32px; border-radius: 12px; margin-bottom: 28px;">

@@ -10,7 +10,7 @@ export async function sendVerificationEmail(email: string, otp: string) {
   const smtpPort = process.env.SMTP_PORT ? parseInt(process.env.SMTP_PORT) : 587;
   const smtpUser = process.env.SMTP_USER;
   const smtpPass = process.env.SMTP_PASS;
-  const smtpFrom = process.env.SMTP_FROM || "MarketHub <no-reply@markethub.com>";
+  const smtpFrom = process.env.SMTP_FROM || "CampusGo <no-reply@CampusGo.com>";
 
   const hasSMTP = smtpHost && smtpUser && smtpPass;
 
@@ -29,8 +29,8 @@ export async function sendVerificationEmail(email: string, otp: string) {
       const mailOptions = {
         from: smtpFrom,
         to: email,
-        subject: "Verify your MarketHub Account",
-        text: `Welcome to MarketHub! Your verification code is: ${otp}`,
+        subject: "Verify your CampusGo Account",
+        text: `Welcome to CampusGo! Your verification code is: ${otp}`,
         html: `
           <div style="font-family: 'Inter', sans-serif; max-width: 600px; margin: 0 auto; padding: 30px; border: 1px solid #f0f0f0; border-radius: 16px; background-color: #ffffff;">
             <div style="text-align: center; margin-bottom: 25px;">
@@ -38,7 +38,7 @@ export async function sendVerificationEmail(email: string, otp: string) {
             </div>
             <h2 style="font-size: 20px; font-weight: 700; color: #1f2937; margin-bottom: 12px; text-align: center;">Verify Your Email Address</h2>
             <p style="font-size: 14px; color: #4b5563; line-height: 1.6; margin-bottom: 24px; text-align: center;">
-              Welcome to MarketHub! To complete your registration, please enter the 6-digit verification code below:
+              Welcome to CampusGo! To complete your registration, please enter the 6-digit verification code below:
             </p>
             <div style="text-align: center; margin-bottom: 24px; padding: 15px; background-color: #f3f4f6; border-radius: 8px;">
               <span style="font-size: 32px; font-weight: bold; letter-spacing: 5px; color: #16a34a;">${otp}</span>
@@ -62,7 +62,7 @@ export async function sendVerificationEmail(email: string, otp: string) {
   console.log("\n" + "=".repeat(60));
   console.log("[DEVELOPMENT MOCK EMAIL]");
   console.log(`To:      ${email}`);
-  console.log("Subject: Verify your MarketHub account");
+  console.log("Subject: Verify your CampusGo account");
   console.log(`OTP Code: ${otp}`);
   console.log("=".repeat(60) + "\n");
   return true;
@@ -76,7 +76,7 @@ export async function sendWelcomeEmail(email: string, name: string) {
   const smtpPort = process.env.SMTP_PORT ? parseInt(process.env.SMTP_PORT) : 587;
   const smtpUser = process.env.SMTP_USER;
   const smtpPass = process.env.SMTP_PASS;
-  const smtpFrom = process.env.SMTP_FROM || "MarketHub <no-reply@markethub.com>";
+  const smtpFrom = process.env.SMTP_FROM || "CampusGo <no-reply@CampusGo.com>";
 
   const hasSMTP = smtpHost && smtpUser && smtpPass;
 
@@ -95,10 +95,10 @@ export async function sendWelcomeEmail(email: string, name: string) {
       await transporter.sendMail({
         from: smtpFrom,
         to: email,
-        subject: "Welcome to MarketHub!",
+        subject: "Welcome to CampusGo!",
         html: `
           <div style="font-family: sans-serif; padding: 20px;">
-            <h2>Welcome to MarketHub, ${name}!</h2>
+            <h2>Welcome to CampusGo, ${name}!</h2>
             <p>Your account has been created successfully. You can now start buying and selling on our platform.</p>
           </div>
         `,
@@ -133,7 +133,7 @@ export async function sendOrderConfirmationEmails(
   const smtpPort = process.env.SMTP_PORT ? parseInt(process.env.SMTP_PORT) : 587;
   const smtpUser = process.env.SMTP_USER;
   const smtpPass = process.env.SMTP_PASS;
-  const smtpFrom = process.env.SMTP_FROM || "MarketHub <no-reply@markethub.com>";
+  const smtpFrom = process.env.SMTP_FROM || "CampusGo <no-reply@CampusGo.com>";
 
   const hasSMTP = smtpHost && smtpUser && smtpPass;
 
@@ -182,7 +182,7 @@ export async function sendOrderConfirmationEmails(
 
         <!-- Footer -->
         <div style="background:#f9fafb;padding:16px 32px;text-align:center;border-top:1px solid #e5e7eb;">
-          <p style="font-size:11px;color:#9ca3af;margin:0;">© ${new Date().getFullYear()} MarketHub · This is an automated email, please do not reply.</p>
+          <p style="font-size:11px;color:#9ca3af;margin:0;">© ${new Date().getFullYear()} CampusGo · This is an automated email, please do not reply.</p>
         </div>
       </div>
     </div>
@@ -267,7 +267,7 @@ export async function sendOrderConfirmationEmails(
 
           <!-- Footer -->
           <div style="background:#f9fafb;padding:16px 32px;text-align:center;border-top:1px solid #e5e7eb;">
-            <p style="font-size:11px;color:#9ca3af;margin:0;">© ${new Date().getFullYear()} MarketHub · This is an automated email, please do not reply.</p>
+            <p style="font-size:11px;color:#9ca3af;margin:0;">© ${new Date().getFullYear()} CampusGo · This is an automated email, please do not reply.</p>
           </div>
         </div>
       </div>
@@ -287,7 +287,7 @@ export async function sendOrderConfirmationEmails(
       await transporter.sendMail({
         from: smtpFrom,
         to: buyerEmail,
-        subject: "Order Confirmation & Delivery PIN - MarketHub",
+        subject: "Order Confirmation & Delivery PIN - CampusGo",
         html: buyerHtml,
       });
 
@@ -297,7 +297,7 @@ export async function sendOrderConfirmationEmails(
           await transporter.sendMail({
             from: smtpFrom,
             to: email,
-            subject: "🎉 New Order Received - MarketHub",
+            subject: "🎉 New Order Received - CampusGo",
             html: buildSellerHtml(items),
           });
         }

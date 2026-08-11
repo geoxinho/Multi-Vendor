@@ -125,10 +125,11 @@ function ResetPasswordForm() {
                       placeholder="Min. 6 characters"
                       className="w-full pl-10 pr-10 py-3 rounded-xl border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent bg-gray-50/50 focus:bg-white transition-all shadow-inner"
                     />
-                    <button 
-                      type="button" 
+                    <button
+                      type="button"
                       onClick={() => setShowPassword(!showPassword)}
-                      className="absolute inset-y-0 right-0 pr-3.5 flex items-center text-gray-400 hover:text-green-600 transition-colors text-sm"
+                      className="absolute right-2 top-1/2 -translate-y-1/2 p-2 text-[#9B9B9B] hover:text-[#6B6B6B] transition-colors z-10"
+                      tabIndex={-1}
                     >
                       <i className={`fa-solid ${showPassword ? "fa-eye-slash" : "fa-eye"}`} />
                     </button>
@@ -149,10 +150,11 @@ function ResetPasswordForm() {
                       placeholder="Repeat your new password"
                       className="w-full pl-10 pr-10 py-3 rounded-xl border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent bg-gray-50/50 focus:bg-white transition-all shadow-inner"
                     />
-                    <button 
-                      type="button" 
+                    <button
+                      type="button"
                       onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                      className="absolute inset-y-0 right-0 pr-3.5 flex items-center text-gray-400 hover:text-green-600 transition-colors text-sm"
+                      className="absolute right-2 top-1/2 -translate-y-1/2 p-2 text-[#9B9B9B] hover:text-[#6B6B6B] transition-colors z-10"
+                      tabIndex={-1}
                     >
                       <i className={`fa-solid ${showConfirmPassword ? "fa-eye-slash" : "fa-eye"}`} />
                     </button>
