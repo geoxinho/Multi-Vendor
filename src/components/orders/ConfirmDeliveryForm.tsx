@@ -56,9 +56,7 @@ export default function ConfirmDeliveryForm({ orderId, onSuccess }: ConfirmDeliv
   if (success) {
     return (
       <div className="p-4 bg-green-50 border border-green-200 text-green-800 rounded-xl text-sm font-semibold flex items-center gap-2">
-        <svg className="w-5 h-5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" />
-        </svg>
+        <i className="fa-solid fa-circle-check text-lg shrink-0" style={{ color: "#A4860E" }} />
         <span>Delivery verified & confirmed successfully! <i className="fa-solid fa-champagne-glasses text-green-600" /></span>
       </div>
     );
@@ -81,7 +79,7 @@ export default function ConfirmDeliveryForm({ orderId, onSuccess }: ConfirmDeliv
             required
             maxLength={6}
             placeholder="Enter 6-digit PIN"
-            className="w-full px-4 py-2.5 text-sm bg-white rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500 transition font-mono tracking-widest text-center sm:text-left"
+            className="w-full px-4 py-2.5 text-sm bg-white rounded-xl border border-gray-200 focus:outline-none transition font-mono tracking-widest text-center sm:text-left"
             value={pin}
             onChange={(e) => setPin(e.target.value.replace(/\D/g, ""))}
           />
@@ -97,9 +95,7 @@ export default function ConfirmDeliveryForm({ orderId, onSuccess }: ConfirmDeliv
       
       {error && (
         <div className="flex items-center gap-1.5 text-xs text-red-600 mt-3 font-semibold bg-red-50 p-2.5 rounded-lg border border-red-100">
-          <svg className="w-4 h-4 shrink-0" fill="currentColor" viewBox="0 0 20 20">
-            <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
-          </svg>
+          <i className="fa-solid fa-circle-xmark text-sm shrink-0 text-red-600" />
           <span>{error}</span>
         </div>
       )}

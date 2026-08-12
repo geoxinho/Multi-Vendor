@@ -187,19 +187,7 @@ export default async function ProductDetailPage({ params }: Props) {
             </div>
           ) : null}
 
-          <div className="flex items-center gap-3 mb-6">
-            <span
-              className={`text-sm font-medium ${(product.stock ?? 0) > 0 ? "text-[#16A34A]" : "text-[#DC2626]"}`}
-            >
-              {(product.stock ?? 0) > 0 ? (
-                <>
-                  <i className="fa-solid fa-check" /> {product.stock} in stock
-                </>
-              ) : (
-                "Out of stock"
-              )}
-            </span>
-          </div>
+
 
           {/* Variants */}
           {(product.variants?.sizes?.length > 0 || product.variants?.colors?.length > 0) && (

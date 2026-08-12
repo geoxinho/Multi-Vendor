@@ -82,8 +82,8 @@ export default function ProductReviews({ productId }: { productId: string }) {
     if (eligibility.reason === "already_reviewed" || success) {
       return (
         <div className="bg-[#F0FDF4] rounded-md border border-[#BBF7D0] p-5 mb-8 flex items-center gap-3">
-          <i className="fa-solid fa-circle-check text-[#16A34A] text-2xl shrink-0" />
-          <p className="text-[#16A34A] text-sm font-medium">You have already reviewed this product. Thank you!</p>
+          <i className="fa-solid fa-circle-check text-[#A4860E] text-2xl shrink-0" />
+          <p className="text-[#A4860E] text-sm font-medium">You have already reviewed this product. Thank you!</p>
         </div>
       );
     }
@@ -131,10 +131,10 @@ export default function ProductReviews({ productId }: { productId: string }) {
             <textarea rows={3} value={form.comment} required
               onChange={(e) => setForm((f) => ({ ...f, comment: e.target.value }))}
               placeholder="Share your honest experience — quality, delivery, packaging..."
-              className="w-full px-4 py-3 rounded-md border border-[#E5E5E5] text-sm focus:outline-none focus:border-[#2563EB] transition-colors resize-none bg-white text-[#111111] placeholder:text-[#9B9B9B]" />
+              className="w-full px-4 py-3 rounded-md border border-[#E5E5E5] text-sm focus:outline-none focus:border-[#A4860E] transition-colors resize-none bg-white text-[#111111] placeholder:text-[#9B9B9B]" />
             {error && <p className="text-sm text-[#DC2626] font-medium">{error}</p>}
             <button type="submit" disabled={submitting}
-              className="px-5 py-2 bg-[#2563EB] text-white font-semibold rounded-md hover:bg-[#1D4ED8] transition-colors text-sm disabled:opacity-60">
+              className="px-5 py-2 bg-[#A4860E] text-white font-semibold rounded-md hover:bg-[#8a6f0b] transition-colors text-sm disabled:opacity-60">
               {submitting ? "Submitting…" : "Submit Review"}
             </button>
           </form>
@@ -164,8 +164,8 @@ export default function ProductReviews({ productId }: { productId: string }) {
           {reviews.map((r) => (
             <div key={r._id} className="bg-white rounded-md border border-[#E5E5E5] p-5">
               <div className="flex items-center gap-3 mb-3">
-                <div className="w-8 h-8 rounded-full bg-[#EFF6FF] flex items-center justify-center shrink-0">
-                  <span className="text-[#2563EB] font-bold text-xs">{r.buyer?.name?.[0]?.toUpperCase() ?? "?"}</span>
+                <div className="w-8 h-8 rounded-full bg-[#fdf8e8] flex items-center justify-center shrink-0">
+                  <span className="text-[#A4860E] font-bold text-xs">{r.buyer?.name?.[0]?.toUpperCase() ?? "?"}</span>
                 </div>
                 <div className="flex-1 min-w-0">
                   <p className="text-sm font-semibold text-[#111111]">{r.buyer?.name ?? "Deleted User"}</p>

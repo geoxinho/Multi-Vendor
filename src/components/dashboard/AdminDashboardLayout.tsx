@@ -35,10 +35,7 @@ export default function AdminDashboardLayout({ navItems, children }: AdminDashbo
         <div className="px-5 py-5 border-b border-gray-800">
           <div className="flex items-center gap-2.5">
             <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-purple-500 to-indigo-700 flex items-center justify-center shadow">
-              <svg className="w-4 h-4 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
-                  d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
-              </svg>
+              <i className="fa-solid fa-shield-halved text-white text-xs" />
             </div>
             <div>
               <p className="font-black text-white text-base leading-tight">CampusGo</p>
@@ -93,24 +90,16 @@ export default function AdminDashboardLayout({ navItems, children }: AdminDashbo
             rel="noopener noreferrer"
             className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-gray-400 hover:bg-gray-800 hover:text-white transition-all group"
           >
-            <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
-                d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
-            </svg>
+            <i className="fa-solid fa-arrow-up-right-from-square w-5 text-center" />
             Visit Website
-            <svg className="w-3 h-3 ml-auto opacity-0 group-hover:opacity-100 transition-opacity" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-            </svg>
+            <i className="fa-solid fa-chevron-right text-[10px] ml-auto opacity-0 group-hover:opacity-100 transition-opacity" />
           </Link>
 
           <button
             onClick={() => setConfirmLogout(true)}
             className="flex items-center gap-3 w-full px-3 py-2.5 rounded-xl text-sm font-medium text-gray-400 hover:bg-red-900/40 hover:text-red-400 transition-all"
           >
-            <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
-                d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
-            </svg>
+            <i className="fa-solid fa-right-from-bracket w-5 text-center" />
             Sign Out
           </button>
         </div>
@@ -123,20 +112,16 @@ export default function AdminDashboardLayout({ navItems, children }: AdminDashbo
         <header className="bg-white border-b border-gray-200 px-4 md:px-6 h-14 flex items-center justify-between shrink-0">
           <button
             onClick={() => setMobileOpen(true)}
-            className="md:hidden p-2 rounded-xl hover:bg-gray-100 transition-colors text-gray-600"
+            className="md:hidden p-2 rounded-xl hover:bg-gray-100 transition-colors text-gray-600 flex items-center justify-center"
           >
-            <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
-            </svg>
+            <i className="fa-solid fa-bars text-lg" />
           </button>
 
           <div className="hidden md:flex items-center gap-2 text-sm text-gray-500">
             <span className="font-bold text-purple-700">Admin Panel</span>
             {pathname.split("/").filter(Boolean).length > 2 && (
               <>
-                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                </svg>
+                <i className="fa-solid fa-chevron-right text-xs text-gray-300" />
                 <span className="capitalize">{pathname.split("/").pop()?.replace(/-/g, " ")}</span>
               </>
             )}
@@ -148,10 +133,7 @@ export default function AdminDashboardLayout({ navItems, children }: AdminDashbo
             rel="noopener noreferrer"
             className="flex items-center gap-2 px-4 py-1.5 rounded-xl bg-purple-600 hover:bg-purple-700 text-white text-sm font-semibold transition-colors shadow-sm"
           >
-            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
-                d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
-            </svg>
+            <i className="fa-solid fa-arrow-up-right-from-square text-xs" />
             Visit Website
           </Link>
         </header>
@@ -168,10 +150,8 @@ export default function AdminDashboardLayout({ navItems, children }: AdminDashbo
           <div className="fixed inset-y-0 left-0 z-50 w-72 bg-gray-950 text-white flex flex-col md:hidden">
             <div className="px-5 py-5 border-b border-gray-800 flex items-center justify-between">
               <span className="font-black text-white">Admin Panel</span>
-              <button onClick={() => setMobileOpen(false)} className="p-1.5 rounded-xl hover:bg-gray-800 text-gray-400">
-                <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                </svg>
+              <button onClick={() => setMobileOpen(false)} className="p-1.5 rounded-xl hover:bg-gray-800 text-gray-400 flex items-center justify-center">
+                <i className="fa-solid fa-xmark text-lg" />
               </button>
             </div>
             <nav className="flex-1 px-3 py-4 space-y-1">
@@ -191,16 +171,12 @@ export default function AdminDashboardLayout({ navItems, children }: AdminDashbo
             <div className="px-3 py-4 border-t border-gray-800 space-y-1">
               <Link href="/" target="_blank" onClick={() => setMobileOpen(false)}
                 className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm text-gray-400 hover:bg-gray-800 hover:text-white transition-all">
-                <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
-                </svg>
+                <i className="fa-solid fa-arrow-up-right-from-square w-5 text-center" />
                 Visit Website
               </Link>
               <button onClick={() => { setMobileOpen(false); setConfirmLogout(true); }}
                 className="flex items-center gap-3 w-full px-3 py-2.5 rounded-xl text-sm text-gray-400 hover:bg-red-900/40 hover:text-red-400 transition-all">
-                <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
-                </svg>
+                <i className="fa-solid fa-right-from-bracket w-5 text-center" />
                 Sign Out
               </button>
             </div>
@@ -237,17 +213,17 @@ export default function AdminDashboardLayout({ navItems, children }: AdminDashbo
                 key={item.href}
                 href={item.href}
                 className={`flex flex-col items-center gap-0.5 px-3 py-1.5 rounded-xl transition-colors min-w-0 ${
-                  active ? "text-[#2563EB]" : "text-gray-400"
+                  active ? "text-[#A4860E]" : "text-gray-400"
                 }`}
               >
-                <span className={`${active ? "text-[#2563EB]" : "text-gray-400"}`}>
+                <span className={`${active ? "text-[#A4860E]" : "text-gray-400"}`}>
                   {item.icon}
                 </span>
-                <span className={`text-[10px] font-medium truncate max-w-[50px] ${active ? "text-[#2563EB]" : "text-gray-500"}`}>
+                <span className={`text-[10px] font-medium truncate max-w-[50px] ${active ? "text-[#A4860E]" : "text-gray-500"}`}>
                   {item.label.split(" ")[0]} {/* Show single word labels for admin on mobile */}
                 </span>
                 {active && (
-                  <span className="w-1 h-1 rounded-full bg-[#2563EB]" />
+                  <span className="w-1 h-1 rounded-full bg-[#A4860E]" />
                 )}
               </Link>
             );

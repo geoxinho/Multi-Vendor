@@ -27,7 +27,7 @@ export default function CartPage() {
             <h2 className="text-lg font-semibold text-[#111111] mb-2">Your cart is empty</h2>
             <p className="text-[#6B6B6B] mb-8 text-sm">Looks like you haven&apos;t added anything yet.</p>
             <Link href="/products"
-              className="px-6 py-2.5 bg-[#2563EB] text-white font-semibold rounded-md hover:bg-[#1D4ED8] transition-colors text-sm">
+              className="px-6 py-2.5 bg-[#A4860E] text-white font-semibold rounded-md hover:bg-[#8a6f0b] transition-colors text-sm">
               Browse Products
             </Link>
           </div>
@@ -42,7 +42,7 @@ export default function CartPage() {
                   </div>
                   <div className="flex-1 min-w-0">
                     <Link href={`/products/${item.productId}`}
-                      className="font-medium text-[#111111] hover:text-[#2563EB] transition-colors line-clamp-2 text-sm">
+                      className="font-medium text-[#111111] hover:text-[#A4860E] transition-colors line-clamp-2 text-sm">
                       {item.title}
                     </Link>
                     <p className="text-xs text-[#9B9B9B] mt-0.5 capitalize">{item.condition}</p>
@@ -90,7 +90,7 @@ export default function CartPage() {
                   </div>
                   <div className="flex justify-between text-[#6B6B6B]">
                     <span>Delivery</span>
-                    <span className="text-[#16A34A] font-medium">Free</span>
+                    <span className="text-[#A4860E] font-medium">Free</span>
                   </div>
                   <div className="border-t border-[#E5E5E5] pt-3 flex justify-between font-bold text-[#111111]">
                     <span>Total</span>
@@ -98,7 +98,7 @@ export default function CartPage() {
                   </div>
                 </div>
                 <Link href="/checkout"
-                  className="block w-full py-3 text-center bg-[#2563EB] text-white font-semibold rounded-md hover:bg-[#1D4ED8] transition-colors text-sm">
+                  className="block w-full py-3 text-center bg-[#A4860E] text-white font-semibold rounded-md hover:bg-[#8a6f0b] transition-colors text-sm">
                   Proceed to Checkout
                 </Link>
                 <Link href="/products"

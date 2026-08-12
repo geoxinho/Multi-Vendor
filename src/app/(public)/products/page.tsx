@@ -109,7 +109,7 @@ function ProductsContent() {
               {["", "new", "used"].map((c) => (
                 <button key={c}
                   onClick={() => updateParam("condition", c)}
-                  className={`block w-full text-left px-3 py-2 rounded-md text-sm mb-1 transition-colors ${condition === c ? "bg-[#EFF6FF] text-[#2563EB] font-semibold" : "text-[#6B6B6B] hover:bg-[#F5F5F5]"}`}>
+                  className={`block w-full text-left px-3 py-2 rounded-md text-sm mb-1 transition-colors ${condition === c ? "bg-[#fdf8e8] text-[#A4860E] font-semibold" : "text-[#6B6B6B] hover:bg-[#F5F5F5]"}`}>
                   {c === "" ? "All" : c.charAt(0).toUpperCase() + c.slice(1)}
                 </button>
               ))}
@@ -121,13 +121,13 @@ function ProductsContent() {
                 <p className="text-xs font-semibold text-[#9B9B9B] uppercase tracking-wider mb-2">Category</p>
                 <button
                   onClick={() => updateParam("category", "")}
-                  className={`block w-full text-left px-3 py-2 rounded-md text-sm mb-1 transition-colors ${!category ? "bg-[#EFF6FF] text-[#2563EB] font-semibold" : "text-[#6B6B6B] hover:bg-[#F5F5F5]"}`}>
+                  className={`block w-full text-left px-3 py-2 rounded-md text-sm mb-1 transition-colors ${!category ? "bg-[#fdf8e8] text-[#A4860E] font-semibold" : "text-[#6B6B6B] hover:bg-[#F5F5F5]"}`}>
                   All Categories
                 </button>
                 {categories.map((cat) => (
                   <button key={cat._id}
                     onClick={() => updateParam("category", cat._id)}
-                    className={`block w-full text-left px-3 py-2 rounded-md text-sm mb-1 transition-colors truncate ${category === cat._id ? "bg-[#EFF6FF] text-[#2563EB] font-semibold" : "text-[#6B6B6B] hover:bg-[#F5F5F5]"}`}>
+                    className={`block w-full text-left px-3 py-2 rounded-md text-sm mb-1 transition-colors truncate ${category === cat._id ? "bg-[#fdf8e8] text-[#A4860E] font-semibold" : "text-[#6B6B6B] hover:bg-[#F5F5F5]"}`}>
                     {cat.name}
                   </button>
                 ))}
@@ -145,7 +145,7 @@ function ProductsContent() {
               ].map((s) => (
                 <button key={s.value}
                   onClick={() => updateParam("sort", s.value)}
-                  className={`block w-full text-left px-3 py-2 rounded-md text-sm mb-1 transition-colors ${sort === s.value ? "bg-[#EFF6FF] text-[#2563EB] font-semibold" : "text-[#6B6B6B] hover:bg-[#F5F5F5]"}`}>
+                  className={`block w-full text-left px-3 py-2 rounded-md text-sm mb-1 transition-colors ${sort === s.value ? "bg-[#fdf8e8] text-[#A4860E] font-semibold" : "text-[#6B6B6B] hover:bg-[#F5F5F5]"}`}>
                   {s.label}
                 </button>
               ))}

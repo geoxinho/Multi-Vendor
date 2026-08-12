@@ -179,10 +179,7 @@ export default function BankAccountVerifier({
 
         {banksLoading ? (
           <div className="flex items-center gap-2 px-4 py-3 rounded-xl border border-[#E5E5E5] bg-[#FAFAFA]">
-            <svg className="w-4 h-4 animate-spin text-[#2563EB]" fill="none" viewBox="0 0 24 24">
-              <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-              <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z" />
-            </svg>
+            <i className="fa-solid fa-circle-notch animate-spin text-[#A4860E] text-sm shrink-0" />
             <span className="text-sm text-[#9B9B9B]">Loading banks…</span>
           </div>
         ) : banksError ? (
@@ -199,10 +196,8 @@ export default function BankAccountVerifier({
         ) : (
           <div className="relative" ref={dropdownRef}>
             <div className="relative">
-              <span className="absolute left-3 top-1/2 -translate-y-1/2 text-[#9B9B9B]">
-                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-4.35-4.35M17 11A6 6 0 1 1 5 11a6 6 0 0 1 12 0z" />
-                </svg>
+              <span className="absolute left-3 top-1/2 -translate-y-1/2 text-[#9B9B9B] flex items-center justify-center">
+                <i className="fa-solid fa-magnifying-glass text-xs" />
               </span>
               <input
                 id="bank-search"
@@ -212,13 +207,11 @@ export default function BankAccountVerifier({
                 onChange={handleSearchChange}
                 onFocus={() => setDropdownOpen(true)}
                 placeholder="Search and select your bank…"
-                className="w-full pl-9 pr-4 py-2.5 rounded-xl border border-[#E5E5E5] focus:outline-none focus:ring-2 focus:ring-[#2563EB]/40 focus:border-[#2563EB] bg-white text-sm transition-colors"
+                className="w-full pl-9 pr-4 py-2.5 rounded-xl border border-[#E5E5E5] focus:outline-none focus:ring-2 focus:ring-[#A4860E]/40 focus:border-[#A4860E] bg-white text-sm transition-colors"
               />
               {bankCode && (
-                <span className="absolute right-3 top-1/2 -translate-y-1/2 text-[#16A34A]">
-                  <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" />
-                  </svg>
+                <span className="absolute right-3 top-1/2 -translate-y-1/2 text-[#A4860E] flex items-center justify-center">
+                  <i className="fa-solid fa-check text-sm" />
                 </span>
               )}
             </div>
@@ -234,9 +227,9 @@ export default function BankAccountVerifier({
                       key={bank.code}
                       type="button"
                       onClick={() => handleBankSelect(bank)}
-                      className={`w-full text-left px-4 py-2.5 text-sm hover:bg-[#EFF6FF] transition-colors ${
+                      className={`w-full text-left px-4 py-2.5 text-sm hover:bg-[#fdf8e8] transition-colors ${
                         bank.code === bankCode
-                          ? "bg-[#EFF6FF] text-[#2563EB] font-semibold"
+                          ? "bg-[#fdf8e8] text-[#A4860E] font-semibold"
                           : "text-[#111111]"
                       }`}
                     >
@@ -267,11 +260,11 @@ export default function BankAccountVerifier({
           value={accountNumber}
           onChange={handleAccountNumberChange}
           placeholder="Enter 10-digit account number"
-          className="w-full px-4 py-2.5 rounded-xl border border-[#E5E5E5] focus:outline-none focus:ring-2 focus:ring-[#2563EB]/40 focus:border-[#2563EB] bg-white text-sm font-mono tracking-widest transition-colors"
+          className="w-full px-4 py-2.5 rounded-xl border border-[#E5E5E5] focus:outline-none focus:ring-2 focus:ring-[#A4860E]/40 focus:border-[#A4860E] bg-white text-sm font-mono tracking-widest transition-colors"
         />
         <div className="flex justify-between mt-1">
           <p className="text-xs text-[#9B9B9B]">Digits only, exactly 10 characters</p>
-          <p className={`text-xs font-mono ${accountNumber.length === 10 ? "text-[#16A34A]" : "text-[#9B9B9B]"}`}>
+          <p className={`text-xs font-mono ${accountNumber.length === 10 ? "text-[#A4860E]" : "text-[#9B9B9B]"}`}>
             {accountNumber.length}/10
           </p>
         </div>
@@ -282,25 +275,20 @@ export default function BankAccountVerifier({
         <div
           className={`flex items-start gap-3 px-4 py-3.5 rounded-xl border text-sm ${
             verifying
-              ? "bg-[#EFF6FF] border-[#BFDBFE] text-[#2563EB]"
+              ? "bg-[#fdf8e8] border-[#BFDBFE] text-[#A4860E]"
               : verifiedAccount
-              ? "bg-[#F0FDF4] border-[#BBF7D0] text-[#15803D]"
+              ? "bg-[#F0FDF4] border-[#BBF7D0] text-[#8a6f0b]"
               : "bg-red-50 border-red-200 text-red-600"
           }`}
         >
           {verifying ? (
             <>
-              <svg className="w-4 h-4 mt-0.5 shrink-0 animate-spin" fill="none" viewBox="0 0 24 24">
-                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z" />
-              </svg>
+              <i className="fa-solid fa-circle-notch animate-spin text-sm mt-0.5 shrink-0" />
               <span className="font-medium">Verifying account…</span>
             </>
           ) : verifiedAccount ? (
             <>
-              <svg className="w-4 h-4 mt-0.5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-              </svg>
+              <i className="fa-solid fa-circle-check text-base mt-0.5 shrink-0" />
               <div>
                 <p className="font-bold">Account Verified ✓</p>
                 <p className="font-semibold text-[#111111] mt-0.5 uppercase tracking-wide">
@@ -310,9 +298,7 @@ export default function BankAccountVerifier({
             </>
           ) : (
             <>
-              <svg className="w-4 h-4 mt-0.5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-              </svg>
+              <i className="fa-solid fa-circle-exclamation text-base mt-0.5 shrink-0" />
               <div>
                 <p className="font-semibold">Verification Failed</p>
                 <p className="text-xs mt-0.5">{verifyError}</p>
@@ -325,9 +311,7 @@ export default function BankAccountVerifier({
       {/* ── Empty-state prompt ── */}
       {!verifying && !verifyError && !verifiedAccount && accountNumber.length > 0 && accountNumber.length < 10 && (
         <p className="text-xs text-[#9B9B9B] flex items-center gap-1.5">
-          <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-          </svg>
+          <i className="fa-solid fa-circle-info text-xs shrink-0" />
           Enter all 10 digits to auto-verify your account
         </p>
       )}

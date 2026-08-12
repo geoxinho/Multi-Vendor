@@ -77,7 +77,7 @@ export default async function SellerDashboardPage() {
         </div>
         <Link
           href="/dashboard/seller/products/new"
-          className="px-5 py-2.5 bg-[#2563EB] text-white font-bold rounded-md hover:bg-[#1D4ED8] transition-colors text-sm shadow-sm"
+          className="px-5 py-2.5 bg-[#A4860E] text-white font-bold rounded-md hover:bg-[#8a6f0b] transition-colors text-sm shadow-sm"
         >
           + New Product
         </Link>
@@ -87,17 +87,17 @@ export default async function SellerDashboardPage() {
       {(newOrdersCount > 0 || undeliveredCount > 0 || lowStockAlerts.length > 0) && (
         <div className="mb-8 space-y-3">
           {newOrdersCount > 0 && (
-            <div className="bg-[#EFF6FF] border border-[#BFDBFE]/60 rounded-xl p-4 flex items-center justify-between shadow-[0_2px_8px_rgba(37,99,235,0.03)] animate-pulse">
+            <div className="bg-[#fdf8e8] border border-[#BFDBFE]/60 rounded-xl p-4 flex items-center justify-between shadow-[0_2px_8px_rgba(37,99,235,0.03)] animate-pulse">
               <div className="flex items-center gap-3">
-                <div className="w-9 h-9 rounded-lg bg-[#DBEAFE] flex items-center justify-center text-[#2563EB] border border-[#BFDBFE]/40">
+                <div className="w-9 h-9 rounded-lg bg-[#DBEAFE] flex items-center justify-center text-[#A4860E] border border-[#BFDBFE]/40">
                   <i className="fa-solid fa-bell text-sm" />
                 </div>
                 <div>
                   <h4 className="text-sm font-bold text-[#1E40AF]">New Orders Received</h4>
-                  <p className="text-xs text-[#2563EB] mt-0.5">You have {newOrdersCount} new order{newOrdersCount > 1 ? "s" : ""} awaiting processing.</p>
+                  <p className="text-xs text-[#A4860E] mt-0.5">You have {newOrdersCount} new order{newOrdersCount > 1 ? "s" : ""} awaiting processing.</p>
                 </div>
               </div>
-              <Link href="/dashboard/seller/orders" className="text-xs font-bold text-[#2563EB] bg-white border border-[#BFDBFE] hover:bg-[#EFF6FF] px-3.5 py-2 rounded-md transition-colors shadow-sm">
+              <Link href="/dashboard/seller/orders" className="text-xs font-bold text-[#A4860E] bg-white border border-[#BFDBFE] hover:bg-[#fdf8e8] px-3.5 py-2 rounded-md transition-colors shadow-sm">
                 Process Orders
               </Link>
             </div>

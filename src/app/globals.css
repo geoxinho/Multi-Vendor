@@ -26,9 +26,58 @@
   --color-border-dark:   #D0D0D0;
 
   /* Status */
-  --color-success:       #16A34A;
+  --color-success:       #A4860E;
   --color-danger:        #DC2626;
   --color-warning:       #D97706;
+
+  /* Overrides to make all blue, green, teal, and indigo resolve to gold/bronze */
+  --color-blue-50: #fdf8e8;
+  --color-blue-100: #faf1cf;
+  --color-blue-200: #f5e09f;
+  --color-blue-300: #eec965;
+  --color-blue-400: #e6ad34;
+  --color-blue-500: #A4860E;
+  --color-blue-600: #A4860E;
+  --color-blue-700: #8a6f0b;
+  --color-blue-800: #6f5809;
+  --color-blue-900: #574406;
+  --color-blue-950: #3c2f03;
+
+  --color-green-50: #fdf8e8;
+  --color-green-100: #faf1cf;
+  --color-green-200: #f5e09f;
+  --color-green-300: #eec965;
+  --color-green-400: #e6ad34;
+  --color-green-500: #A4860E;
+  --color-green-600: #A4860E;
+  --color-green-700: #8a6f0b;
+  --color-green-800: #6f5809;
+  --color-green-900: #574406;
+  --color-green-950: #3c2f03;
+
+  --color-teal-50: #fdf8e8;
+  --color-teal-100: #faf1cf;
+  --color-teal-200: #f5e09f;
+  --color-teal-300: #eec965;
+  --color-teal-400: #e6ad34;
+  --color-teal-500: #A4860E;
+  --color-teal-600: #A4860E;
+  --color-teal-700: #8a6f0b;
+  --color-teal-800: #6f5809;
+  --color-teal-900: #574406;
+  --color-teal-950: #3c2f03;
+
+  --color-indigo-50: #fdf8e8;
+  --color-indigo-100: #faf1cf;
+  --color-indigo-200: #f5e09f;
+  --color-indigo-300: #eec965;
+  --color-indigo-400: #e6ad34;
+  --color-indigo-500: #A4860E;
+  --color-indigo-600: #A4860E;
+  --color-indigo-700: #8a6f0b;
+  --color-indigo-800: #6f5809;
+  --color-indigo-900: #574406;
+  --color-indigo-950: #3c2f03;
 }
 
 :root {

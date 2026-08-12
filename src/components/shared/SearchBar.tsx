@@ -77,9 +77,7 @@ export default function SearchBar({ defaultValue = "" }: SearchBarProps) {
   return (
     <div ref={wrapperRef} className="relative w-full">
       <form onSubmit={handleSubmit} className="relative flex items-center w-full">
-        <svg className="absolute left-3 w-4 h-4 text-[#9B9B9B] pointer-events-none" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-        </svg>
+        <i className="fa-solid fa-magnifying-glass absolute left-3 text-[#9B9B9B] text-xs pointer-events-none" />
 
         <input
           type="search"
@@ -87,20 +85,15 @@ export default function SearchBar({ defaultValue = "" }: SearchBarProps) {
           onChange={(e) => setQ(e.target.value)}
           onFocus={() => hasSuggestions && setOpen(true)}
           placeholder="Search products..."
-          className="w-full pl-9 pr-10 py-2 rounded-md border border-[#E5E5E5] bg-[#FAFAFA] text-sm text-[#111111] placeholder:text-[#9B9B9B] focus:outline-none focus:border-[#2563EB] focus:bg-white transition-colors"
+          className="w-full pl-9 pr-10 py-2 rounded-md border border-[#E5E5E5] bg-[#FAFAFA] text-sm text-[#111111] placeholder:text-[#9B9B9B] focus:outline-none focus:border-[#A4860E] focus:bg-white transition-colors"
         />
 
-        <div className="absolute right-2">
+        <div className="absolute right-2 flex items-center justify-center">
           {loading ? (
-            <svg className="w-4 h-4 text-[#9B9B9B] animate-spin" fill="none" viewBox="0 0 24 24">
-              <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/>
-              <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/>
-            </svg>
+            <i className="fa-solid fa-circle-notch animate-spin text-[#9B9B9B] text-sm" />
           ) : (
-            <button type="submit" className="p-1 rounded text-[#9B9B9B] hover:text-[#2563EB] transition-colors" aria-label="Search">
-              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-              </svg>
+            <button type="submit" className="p-1 rounded text-[#9B9B9B] hover:text-[#A4860E] transition-colors flex items-center justify-center" aria-label="Search">
+              <i className="fa-solid fa-magnifying-glass text-xs" />
             </button>
           )}
         </div>
@@ -119,9 +112,7 @@ export default function SearchBar({ defaultValue = "" }: SearchBarProps) {
                 }}
                   className="w-full flex items-center gap-2.5 px-3 py-2 hover:bg-[#F5F5F5] text-left transition-colors">
                   <div className="w-6 h-6 rounded bg-gray-100 flex items-center justify-center shrink-0">
-                    <svg className="w-3 h-3 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-                    </svg>
+                    <i className="fa-solid fa-magnifying-glass text-[10px] text-gray-500" />
                   </div>
                   <span className="text-sm font-medium text-[#111111]">{tag}</span>
                 </button>
@@ -135,11 +126,8 @@ export default function SearchBar({ defaultValue = "" }: SearchBarProps) {
               {suggestions.categories.map((cat) => (
                 <button key={cat._id} onMouseDown={() => goToCategory(cat._id, cat.name)}
                   className="w-full flex items-center gap-2.5 px-3 py-2 hover:bg-[#F5F5F5] text-left transition-colors">
-                  <div className="w-6 h-6 rounded bg-[#EFF6FF] flex items-center justify-center shrink-0">
-                    <svg className="w-3 h-3 text-[#2563EB]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
-                        d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" />
-                    </svg>
+                  <div className="w-6 h-6 rounded bg-[#fdf8e8] flex items-center justify-center shrink-0">
+                    <i className="fa-solid fa-tag text-[10px] text-[#A4860E]" />
                   </div>
                   <span className="text-sm text-[#111111]">{cat.name}</span>
                   <span className="ml-auto text-xs text-[#9B9B9B]">Browse →</span>
@@ -159,9 +147,7 @@ export default function SearchBar({ defaultValue = "" }: SearchBarProps) {
                       <Image src={p.images[0]} alt={p.title} fill className="object-cover" sizes="32px" />
                     ) : (
                       <div className="w-full h-full flex items-center justify-center text-[#D0D0D0]">
-                        <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                        </svg>
+                        <i className="fa-solid fa-image text-xs" />
                       </div>
                     )}
                   </div>
@@ -176,7 +162,7 @@ export default function SearchBar({ defaultValue = "" }: SearchBarProps) {
 
           <div className="border-t border-[#E5E5E5] px-3 py-2">
             <button onMouseDown={handleSubmit as unknown as React.MouseEventHandler}
-              className="w-full text-center text-sm text-[#2563EB] hover:underline font-medium py-1">
+              className="w-full text-center text-sm text-[#A4860E] hover:underline font-medium py-1">
               See all results for &ldquo;{q}&rdquo; →
             </button>
           </div>

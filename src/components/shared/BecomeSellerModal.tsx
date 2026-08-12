@@ -42,16 +42,14 @@ export default function BecomeSellerModal({ onClose }: BecomeSellerModalProps) {
 
       <div className="relative bg-white rounded-2xl shadow-2xl w-full max-w-md z-10 overflow-hidden">
         {/* Header */}
-        <div className="bg-gradient-to-r from-green-600 to-green-500 px-6 py-5">
+        <div className="bg-gradient-to-r from-[#A4860E] to-[#c9a820] px-6 py-5">
           <div className="flex items-center justify-between">
             <div>
               <h2 className="text-lg font-bold text-white">Become a Seller</h2>
-              <p className="text-green-100 text-xs mt-0.5">Start selling products on CampusGo</p>
+              <p className="text-yellow-100 text-xs mt-0.5">Start selling products on CampusGo</p>
             </div>
-            <button onClick={onClose} className="text-white/70 hover:text-white transition-colors">
-              <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-              </svg>
+            <button onClick={onClose} className="text-white/70 hover:text-white transition-colors flex items-center justify-center">
+              <i className="fa-solid fa-xmark text-lg" />
             </button>
           </div>
         </div>
@@ -61,68 +59,65 @@ export default function BecomeSellerModal({ onClose }: BecomeSellerModalProps) {
           {/* Benefits */}
           <div className="grid grid-cols-3 gap-3 mb-2">
             {[
-              { icon: <i className="fa-solid fa-box text-green-600 text-xl" />, label: "List products" },
-              { icon: <i className="fa-solid fa-money-bill-wave text-green-600 text-xl" />, label: "Earn payouts" },
-              { icon: <i className="fa-solid fa-chart-bar text-green-600 text-xl" />, label: "Track orders" },
-            ].map((b) => (
-              <div key={b.label} className="bg-green-50 rounded-xl p-3 text-center">
-                <p className="mb-1 flex justify-center">{b.icon}</p>
-                <p className="text-xs font-medium text-green-700">{b.label}</p>
+              { icon: <i className="fa-solid fa-box text-[#A4860E] text-xl" />, label: "List products" },
+              { icon: <i className="fa-solid fa-money-bill-wave text-[#A4860E] text-xl" />, label: "Earn payouts" },
+              { icon: <i className="fa-solid fa-shield text-[#A4860E] text-xl" />, label: "Secure trade" }
+            ].map((b, i) => (
+              <div key={i} className="flex flex-col items-center text-center p-2.5 rounded-xl bg-gray-50 border border-gray-100">
+                {b.icon}
+                <span className="text-[10px] font-semibold text-gray-600 mt-1">{b.label}</span>
               </div>
             ))}
           </div>
 
           {/* Store Name */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1.5">Store Name</label>
+            <label className="block text-xs font-semibold text-gray-700 mb-1.5 uppercase tracking-wider">Store Name</label>
             <input
               type="text"
+              required
+              placeholder="e.g. Joy's Campus Shop"
+              className="w-full px-4 py-2.5 text-sm bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:bg-white transition"
               value={form.storeName}
               onChange={(e) => setForm((f) => ({ ...f, storeName: e.target.value }))}
-              placeholder="e.g. Chidi's Electronics"
-              required
-              minLength={2}
-              className="w-full px-4 py-3 rounded-xl border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-green-500 transition"
             />
           </div>
 
           {/* Store Description */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1.5">Store Description</label>
+            <label className="block text-xs font-semibold text-gray-700 mb-1.5 uppercase tracking-wider">Store Description (Optional)</label>
             <textarea
+              placeholder="Tell buyers what you sell..."
+              rows={3}
+              className="w-full px-4 py-2.5 text-sm bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:bg-white transition resize-none"
               value={form.storeDescription}
               onChange={(e) => setForm((f) => ({ ...f, storeDescription: e.target.value }))}
-              placeholder="Tell buyers what you sell..."
-              required
-              minLength={10}
-              rows={3}
-              className="w-full px-4 py-3 rounded-xl border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-green-500 transition resize-none"
             />
           </div>
 
           {error && (
-            <p className="text-sm text-red-600 bg-red-50 px-3 py-2 rounded-lg">{error}</p>
+            <div className="p-3 bg-red-50 border border-red-200 text-red-600 text-xs rounded-xl font-medium flex items-center gap-1.5">
+              <i className="fa-solid fa-circle-exclamation text-red-500" />
+              <span>{error}</span>
+            </div>
           )}
 
-          <div className="flex gap-3 pt-1">
+          <div className="flex gap-3 pt-2">
             <button
               type="button"
               onClick={onClose}
-              className="flex-1 py-3 rounded-xl border border-gray-200 text-gray-700 font-semibold text-sm hover:bg-gray-50 transition-colors"
+              className="flex-1 py-3 rounded-xl border border-gray-200 text-gray-700 font-bold text-sm hover:bg-gray-50 transition-colors"
             >
               Cancel
             </button>
             <button
               type="submit"
               disabled={loading}
-              className="flex-1 py-3 rounded-xl bg-green-600 text-white font-bold text-sm hover:bg-green-700 transition-colors disabled:opacity-60 flex items-center justify-center gap-2"
+              className="flex-1 py-3 rounded-xl bg-[#A4860E] text-white font-bold text-sm hover:bg-[#8a7009] transition-colors disabled:opacity-60 flex items-center justify-center gap-2"
             >
               {loading ? (
                 <>
-                  <svg className="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24">
-                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/>
-                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/>
-                  </svg>
+                  <i className="fa-solid fa-circle-notch animate-spin text-sm" />
                   Setting up…
                 </>
               ) : (

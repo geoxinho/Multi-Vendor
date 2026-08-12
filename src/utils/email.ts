@@ -34,14 +34,14 @@ export async function sendVerificationEmail(email: string, otp: string) {
         html: `
           <div style="font-family: 'Inter', sans-serif; max-width: 600px; margin: 0 auto; padding: 30px; border: 1px solid #f0f0f0; border-radius: 16px; background-color: #ffffff;">
             <div style="text-align: center; margin-bottom: 25px;">
-              <span style="font-weight: 800; font-size: 24px; color: #111827;">Market<span style="color: #16a34a;">Hub</span></span>
+              <span style="font-weight: 800; font-size: 24px; color: #111827;">Market<span style="color: #A4860E;">Hub</span></span>
             </div>
             <h2 style="font-size: 20px; font-weight: 700; color: #1f2937; margin-bottom: 12px; text-align: center;">Verify Your Email Address</h2>
             <p style="font-size: 14px; color: #4b5563; line-height: 1.6; margin-bottom: 24px; text-align: center;">
               Welcome to CampusGo! To complete your registration, please enter the 6-digit verification code below:
             </p>
             <div style="text-align: center; margin-bottom: 24px; padding: 15px; background-color: #f3f4f6; border-radius: 8px;">
-              <span style="font-size: 32px; font-weight: bold; letter-spacing: 5px; color: #16a34a;">${otp}</span>
+              <span style="font-size: 32px; font-weight: bold; letter-spacing: 5px; color: #A4860E;">${otp}</span>
             </div>
             <p style="font-size: 12px; color: #9ca3af; text-align: center; margin-bottom: 0;">
               This code will expire in 24 hours.
@@ -143,7 +143,7 @@ export async function sendOrderConfirmationEmails(
       <div style="background:#ffffff;border-radius:16px;overflow:hidden;box-shadow:0 4px 24px rgba(0,0,0,0.06);">
 
         <!-- Header -->
-        <div style="background:linear-gradient(135deg,#2563eb 0%,#7c3aed 100%);padding:28px 32px;text-align:center;">
+        <div style="background:linear-gradient(135deg,#A4860E 0%,#7c3aed 100%);padding:28px 32px;text-align:center;">
           <span style="font-size:26px;font-weight:900;color:#ffffff;letter-spacing:-0.5px;">Market<span style="color:#bfdbfe;">Hub</span></span>
           <p style="color:#bfdbfe;font-size:13px;margin:6px 0 0;">Order Confirmation</p>
         </div>
@@ -173,7 +173,7 @@ export async function sendOrderConfirmationEmails(
             </div>`).join("")}
             <div style="display:flex;justify-content:space-between;align-items:center;margin-top:4px;">
               <p style="font-size:14px;font-weight:700;color:#111827;margin:0;">Total</p>
-              <p style="font-size:16px;font-weight:900;color:#2563eb;margin:0;">₦${order.totalAmount.toLocaleString()}</p>
+              <p style="font-size:16px;font-weight:900;color:#A4860E;margin:0;">₦${order.totalAmount.toLocaleString()}</p>
             </div>
           </div>
 
@@ -203,7 +203,7 @@ export async function sendOrderConfirmationEmails(
         <div style="background:#ffffff;border-radius:16px;overflow:hidden;box-shadow:0 4px 24px rgba(0,0,0,0.06);">
 
           <!-- Header -->
-          <div style="background:linear-gradient(135deg,#059669 0%,#2563eb 100%);padding:28px 32px;text-align:center;">
+          <div style="background:linear-gradient(135deg,#A4860E 0%,#A4860E 100%);padding:28px 32px;text-align:center;">
             <span style="font-size:26px;font-weight:900;color:#ffffff;letter-spacing:-0.5px;">Market<span style="color:#a7f3d0;">Hub</span></span>
             <p style="color:#a7f3d0;font-size:13px;margin:6px 0 0;">New Order Received! 🎉</p>
           </div>
@@ -242,14 +242,14 @@ export async function sendOrderConfirmationEmails(
                 </div>
                 <div style="display:flex;justify-content:space-between;margin-top:8px;padding-top:8px;border-top:1px solid #e5e7eb;">
                   <p style="font-size:15px;font-weight:700;color:#111827;margin:0;">Your Net Payout</p>
-                  <p style="font-size:17px;font-weight:900;color:#059669;margin:0;">₦${sellerNet.toLocaleString()}</p>
+                  <p style="font-size:17px;font-weight:900;color:#A4860E;margin:0;">₦${sellerNet.toLocaleString()}</p>
                 </div>
               </div>
             </div>
 
             <!-- Shipping Address -->
-            <div style="background:#eff6ff;border:1.5px solid #bfdbfe;border-radius:10px;padding:18px;margin-bottom:20px;">
-              <p style="font-size:12px;font-weight:700;color:#1d4ed8;text-transform:uppercase;letter-spacing:0.07em;margin:0 0 10px;">📦 Delivery Address</p>
+            <div style="background:#fdf8e8;border:1.5px solid #bfdbfe;border-radius:10px;padding:18px;margin-bottom:20px;">
+              <p style="font-size:12px;font-weight:700;color:#8a6f0b;text-transform:uppercase;letter-spacing:0.07em;margin:0 0 10px;">📦 Delivery Address</p>
               <p style="font-size:14px;font-weight:700;color:#111827;margin:0 0 4px;">${shipping.fullName ?? buyerName}</p>
               <p style="font-size:13px;color:#374151;margin:0 0 2px;">${shipping.address ?? ""}</p>
               <p style="font-size:13px;color:#374151;margin:0 0 2px;">${[shipping.city, shipping.state, shipping.postalCode].filter(Boolean).join(", ")}</p>
@@ -259,10 +259,10 @@ export async function sendOrderConfirmationEmails(
             <!-- Delivery PIN reminder -->
             <div style="background:#f0fdf4;border:1.5px solid #86efac;border-radius:10px;padding:16px;margin-bottom:20px;">
               <p style="font-size:13px;font-weight:700;color:#166534;margin:0 0 6px;">🔐 Delivery PIN Required</p>
-              <p style="font-size:13px;color:#15803d;margin:0;">After delivering the order, ask the buyer for their 6-digit <strong>Delivery PIN</strong> and enter it in your seller dashboard to confirm delivery and start your payout countdown (<strong>3 days</strong> after confirmation).</p>
+              <p style="font-size:13px;color:#8a6f0b;margin:0;">After delivering the order, ask the buyer for their 6-digit <strong>Delivery PIN</strong> and enter it in your seller dashboard to confirm delivery and start your payout countdown (<strong>3 days</strong> after confirmation).</p>
             </div>
 
-            <p style="font-size:13px;color:#6b7280;text-align:center;">Head to your <a href="${process.env.NEXT_PUBLIC_SITE_URL ?? ""}/dashboard/seller/orders" style="color:#2563eb;font-weight:600;text-decoration:none;">Seller Dashboard</a> to view and manage this order.</p>
+            <p style="font-size:13px;color:#6b7280;text-align:center;">Head to your <a href="${process.env.NEXT_PUBLIC_SITE_URL ?? ""}/dashboard/seller/orders" style="color:#A4860E;font-weight:600;text-decoration:none;">Seller Dashboard</a> to view and manage this order.</p>
           </div>
 
           <!-- Footer -->

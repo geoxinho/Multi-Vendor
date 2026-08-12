@@ -25,10 +25,8 @@ export default function CartDrawer({ open, onClose }: CartDrawerProps) {
           <h2 className="text-base font-bold text-[#111111]">
             Cart <span className="text-[#6B6B6B] font-normal">({items.length})</span>
           </h2>
-          <button onClick={onClose} className="p-1.5 rounded-md hover:bg-[#F5F5F5] transition-colors">
-            <svg className="w-5 h-5 text-[#6B6B6B]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-            </svg>
+          <button onClick={onClose} className="p-1.5 rounded-md hover:bg-[#F5F5F5] transition-colors flex items-center justify-center">
+            <i className="fa-solid fa-xmark text-lg text-[#6B6B6B]" />
           </button>
         </div>
 
@@ -36,13 +34,10 @@ export default function CartDrawer({ open, onClose }: CartDrawerProps) {
         <div className="flex-1 overflow-y-auto py-4 px-5 space-y-3">
           {items.length === 0 ? (
             <div className="flex flex-col items-center justify-center h-full text-center">
-              <svg className="w-14 h-14 text-[#E5E5E5] mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5}
-                  d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.3 2.3A1 1 0 006 17h12" />
-              </svg>
+              <i className="fa-solid fa-cart-shopping text-5xl text-[#E5E5E5] mb-4" />
               <p className="text-[#6B6B6B] font-medium mb-4">Your cart is empty</p>
               <Link href="/products" onClick={onClose}
-                className="px-5 py-2 bg-[#2563EB] text-white text-sm font-semibold rounded-md hover:bg-[#1D4ED8] transition-colors">
+                className="px-5 py-2 bg-[#A4860E] text-white text-sm font-semibold rounded-md hover:bg-[#8a6f0b] transition-colors">
                 Start Shopping
               </Link>
             </div>
@@ -58,21 +53,19 @@ export default function CartDrawer({ open, onClose }: CartDrawerProps) {
                   <div className="flex items-center gap-2 mt-2">
                     <button
                       onClick={() => updateQuantity(item.productId, item.quantity - 1)}
-                      className="w-6 h-6 rounded border border-[#E5E5E5] flex items-center justify-center text-[#111111] hover:border-[#2563EB] transition-colors text-sm"
+                      className="w-6 h-6 rounded border border-[#E5E5E5] flex items-center justify-center text-[#111111] hover:border-[#A4860E] transition-colors text-sm"
                     >−</button>
                     <span className="text-sm font-semibold w-5 text-center text-[#111111]">{item.quantity}</span>
                     <button
                       onClick={() => updateQuantity(item.productId, item.quantity + 1)}
                       disabled={item.quantity >= item.stock}
-                      className="w-6 h-6 rounded border border-[#E5E5E5] flex items-center justify-center text-[#111111] hover:border-[#2563EB] disabled:opacity-40 transition-colors text-sm"
+                      className="w-6 h-6 rounded border border-[#E5E5E5] flex items-center justify-center text-[#111111] hover:border-[#A4860E] disabled:opacity-40 transition-colors text-sm"
                     >+</button>
                     <button
                       onClick={() => removeItem(item.productId)}
-                      className="ml-auto text-[#9B9B9B] hover:text-[#DC2626] transition-colors"
+                      className="ml-auto text-[#9B9B9B] hover:text-[#DC2626] transition-colors flex items-center justify-center p-1"
                     >
-                      <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                      </svg>
+                      <i className="fa-solid fa-trash-can text-sm" />
                     </button>
                   </div>
                 </div>
@@ -89,7 +82,7 @@ export default function CartDrawer({ open, onClose }: CartDrawerProps) {
               <span className="text-lg font-bold text-[#111111]">₦{totalPrice().toLocaleString()}</span>
             </div>
             <Link href="/checkout" onClick={onClose}
-              className="block w-full py-3 text-center bg-[#2563EB] text-white font-semibold rounded-md hover:bg-[#1D4ED8] transition-colors text-sm">
+              className="block w-full py-3 text-center bg-[#A4860E] text-white font-semibold rounded-md hover:bg-[#8a6f0b] transition-colors text-sm">
               Proceed to Checkout
             </Link>
             <button onClick={clearCart}

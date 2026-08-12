@@ -9,7 +9,7 @@ export default function Footer() {
           <div>
             <div className="flex items-center gap-2 mb-4">
               <img src="/logo.png" alt="CampusGo" className="h-7 w-auto object-contain" />
-              <span className="font-bold text-lg text-[#111111]">Campus<span className="text-[#2563EB]">Go</span></span>
+              <span className="font-bold text-lg text-[#111111]">Campus<span className="text-[#A4860E]">Go</span></span>
             </div>
             <p className="text-sm text-[#6B6B6B] leading-relaxed">
               Nigeria&apos;s modern multi-vendor marketplace. Buy and sell new &amp; used products from verified sellers.

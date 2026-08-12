@@ -74,7 +74,7 @@ function LoginForm() {
         <div className="text-center mb-8">
           <Link href="/" className="inline-flex items-center gap-2">
             <img src="/logo.png" alt="CampusGo" className="h-8 w-auto object-contain" />
-            <span className="font-bold text-xl text-[#111111]">Campus<span className="text-[#2563EB]">Go</span></span>
+            <span className="font-bold text-xl text-[#111111]">Campus<span className="text-[#A4860E]">Go</span></span>
           </Link>
           <h1 className="text-xl font-bold text-[#111111] mt-6 mb-1">Sign in</h1>
           <p className="text-sm text-[#6B6B6B]">Welcome back.</p>
@@ -92,7 +92,7 @@ function LoginForm() {
                   value={form.email}
                   onChange={(e) => setForm((f) => ({ ...f, email: e.target.value }))}
                   placeholder="you@example.com"
-                  className="w-full pl-9 pr-4 py-2.5 rounded-md border border-[#E5E5E5] text-sm text-[#111111] placeholder:text-[#9B9B9B] focus:outline-none focus:border-[#2563EB] transition-colors bg-white"
+                  className="w-full pl-9 pr-4 py-2.5 rounded-md border border-[#E5E5E5] text-sm text-[#111111] placeholder:text-[#9B9B9B] focus:outline-none focus:border-[#A4860E] transition-colors bg-white"
                 />
               </div>
             </div>
@@ -100,7 +100,7 @@ function LoginForm() {
             <div>
               <div className="flex items-center justify-between mb-1.5">
                 <label className="text-xs font-medium text-[#111111]">Password</label>
-                <Link href="/auth/forgot-password" className="text-xs text-[#2563EB] hover:underline">
+                <Link href="/auth/forgot-password" className="text-xs text-[#A4860E] hover:underline">
                   Forgot password?
                 </Link>
               </div>
@@ -112,7 +112,7 @@ function LoginForm() {
                   value={form.password}
                   onChange={(e) => setForm((f) => ({ ...f, password: e.target.value }))}
                   placeholder="••••••••"
-                  className="w-full pl-9 pr-10 py-2.5 rounded-md border border-[#E5E5E5] text-sm text-[#111111] focus:outline-none focus:border-[#2563EB] transition-colors bg-white"
+                  className="w-full pl-9 pr-10 py-2.5 rounded-md border border-[#E5E5E5] text-sm text-[#111111] focus:outline-none focus:border-[#A4860E] transition-colors bg-white"
                 />
                 <button
                   type="button"
@@ -135,7 +135,7 @@ function LoginForm() {
             <button
               type="submit"
               disabled={loading}
-              className="w-full py-2.5 bg-[#2563EB] hover:bg-[#1D4ED8] text-white font-semibold rounded-md transition-colors text-sm disabled:opacity-60 disabled:cursor-not-allowed mt-2"
+              className="w-full py-2.5 bg-[#A4860E] hover:bg-[#8a6f0b] text-white font-semibold rounded-md transition-colors text-sm disabled:opacity-60 disabled:cursor-not-allowed mt-2"
             >
               {loading ? "Signing in…" : "Sign In"}
             </button>
@@ -144,7 +144,7 @@ function LoginForm() {
 
         <p className="text-center text-sm text-[#6B6B6B] mt-6">
           Don&apos;t have an account?{" "}
-          <Link href="/auth/register" className="text-[#2563EB] font-medium hover:underline">
+          <Link href="/auth/register" className="text-[#A4860E] font-medium hover:underline">
             Create one
           </Link>
         </p>
@@ -157,7 +157,7 @@ export default function LoginPage() {
   return (
     <Suspense fallback={
       <div className="min-h-screen bg-white flex items-center justify-center">
-        <div className="w-8 h-8 border-2 border-[#E5E5E5] border-t-[#2563EB] rounded-full animate-spin" />
+        <div className="w-8 h-8 border-2 border-[#E5E5E5] border-t-[#A4860E] rounded-full animate-spin" />
       </div>
     }>
       <LoginForm />

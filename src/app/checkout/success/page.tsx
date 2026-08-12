@@ -12,7 +12,7 @@ function CheckoutSuccessContent() {
     <div className="min-h-screen bg-white flex items-center justify-center px-4">
       <div className="bg-white rounded-md border border-[#E5E5E5] p-8 text-center max-w-md w-full">
         <div className="w-16 h-16 bg-[#F0FDF4] rounded-full flex items-center justify-center mx-auto mb-6">
-          <svg className="w-8 h-8 text-[#16A34A]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <svg className="w-8 h-8 text-[#A4860E]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
           </svg>
         </div>
@@ -25,7 +25,7 @@ function CheckoutSuccessContent() {
         )}
         <div className="flex flex-col gap-3">
           <Link href="/dashboard/buyer/orders"
-            className="block py-2.5 bg-[#2563EB] text-white font-semibold rounded-md hover:bg-[#1D4ED8] transition-colors text-sm">
+            className="block py-2.5 bg-[#A4860E] text-white font-semibold rounded-md hover:bg-[#8a6f0b] transition-colors text-sm">
             View My Orders
           </Link>
           <Link href="/products"
@@ -42,7 +42,7 @@ export default function CheckoutSuccessPage() {
   return (
     <Suspense fallback={
       <div className="min-h-screen bg-white flex items-center justify-center">
-        <div className="w-8 h-8 border-2 border-[#E5E5E5] border-t-[#2563EB] rounded-full animate-spin" />
+        <div className="w-8 h-8 border-2 border-[#E5E5E5] border-t-[#A4860E] rounded-full animate-spin" />
       </div>
     }>
       <CheckoutSuccessContent />

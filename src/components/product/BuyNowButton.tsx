@@ -35,24 +35,36 @@ export default function BuyNowButton({ product }: { product: ProductSummary }) {
   }
 
   return (
-    <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 w-full">
-      <div className="flex items-center justify-between border border-[#E5E5E5] rounded-md overflow-hidden shrink-0 bg-white">
-        <button
-          type="button"
-          onClick={() => setQty((q) => Math.max(1, q - 1))}
-          className="px-4 py-2.5 text-[#111111] hover:bg-[#F5F5F5] transition-colors font-bold cursor-pointer"
-        >−</button>
-        <span className="px-4 py-2.5 font-semibold text-[#111111] min-w-[3rem] text-center text-sm">{qty}</span>
-        <button
-          type="button"
-          onClick={() => setQty((q) => Math.min(product.stock, q + 1))}
-          className="px-4 py-2.5 text-[#111111] hover:bg-[#F5F5F5] transition-colors font-bold cursor-pointer"
-        >+</button>
+    <div className="flex flex-col items-stretch w-full">
+      {/* Stock and small Quantity selector inline */}
+      <div className="flex items-center gap-3 mb-4 flex-wrap">
+        <span className="text-sm font-medium text-[#A4860E] flex items-center">
+          <i className="fa-solid fa-check mr-1.5" />
+          {product.stock} in stock
+        </span>
+        <span className="text-gray-300 text-xs">|</span>
+        <div className="flex items-center gap-2">
+          <span className="text-xs text-gray-500 font-medium">Qty:</span>
+          <div className="flex items-center border border-[#E5E5E5] rounded-md overflow-hidden bg-white h-7">
+            <button
+              type="button"
+              onClick={() => setQty((q) => Math.max(1, q - 1))}
+              className="px-2 py-0 text-[#111111] hover:bg-[#F5F5F5] transition-colors font-bold cursor-pointer h-full flex items-center text-xs"
+            >−</button>
+            <span className="px-2 py-0 font-semibold text-[#111111] min-w-[2rem] text-center text-xs h-full flex items-center justify-center">{qty}</span>
+            <button
+              type="button"
+              onClick={() => setQty((q) => Math.min(product.stock, q + 1))}
+              className="px-2 py-0 text-[#111111] hover:bg-[#F5F5F5] transition-colors font-bold cursor-pointer h-full flex items-center text-xs"
+            >+</button>
+          </div>
+        </div>
       </div>
+
       <button
         type="button"
         onClick={handleBuyNow}
-        className="flex-1 py-3 px-6 rounded-md font-bold bg-[#2563EB] hover:bg-[#1D4ED8] text-white transition-colors flex items-center justify-center gap-2 text-sm cursor-pointer"
+        className="w-full py-3 px-6 rounded-md font-bold bg-[#A4860E] hover:bg-[#8a6f0b] text-white transition-colors flex items-center justify-center gap-2 text-sm cursor-pointer shadow-sm shadow-[#A4860E]/10"
       >
         <i className="fa-solid fa-bolt" />
         <span>Buy Now</span>

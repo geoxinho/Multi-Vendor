@@ -39,11 +39,11 @@ export default function DashboardSidebar({ title, navItems }: DashboardSidebarPr
                   href={item.href}
                   className={`flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-colors ${
                     active
-                      ? "bg-blue-50 text-[#2563EB]"
+                      ? "bg-blue-50 text-[#A4860E]"
                       : "text-gray-600 hover:bg-gray-50 hover:text-gray-900"
                   }`}
                 >
-                  <span className={active ? "text-[#2563EB]" : "text-gray-400"}>{item.icon}</span>
+                  <span className={active ? "text-[#A4860E]" : "text-gray-400"}>{item.icon}</span>
                   {item.label}
                 </Link>
               );
@@ -62,17 +62,17 @@ export default function DashboardSidebar({ title, navItems }: DashboardSidebarPr
                 key={item.href}
                 href={item.href}
                 className={`flex flex-col items-center gap-0.5 px-3 py-1.5 rounded-xl transition-colors min-w-0 ${
-                  active ? "text-[#2563EB]" : "text-gray-400"
+                  active ? "text-[#A4860E]" : "text-gray-400"
                 }`}
               >
-                <span className={`${active ? "text-[#2563EB]" : "text-gray-400"}`}>
+                <span className={`${active ? "text-[#A4860E]" : "text-gray-400"}`}>
                   {item.icon}
                 </span>
-                <span className={`text-[10px] font-medium truncate max-w-[60px] ${active ? "text-[#2563EB]" : "text-gray-500"}`}>
+                <span className={`text-[10px] font-medium truncate max-w-[60px] ${active ? "text-[#A4860E]" : "text-gray-500"}`}>
                   {item.label}
                 </span>
                 {active && (
-                  <span className="w-1 h-1 rounded-full bg-[#2563EB]" />
+                  <span className="w-1 h-1 rounded-full bg-[#A4860E]" />
                 )}
               </Link>
             );

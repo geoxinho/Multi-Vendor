@@ -68,7 +68,7 @@ const CAT_STYLING: Record<
 > = {
   electronics: {
     icon: "fa-laptop",
-    bg: "bg-[#EFF6FF]",
+    bg: "bg-[#fdf8e8]",
     border: "border-[#BFDBFE]/60",
     text: "text-[#1E40AF]",
     iconBg: "bg-[#DBEAFE]",
@@ -154,7 +154,7 @@ const CAT_STYLING: Record<
 
 const FALLBACK_STYLES = [
   {
-    bg: "bg-[#EFF6FF]",
+    bg: "bg-[#fdf8e8]",
     border: "border-[#BFDBFE]/60",
     text: "text-[#1E40AF]",
     iconBg: "bg-[#DBEAFE]",
@@ -225,15 +225,15 @@ export default async function HomePage() {
           <div className="grid lg:grid-cols-12 gap-12 items-center">
             {/* Left — copy */}
             <div className="lg:col-span-7 animate-in fade-in slide-in-from-bottom-6 duration-700">
-              <span className="inline-flex items-center gap-2 px-3 py-1 rounded-md bg-[#EFF6FF] text-[#2563EB] text-xs font-semibold mb-6 border border-[#BFDBFE]">
-                <span className="w-1.5 h-1.5 rounded-full bg-[#2563EB] inline-block animate-pulse" />
+              <span className="inline-flex items-center gap-2 px-3 py-1 rounded-md bg-[#fdf8e8] text-[#A4860E] text-xs font-semibold mb-6 border border-[#BFDBFE]">
+                <span className="w-1.5 h-1.5 rounded-full bg-[#A4860E] inline-block animate-pulse" />
                 Nigeria&apos;s Student Campus Marketplace
               </span>
 
               <h1 className="text-4xl md:text-5xl lg:text-6xl font-extrabold text-[#111111] leading-[1.15] tracking-tight mb-6">
                 Buy & Sell,
                 <br />
-                <span className="bg-gradient-to-r from-[#2563EB] to-[#4F46E5] bg-clip-text text-transparent">
+                <span className="bg-gradient-to-r from-[#A4860E] to-[#4F46E5] bg-clip-text text-transparent">
                   Trade on Campus.
                 </span>
               </h1>
@@ -247,7 +247,7 @@ export default async function HomePage() {
               <div className="flex flex-col sm:flex-row gap-4 mb-8">
                 <Link
                   href="/products"
-                  className="group inline-flex items-center justify-center gap-2 px-6 py-3 bg-[#2563EB] text-white font-bold rounded-md hover:bg-[#1D4ED8] hover:shadow-lg hover:shadow-blue-500/10 hover:-translate-y-0.5 transition-all duration-300 text-sm"
+                  className="group inline-flex items-center justify-center gap-2 px-6 py-3 bg-[#A4860E] text-white font-bold rounded-md hover:bg-[#8a6f0b] hover:shadow-lg hover:shadow-blue-500/10 hover:-translate-y-0.5 transition-all duration-300 text-sm"
                 >
                   Browse Campus Listings
                   <svg
@@ -277,7 +277,7 @@ export default async function HomePage() {
                     key={b.label}
                     className="flex items-center gap-2 text-sm text-[#6B6B6B]"
                   >
-                    <i className={`fa-solid ${b.icon} text-[#2563EB]`} />
+                    <i className={`fa-solid ${b.icon} text-[#A4860E]`} />
                     <span>{b.label}</span>
                   </div>
                 ))}
@@ -309,7 +309,7 @@ export default async function HomePage() {
               icon: "fa-shield-halved",
               title: "Buyer Protection",
               desc: "Escrow system until handshake",
-              color: "text-[#16A34A] bg-[#F0FDF4] border-[#BBF7D0]/60",
+              color: "text-[#A4860E] bg-[#F0FDF4] border-[#BBF7D0]/60",
             },
             {
               icon: "fa-handshake",
@@ -321,7 +321,7 @@ export default async function HomePage() {
               icon: "fa-graduation-cap",
               title: "Student Verified",
               desc: "Profiles linked to school email",
-              color: "text-[#2563EB] bg-[#EFF6FF] border-[#BFDBFE]/60",
+              color: "text-[#A4860E] bg-[#fdf8e8] border-[#BFDBFE]/60",
             },
             {
               icon: "fa-rotate-left",
@@ -358,7 +358,7 @@ export default async function HomePage() {
               </h2>
               <Link
                 href="/products"
-                className="inline-flex items-center gap-1 text-sm font-medium text-[#2563EB] hover:underline"
+                className="inline-flex items-center gap-1 text-sm font-medium text-[#A4860E] hover:underline"
               >
                 View all categories
                 <svg
@@ -444,7 +444,7 @@ export default async function HomePage() {
           </div>
           <Link
             href="/products"
-            className="text-[#2563EB] hover:underline text-sm font-medium flex items-center gap-1"
+            className="text-[#A4860E] hover:underline text-sm font-medium flex items-center gap-1"
           >
             See all products
             <svg
@@ -474,7 +474,7 @@ export default async function HomePage() {
             </p>
             <Link
               href="/products"
-              className="inline-block px-5 py-2.5 bg-[#2563EB] text-white font-bold rounded-md hover:bg-[#1D4ED8] transition-colors text-sm"
+              className="inline-block px-5 py-2.5 bg-[#A4860E] text-white font-bold rounded-md hover:bg-[#8a6f0b] transition-colors text-sm"
             >
               Browse Categories
             </Link>
@@ -507,7 +507,7 @@ export default async function HomePage() {
                 <div className="flex flex-col sm:flex-row gap-3.5">
                   <Link
                     href="/auth/register?role=seller"
-                    className="inline-flex items-center justify-center gap-2 px-5 py-2.5 bg-[#2563EB] text-white font-bold rounded-md hover:bg-[#1D4ED8] transition-colors text-sm shadow-sm"
+                    className="inline-flex items-center justify-center gap-2 px-5 py-2.5 bg-[#A4860E] text-white font-bold rounded-md hover:bg-[#8a6f0b] transition-colors text-sm shadow-sm"
                   >
                     Start Selling on Campus
                     <svg

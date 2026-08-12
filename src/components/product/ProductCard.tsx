@@ -116,10 +116,7 @@ export default function ProductCard({ product, priority = false, wishlisted: ini
                     : "bg-white border-[#E5E5E5] text-[#9B9B9B] hover:border-[#DC2626] hover:text-[#DC2626] shadow-sm"
                 } ${wishlistLoading ? "opacity-50 cursor-wait" : ""}`}
               >
-                <svg className="w-4 h-4" fill={wishlisted ? "currentColor" : "none"} viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                  <path strokeLinecap="round" strokeLinejoin="round"
-                    d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
-                </svg>
+                <i className={`${wishlisted ? "fa-solid" : "fa-regular"} fa-heart text-xs`} />
               </button>
             </div>
           )}
@@ -136,7 +133,7 @@ export default function ProductCard({ product, priority = false, wishlisted: ini
           <p className="text-[11px] font-semibold text-[#9B9B9B] uppercase tracking-wider mb-1 truncate">
             {product.seller?.storeName || product.seller?.name}
           </p>
-          <h3 className="text-sm font-bold text-[#111111] line-clamp-2 mb-2 group-hover:text-[#2563EB] transition-colors leading-snug flex-1">
+          <h3 className="text-sm font-bold text-[#111111] line-clamp-2 mb-2 group-hover:text-[#A4860E] transition-colors leading-snug flex-1">
             {product.title}
           </h3>
 
@@ -154,8 +151,8 @@ export default function ProductCard({ product, priority = false, wishlisted: ini
               disabled={product.stock === 0}
               className={`px-3.5 py-2 rounded-md text-xs font-bold transition-all duration-150 shadow-sm ${
                 added
-                  ? "bg-[#F0FDF4] text-[#16A34A] border border-[#16A34A]"
-                  : "bg-[#2563EB] text-white hover:bg-[#1D4ED8]"
+                  ? "bg-[#F0FDF4] text-[#A4860E] border border-[#A4860E]"
+                  : "bg-[#A4860E] text-white hover:bg-[#8a6f0b]"
               } disabled:opacity-40 disabled:cursor-not-allowed`}
             >
               {added ? "✓ Added" : "Add"}

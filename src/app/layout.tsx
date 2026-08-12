@@ -31,7 +31,7 @@ export const metadata: Metadata = {
     siteName: "CampusGo",
     images: [
       {
-        url: "/favicon.ico",
+        url: "/main_logo.png",
         alt: "CampusGo logo",
       },
     ],
@@ -58,7 +58,7 @@ const ROOT_SCHEMA = {
       "@type": "Organization",
       name: "CampusGo",
       url: metadataBase.toString(),
-      logo: new URL("/favicon.ico", metadataBase).toString(),
+      logo: new URL("/main_logo.png", metadataBase).toString(),
       sameAs: [],
     },
     {

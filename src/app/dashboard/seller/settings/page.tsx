@@ -163,7 +163,7 @@ export default function SellerSettingsPage() {
   if (loading) {
     return (
       <div className="flex justify-center py-12">
-        <div className="w-8 h-8 border-4 border-[#E5E5E5] border-t-[#2563EB] rounded-full animate-spin" />
+        <div className="w-8 h-8 border-4 border-[#E5E5E5] border-t-[#A4860E] rounded-full animate-spin" />
       </div>
     );
   }
@@ -223,7 +223,7 @@ export default function SellerSettingsPage() {
                 setSettings((prev) => ({ ...prev, storeName: e.target.value }))
               }
               disabled={isBrandNameLocked}
-              className={`w-full px-4 py-2.5 rounded-xl border focus:outline-none focus:ring-2 focus:ring-[#2563EB]/30 focus:border-[#2563EB] transition-colors text-sm ${
+              className={`w-full px-4 py-2.5 rounded-xl border focus:outline-none focus:ring-2 focus:ring-[#A4860E]/30 focus:border-[#A4860E] transition-colors text-sm ${
                 isBrandNameLocked
                   ? "border-[#E5E5E5] bg-[#FAFAFA] text-[#9B9B9B] cursor-not-allowed"
                   : "border-[#E5E5E5] bg-white"
@@ -246,7 +246,7 @@ export default function SellerSettingsPage() {
                 setSettings((prev) => ({ ...prev, storeDescription: e.target.value }))
               }
               placeholder="Tell buyers about your brand and what you sell..."
-              className="w-full px-4 py-2.5 rounded-xl border border-[#E5E5E5] focus:outline-none focus:ring-2 focus:ring-[#2563EB]/30 focus:border-[#2563EB] bg-white transition-colors resize-none text-sm"
+              className="w-full px-4 py-2.5 rounded-xl border border-[#E5E5E5] focus:outline-none focus:ring-2 focus:ring-[#A4860E]/30 focus:border-[#A4860E] bg-white transition-colors resize-none text-sm"
             />
           </div>
 
@@ -262,7 +262,7 @@ export default function SellerSettingsPage() {
                 setSettings((prev) => ({ ...prev, phone: e.target.value }))
               }
               placeholder="e.g. 08012345678"
-              className="w-full px-4 py-2.5 rounded-xl border border-[#E5E5E5] focus:outline-none focus:ring-2 focus:ring-[#2563EB]/30 focus:border-[#2563EB] bg-white transition-colors text-sm"
+              className="w-full px-4 py-2.5 rounded-xl border border-[#E5E5E5] focus:outline-none focus:ring-2 focus:ring-[#A4860E]/30 focus:border-[#A4860E] bg-white transition-colors text-sm"
             />
             <p className="text-xs text-[#9B9B9B] mt-1">
               This number is used to contact you regarding your orders.
@@ -273,7 +273,7 @@ export default function SellerSettingsPage() {
             <button
               type="submit"
               disabled={saving}
-              className="px-6 py-2.5 bg-[#2563EB] text-white font-semibold rounded-xl hover:bg-[#1D4ED8] active:scale-95 transition-all shadow-sm disabled:opacity-50 disabled:cursor-not-allowed text-sm"
+              className="px-6 py-2.5 bg-[#A4860E] text-white font-semibold rounded-xl hover:bg-[#8a6f0b] active:scale-95 transition-all shadow-sm disabled:opacity-50 disabled:cursor-not-allowed text-sm"
             >
               {saving ? "Saving..." : "Save Changes"}
             </button>
@@ -286,7 +286,7 @@ export default function SellerSettingsPage() {
         <div className="px-6 py-4 border-b border-[#F5F5F5]">
           <div className="flex items-center gap-2">
             <div className="w-8 h-8 rounded-lg bg-[#F0FDF4] border border-[#BBF7D0] flex items-center justify-center">
-              <i className="fa-solid fa-building-columns text-[#16A34A] text-sm" />
+              <i className="fa-solid fa-building-columns text-[#A4860E] text-sm" />
             </div>
             <div>
               <h2 className="text-base font-bold text-[#111111]">Payout Bank Account</h2>
@@ -298,11 +298,11 @@ export default function SellerSettingsPage() {
         {/* Currently saved bank — shown as a read-only badge */}
         {hasSavedBankDetails && (
           <div className="mx-6 mt-5 flex items-center gap-3 bg-[#F0FDF4] border border-[#BBF7D0] rounded-xl px-4 py-3">
-            <div className="w-8 h-8 rounded-full bg-[#16A34A] flex items-center justify-center shrink-0">
+            <div className="w-8 h-8 rounded-full bg-[#A4860E] flex items-center justify-center shrink-0">
               <i className="fa-solid fa-check text-white text-xs" />
             </div>
             <div className="flex-1 min-w-0">
-              <p className="text-xs font-semibold text-[#15803D] uppercase tracking-wide">Current Payout Account</p>
+              <p className="text-xs font-semibold text-[#8a6f0b] uppercase tracking-wide">Current Payout Account</p>
               <p className="text-sm font-bold text-[#111111] truncate">
                 {settings.bankDetails!.accountName}
               </p>
@@ -315,9 +315,9 @@ export default function SellerSettingsPage() {
 
         <div className="p-6">
           {/* Payout info banner */}
-          <div className="mb-5 flex items-start gap-2.5 px-4 py-3 bg-[#EFF6FF] border border-[#BFDBFE] rounded-xl">
-            <i className="fa-solid fa-circle-info text-[#2563EB] text-sm mt-0.5 shrink-0" />
-            <p className="text-xs text-[#2563EB] leading-relaxed">
+          <div className="mb-5 flex items-start gap-2.5 px-4 py-3 bg-[#fdf8e8] border border-[#BFDBFE] rounded-xl">
+            <i className="fa-solid fa-circle-info text-[#A4860E] text-sm mt-0.5 shrink-0" />
+            <p className="text-xs text-[#A4860E] leading-relaxed">
               Your payout is released <strong>3 days</strong> after a buyer confirms delivery. 
               Make sure your account details are correct to avoid payment delays.
             </p>
@@ -339,7 +339,7 @@ export default function SellerSettingsPage() {
               disabled={!verifiedAccount || savingBank}
               className={`w-full py-3 rounded-xl font-bold text-sm transition-all flex items-center justify-center gap-2 ${
                 verifiedAccount && !savingBank
-                  ? "bg-[#16A34A] hover:bg-[#15803D] text-white shadow-sm active:scale-95"
+                  ? "bg-[#A4860E] hover:bg-[#8a6f0b] text-white shadow-sm active:scale-95"
                   : "bg-[#F5F5F5] text-[#9B9B9B] cursor-not-allowed"
               }`}
             >

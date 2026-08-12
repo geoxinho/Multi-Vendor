@@ -81,7 +81,7 @@ function RegisterForm() {
         <div className="w-full max-w-sm text-center">
           <div className="border border-[#E5E5E5] rounded-lg p-8">
             <div className="w-14 h-14 bg-[#F0FDF4] rounded-full flex items-center justify-center mx-auto mb-5">
-              <i className={`${isAutoVerified ? "fa-solid fa-check" : "fa-solid fa-envelope"} text-[#16A34A] text-xl`} />
+              <i className={`${isAutoVerified ? "fa-solid fa-check" : "fa-solid fa-envelope"} text-[#A4860E] text-xl`} />
             </div>
             <h2 className="text-xl font-bold text-[#111111] mb-2">
               {isAutoVerified ? "Account Created!" : "Check your email"}
@@ -96,12 +96,12 @@ function RegisterForm() {
 
             {isAutoVerified ? (
               <Link href="/auth/login"
-                className="block w-full py-2.5 bg-[#2563EB] hover:bg-[#1D4ED8] text-white font-semibold rounded-md transition-colors text-sm">
+                className="block w-full py-2.5 bg-[#A4860E] hover:bg-[#8a6f0b] text-white font-semibold rounded-md transition-colors text-sm">
                 Sign In
               </Link>
             ) : (
               <Link href={`/auth/verify-email?email=${encodeURIComponent(form.email)}`}
-                className="block w-full py-2.5 bg-[#2563EB] hover:bg-[#1D4ED8] text-white font-semibold rounded-md transition-colors text-sm">
+                className="block w-full py-2.5 bg-[#A4860E] hover:bg-[#8a6f0b] text-white font-semibold rounded-md transition-colors text-sm">
                 Enter Verification Code
               </Link>
             )}
@@ -111,8 +111,8 @@ function RegisterForm() {
     );
   }
 
-  const inputClass = "w-full pl-9 pr-4 py-2.5 rounded-md border border-[#E5E5E5] text-sm text-[#111111] placeholder:text-[#9B9B9B] focus:outline-none focus:border-[#2563EB] transition-colors bg-white";
-  const inputClassBare = "w-full px-4 py-2.5 rounded-md border border-[#E5E5E5] text-sm text-[#111111] placeholder:text-[#9B9B9B] focus:outline-none focus:border-[#2563EB] transition-colors bg-white";
+  const inputClass = "w-full pl-9 pr-4 py-2.5 rounded-md border border-[#E5E5E5] text-sm text-[#111111] placeholder:text-[#9B9B9B] focus:outline-none focus:border-[#A4860E] transition-colors bg-white";
+  const inputClassBare = "w-full px-4 py-2.5 rounded-md border border-[#E5E5E5] text-sm text-[#111111] placeholder:text-[#9B9B9B] focus:outline-none focus:border-[#A4860E] transition-colors bg-white";
   const labelClass = "block text-xs font-medium text-[#111111] mb-1.5";
 
   return (
@@ -122,7 +122,7 @@ function RegisterForm() {
         <div className="text-center mb-8">
           <Link href="/" className="inline-flex items-center gap-2">
             <img src="/logo.png" alt="CampusGo" className="h-8 w-auto object-contain" />
-            <span className="font-bold text-xl text-[#111111]">Campus<span className="text-[#2563EB]">Go</span></span>
+            <span className="font-bold text-xl text-[#111111]">Campus<span className="text-[#A4860E]">Go</span></span>
           </Link>
           <h1 className="text-xl font-bold text-[#111111] mt-6 mb-1">Create account</h1>
           <p className="text-sm text-[#6B6B6B]">Step {step} of 3</p>
@@ -133,12 +133,12 @@ function RegisterForm() {
           {[1, 2, 3].map((s) => (
             <div key={s} className="flex items-center">
               <div className={`w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold transition-all ${
-                step === s ? "bg-[#2563EB] text-white" :
-                step > s ? "bg-[#EFF6FF] text-[#2563EB]" : "bg-[#F5F5F5] text-[#9B9B9B]"
+                step === s ? "bg-[#A4860E] text-white" :
+                step > s ? "bg-[#fdf8e8] text-[#A4860E]" : "bg-[#F5F5F5] text-[#9B9B9B]"
               }`}>
                 {step > s ? <i className="fa-solid fa-check text-[10px]" /> : s}
               </div>
-              {s < 3 && <div className={`w-8 h-px mx-1 ${step > s ? "bg-[#2563EB]" : "bg-[#E5E5E5]"}`} />}
+              {s < 3 && <div className={`w-8 h-px mx-1 ${step > s ? "bg-[#A4860E]" : "bg-[#E5E5E5]"}`} />}
             </div>
           ))}
         </div>
@@ -162,15 +162,15 @@ function RegisterForm() {
                     <button key={r} type="button" onClick={() => setForm((f) => ({ ...f, role: r }))}
                       className={`p-4 rounded-md border-2 text-center transition-all ${
                         form.role === r
-                          ? "border-[#2563EB] bg-[#EFF6FF]"
+                          ? "border-[#A4860E] bg-[#fdf8e8]"
                           : "border-[#E5E5E5] hover:border-[#D0D0D0] bg-white"
                       }`}>
                       <div className={`w-10 h-10 mx-auto rounded-full flex items-center justify-center text-lg mb-2 ${
-                        form.role === r ? "bg-[#2563EB] text-white" : "bg-[#F5F5F5] text-[#9B9B9B]"
+                        form.role === r ? "bg-[#A4860E] text-white" : "bg-[#F5F5F5] text-[#9B9B9B]"
                       }`}>
                         <i className={`fa-solid ${r === "buyer" ? "fa-cart-shopping" : "fa-store"}`} />
                       </div>
-                      <p className={`text-sm font-semibold capitalize ${form.role === r ? "text-[#2563EB]" : "text-[#111111]"}`}>{r}</p>
+                      <p className={`text-sm font-semibold capitalize ${form.role === r ? "text-[#A4860E]" : "text-[#111111]"}`}>{r}</p>
                     </button>
                   ))}
                 </div>
@@ -205,7 +205,7 @@ function RegisterForm() {
                     <input type={showPassword ? "text" : "password"} required value={form.password}
                       onChange={(e) => setForm((f) => ({ ...f, password: e.target.value }))}
                       placeholder="Min. 6 characters"
-                      className="w-full pl-9 pr-10 py-2.5 rounded-md border border-[#E5E5E5] text-sm text-[#111111] placeholder:text-[#9B9B9B] focus:outline-none focus:border-[#2563EB] transition-colors bg-white" />
+                      className="w-full pl-9 pr-10 py-2.5 rounded-md border border-[#E5E5E5] text-sm text-[#111111] placeholder:text-[#9B9B9B] focus:outline-none focus:border-[#A4860E] transition-colors bg-white" />
                     <button
                       type="button"
                       onClick={() => setShowPassword(!showPassword)}
@@ -223,7 +223,7 @@ function RegisterForm() {
                     <input type={showConfirmPassword ? "text" : "password"} required value={form.confirmPassword}
                       onChange={(e) => setForm((f) => ({ ...f, confirmPassword: e.target.value }))}
                       placeholder="Repeat password"
-                      className="w-full pl-9 pr-10 py-2.5 rounded-md border border-[#E5E5E5] text-sm text-[#111111] placeholder:text-[#9B9B9B] focus:outline-none focus:border-[#2563EB] transition-colors bg-white" />
+                      className="w-full pl-9 pr-10 py-2.5 rounded-md border border-[#E5E5E5] text-sm text-[#111111] placeholder:text-[#9B9B9B] focus:outline-none focus:border-[#A4860E] transition-colors bg-white" />
                     <button
                       type="button"
                       onClick={() => setShowConfirmPassword(!showConfirmPassword)}
@@ -330,7 +330,7 @@ function RegisterForm() {
                 </button>
               )}
               <button type="submit" disabled={loading}
-                className={`py-2.5 bg-[#2563EB] hover:bg-[#1D4ED8] text-white font-semibold rounded-md transition-colors text-sm flex-1 disabled:opacity-60 disabled:cursor-not-allowed`}>
+                className={`py-2.5 bg-[#A4860E] hover:bg-[#8a6f0b] text-white font-semibold rounded-md transition-colors text-sm flex-1 disabled:opacity-60 disabled:cursor-not-allowed`}>
                 {step < 3 ? "Continue →" : (loading ? "Creating…" : "Create Account")}
               </button>
             </div>
@@ -339,7 +339,7 @@ function RegisterForm() {
 
         <p className="text-center text-sm text-[#6B6B6B] mt-6">
           Already have an account?{" "}
-          <Link href="/auth/login" className="text-[#2563EB] font-medium hover:underline">Sign in</Link>
+          <Link href="/auth/login" className="text-[#A4860E] font-medium hover:underline">Sign in</Link>
         </p>
       </div>
     </div>
@@ -350,7 +350,7 @@ export default function RegisterPage() {
   return (
     <Suspense fallback={
       <div className="min-h-screen bg-white flex items-center justify-center">
-        <div className="w-8 h-8 border-2 border-[#E5E5E5] border-t-[#2563EB] rounded-full animate-spin" />
+        <div className="w-8 h-8 border-2 border-[#E5E5E5] border-t-[#A4860E] rounded-full animate-spin" />
       </div>
     }>
       <RegisterForm />

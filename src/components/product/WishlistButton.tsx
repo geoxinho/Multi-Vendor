@@ -65,19 +65,7 @@ export default function WishlistButton({ productId }: { productId: string }) {
           : "border-[#E5E5E5] bg-white text-[#9B9B9B] hover:border-[#DC2626] hover:text-[#DC2626]"
       } ${loading ? "opacity-50" : ""}`}
     >
-      <svg
-        className="w-5 h-5"
-        fill={wishlisted ? "currentColor" : "none"}
-        viewBox="0 0 24 24"
-        stroke="currentColor"
-        strokeWidth={2}
-      >
-        <path
-          strokeLinecap="round"
-          strokeLinejoin="round"
-          d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"
-        />
-      </svg>
+      <i className={`${wishlisted ? "fa-solid" : "fa-regular"} fa-heart text-base`} />
     </button>
   );
 }

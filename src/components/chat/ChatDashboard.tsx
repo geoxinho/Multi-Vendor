@@ -149,7 +149,7 @@ export default function ChatDashboard({ currentUserId, role }: ChatDashboardProp
         <div className="flex-1 overflow-y-auto">
           {loading ? (
             <div className="flex justify-center p-8">
-              <div className="w-6 h-6 border-2 border-gray-300 border-t-[#2563EB] rounded-full animate-spin"></div>
+              <div className="w-6 h-6 border-2 border-gray-300 border-t-[#A4860E] rounded-full animate-spin"></div>
             </div>
           ) : conversations.length === 0 ? (
             <div className="p-8 text-center">
@@ -164,7 +164,7 @@ export default function ChatDashboard({ currentUserId, role }: ChatDashboardProp
                     key={conv.orderId}
                     onClick={() => setActiveConv(conv)}
                     className={`w-full text-left p-4 transition-colors hover:bg-white flex items-start gap-3 ${
-                      isActive ? "bg-blue-50 hover:bg-blue-50 border-l-4 border-[#2563EB]" : "border-l-4 border-transparent"
+                      isActive ? "bg-blue-50 hover:bg-blue-50 border-l-4 border-[#A4860E]" : "border-l-4 border-transparent"
                     }`}
                   >
                     <div className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-400 to-indigo-600 flex items-center justify-center text-white font-bold shrink-0">
@@ -187,7 +187,7 @@ export default function ChatDashboard({ currentUserId, role }: ChatDashboardProp
                           {conv.latestMessage || "No messages yet."}
                         </p>
                         {conv.unreadCount > 0 && (
-                          <span className="bg-[#2563EB] text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full min-w-[1.25rem] text-center shrink-0 ml-2">
+                          <span className="bg-[#A4860E] text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full min-w-[1.25rem] text-center shrink-0 ml-2">
                             {conv.unreadCount}
                           </span>
                         )}
@@ -255,7 +255,7 @@ export default function ChatDashboard({ currentUserId, role }: ChatDashboardProp
 
               {loadingMessages ? (
                 <div className="flex justify-center py-8">
-                  <div className="w-6 h-6 border-2 border-gray-300 border-t-[#2563EB] rounded-full animate-spin"></div>
+                  <div className="w-6 h-6 border-2 border-gray-300 border-t-[#A4860E] rounded-full animate-spin"></div>
                 </div>
               ) : messages.length === 0 ? (
                 <div className="flex flex-col items-center justify-center h-40 text-gray-400">
@@ -282,7 +282,7 @@ export default function ChatDashboard({ currentUserId, role }: ChatDashboardProp
                       )}
                       <div className={`max-w-[75%] rounded-2xl px-4 py-2 text-sm shadow-sm ${
                         isMe 
-                          ? "bg-[#2563EB] text-white rounded-br-sm" 
+                          ? "bg-[#A4860E] text-white rounded-br-sm" 
                           : "bg-white border border-gray-100 text-gray-800 rounded-bl-sm"
                       }`}>
                         <p className="leading-relaxed">{msg.text}</p>
@@ -304,12 +304,12 @@ export default function ChatDashboard({ currentUserId, role }: ChatDashboardProp
                 value={newMessage}
                 onChange={(e) => setNewMessage(e.target.value)}
                 placeholder="Type your message..."
-                className="flex-1 px-4 py-2.5 rounded-xl border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-[#2563EB] bg-gray-50 focus:bg-white transition-colors"
+                className="flex-1 px-4 py-2.5 rounded-xl border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-[#A4860E] bg-gray-50 focus:bg-white transition-colors"
               />
               <button
                 type="submit"
                 disabled={!newMessage.trim()}
-                className="px-5 py-2.5 bg-[#2563EB] hover:bg-[#1D4ED8] active:scale-95 text-white rounded-xl text-sm font-semibold transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-sm cursor-pointer"
+                className="px-5 py-2.5 bg-[#A4860E] hover:bg-[#8a6f0b] active:scale-95 text-white rounded-xl text-sm font-semibold transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-sm cursor-pointer"
               >
                 Send
               </button>

@@ -88,7 +88,7 @@ export async function PATCH(req: NextRequest, { params }: Params) {
       <body style="margin:0;padding:0;background:#F5F8FF;font-family:'Helvetica Neue',Arial,sans-serif;">
         <div style="max-width:560px;margin:0 auto;padding:40px 16px;">
           <div style="background:#ffffff;border-radius:16px;overflow:hidden;box-shadow:0 4px 24px rgba(37,99,235,0.06);border:1px solid #BFDBFE30;">
-            <div style="background:linear-gradient(135deg,#2563EB,#4F46E5);padding:36px 32px;text-align:center;">
+            <div style="background:linear-gradient(135deg,#A4860E,#4F46E5);padding:36px 32px;text-align:center;">
               <div style="width:52px;height:52px;background:rgba(255,255,255,0.2);border-radius:14px;display:inline-flex;align-items:center;justify-content:center;margin-bottom:12px;">
                 <span style="color:#fff;font-size:24px;">🎉</span>
               </div>
@@ -105,8 +105,8 @@ export async function PATCH(req: NextRequest, { params }: Params) {
                 <table style="width:100%;border-collapse:collapse;">
                   <tr><td style="font-size:13px;color:#6B6B6B;padding:4px 0;">Order ID</td><td style="font-size:13px;font-weight:700;color:#111111;text-align:right;">#${orderId}</td></tr>
                   <tr><td style="font-size:13px;color:#6B6B6B;padding:4px 0;">Product</td><td style="font-size:13px;font-weight:700;color:#111111;text-align:right;">${productTitle}</td></tr>
-                  <tr><td style="font-size:13px;color:#6B6B6B;padding:4px 0;">Total Paid</td><td style="font-size:13px;font-weight:700;color:#2563EB;text-align:right;">₦${order.totalAmount.toLocaleString()}</td></tr>
-                  <tr><td style="font-size:13px;color:#6B6B6B;padding:4px 0;">Delivered</td><td style="font-size:13px;font-weight:700;color:#16A34A;text-align:right;">${deliveredAt.toLocaleDateString("en-NG", { weekday: "long", year: "numeric", month: "long", day: "numeric" })}</td></tr>
+                  <tr><td style="font-size:13px;color:#6B6B6B;padding:4px 0;">Total Paid</td><td style="font-size:13px;font-weight:700;color:#A4860E;text-align:right;">₦${order.totalAmount.toLocaleString()}</td></tr>
+                  <tr><td style="font-size:13px;color:#6B6B6B;padding:4px 0;">Delivered</td><td style="font-size:13px;font-weight:700;color:#A4860E;text-align:right;">${deliveredAt.toLocaleDateString("en-NG", { weekday: "long", year: "numeric", month: "long", day: "numeric" })}</td></tr>
                 </table>
               </div>
               <div style="background:linear-gradient(135deg,#FFFBEB,#FFF7ED);border:1px solid #FFEDD5;border-radius:12px;padding:20px;margin-bottom:24px;text-align:center;">
@@ -131,7 +131,7 @@ export async function PATCH(req: NextRequest, { params }: Params) {
       <body style="margin:0;padding:0;background:#F0FDF4;font-family:'Helvetica Neue',Arial,sans-serif;">
         <div style="max-width:560px;margin:0 auto;padding:40px 16px;">
           <div style="background:#ffffff;border-radius:16px;overflow:hidden;box-shadow:0 4px 24px rgba(22,163,74,0.06);border:1px solid #BBF7D030;">
-            <div style="background:linear-gradient(135deg,#16A34A,#059669);padding:36px 32px;text-align:center;">
+            <div style="background:linear-gradient(135deg,#A4860E,#A4860E);padding:36px 32px;text-align:center;">
               <div style="width:52px;height:52px;background:rgba(255,255,255,0.2);border-radius:14px;display:inline-flex;align-items:center;justify-content:center;margin-bottom:12px;">
                 <span style="color:#fff;font-size:24px;">💰</span>
               </div>
@@ -148,12 +148,12 @@ export async function PATCH(req: NextRequest, { params }: Params) {
                 <table style="width:100%;border-collapse:collapse;">
                   <tr><td style="font-size:13px;color:#6B6B6B;padding:4px 0;">Order ID</td><td style="font-size:13px;font-weight:700;color:#111111;text-align:right;">#${orderId}</td></tr>
                   <tr><td style="font-size:13px;color:#6B6B6B;padding:4px 0;">Product Sold</td><td style="font-size:13px;font-weight:700;color:#111111;text-align:right;">${productTitle}</td></tr>
-                  <tr><td style="font-size:13px;color:#6B6B6B;padding:4px 0;">Delivery Confirmed</td><td style="font-size:13px;font-weight:700;color:#16A34A;text-align:right;">${deliveredAt.toLocaleDateString("en-NG", { weekday: "long", year: "numeric", month: "long", day: "numeric" })}</td></tr>
+                  <tr><td style="font-size:13px;color:#6B6B6B;padding:4px 0;">Delivery Confirmed</td><td style="font-size:13px;font-weight:700;color:#A4860E;text-align:right;">${deliveredAt.toLocaleDateString("en-NG", { weekday: "long", year: "numeric", month: "long", day: "numeric" })}</td></tr>
                 </table>
               </div>
-              <div style="background:linear-gradient(135deg,#EFF6FF,#DBEAFE);border:1px solid #BFDBFE;border-radius:12px;padding:20px;margin-bottom:24px;">
+              <div style="background:linear-gradient(135deg,#fdf8e8,#DBEAFE);border:1px solid #BFDBFE;border-radius:12px;padding:20px;margin-bottom:24px;">
                 <p style="font-size:13px;font-weight:700;color:#1E40AF;margin:0 0 8px;">🏦 When Will You Get Paid?</p>
-                <p style="font-size:13px;color:#2563EB;line-height:1.6;margin:0 0 12px;">
+                <p style="font-size:13px;color:#A4860E;line-height:1.6;margin:0 0 12px;">
                   Your payout is held for a <strong>3-day buyer protection period</strong> after delivery confirmation. This helps ensure both buyers and sellers are protected.
                 </p>
                 <div style="background:#fff;border-radius:8px;padding:12px 16px;border:1px solid #BFDBFE;">
@@ -162,7 +162,7 @@ export async function PATCH(req: NextRequest, { params }: Params) {
                 </div>
                 <p style="font-size:12px;color:#6B6B6B;margin:12px 0 0;">Once released, the funds will be transferred to your registered bank account. Keep your bank details up to date in your seller settings.</p>
               </div>
-              <a href="${SITE_URL}/dashboard/seller" style="display:block;background:#16A34A;color:#fff;font-size:14px;font-weight:700;padding:12px 24px;border-radius:10px;text-decoration:none;text-align:center;">View Your Dashboard →</a>
+              <a href="${SITE_URL}/dashboard/seller" style="display:block;background:#A4860E;color:#fff;font-size:14px;font-weight:700;padding:12px 24px;border-radius:10px;text-decoration:none;text-align:center;">View Your Dashboard →</a>
               <p style="color:#9B9B9B;font-size:12px;text-align:center;margin:16px 0 0;">Thank you for selling on CampusGo 💚<br>Keep listing great products to earn more!</p>
             </div>
           </div>

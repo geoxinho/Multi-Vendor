@@ -35,7 +35,7 @@ export default function SellerDashboardLayout({ navItems, title, children }: Sel
         {/* Brand */}
         <div className="px-5 py-5 border-b border-gray-800">
           <div className="flex items-center gap-2.5">
-            <img src="/logo.png" alt="CampusGo" className="h-8 w-auto object-contain" />
+            <img src="/main_logo.png" alt="CampusGo" className="h-8 w-auto object-contain" />
             <div>
               <p className="font-black text-white text-base leading-tight">CampusGo</p>
               <p className="text-xs text-gray-400 leading-tight">Seller Dashboard</p>
@@ -69,13 +69,13 @@ export default function SellerDashboardLayout({ navItems, title, children }: Sel
                 href={item.href}
                 className={`flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all ${
                   active
-                    ? "bg-teal-600 text-white shadow-sm"
+                    ? "bg-[#A4860E] text-white shadow-sm"
                     : "text-gray-400 hover:bg-gray-800 hover:text-white"
                 }`}
               >
                 <span className={active ? "text-white" : "text-gray-500"}>{item.icon}</span>
                 {item.label}
-                {active && <span className="ml-auto w-1.5 h-1.5 rounded-full bg-teal-300" />}
+                {active && <span className="ml-auto w-1.5 h-1.5 rounded-full bg-[#F0C040]" />}
               </Link>
             );
           })}
@@ -90,14 +90,9 @@ export default function SellerDashboardLayout({ navItems, title, children }: Sel
             rel="noopener noreferrer"
             className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-gray-400 hover:bg-gray-800 hover:text-white transition-all group"
           >
-            <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
-                d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
-            </svg>
+            <i className="fa-solid fa-arrow-up-right-from-square w-5 text-center" />
             Visit Website
-            <svg className="w-3 h-3 ml-auto opacity-0 group-hover:opacity-100 transition-opacity" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-            </svg>
+            <i className="fa-solid fa-chevron-right text-[10px] ml-auto opacity-0 group-hover:opacity-100 transition-opacity" />
           </Link>
 
           {/* Sign Out */}
@@ -105,10 +100,7 @@ export default function SellerDashboardLayout({ navItems, title, children }: Sel
             onClick={() => setConfirmLogout(true)}
             className="flex items-center gap-3 w-full px-3 py-2.5 rounded-xl text-sm font-medium text-gray-400 hover:bg-red-900/40 hover:text-red-400 transition-all"
           >
-            <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
-                d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
-            </svg>
+            <i className="fa-solid fa-right-from-bracket w-5 text-center" />
             Sign Out
           </button>
         </div>
@@ -122,11 +114,9 @@ export default function SellerDashboardLayout({ navItems, title, children }: Sel
           {/* Mobile: hamburger */}
           <button
             onClick={() => setMobileOpen(true)}
-            className="md:hidden p-2 rounded-xl hover:bg-gray-100 transition-colors text-gray-600"
+            className="md:hidden p-2 rounded-xl hover:bg-gray-100 transition-colors text-gray-600 flex items-center justify-center"
           >
-            <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
-            </svg>
+            <i className="fa-solid fa-bars text-lg" />
           </button>
 
           {/* Page breadcrumb */}
@@ -134,9 +124,7 @@ export default function SellerDashboardLayout({ navItems, title, children }: Sel
             <span className="font-medium text-gray-900">Seller Dashboard</span>
             {pathname.split("/").filter(Boolean).length > 2 && (
               <>
-                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                </svg>
+                <i className="fa-solid fa-chevron-right text-xs text-gray-300" />
                 <span className="capitalize">{pathname.split("/").pop()?.replace(/-/g, " ")}</span>
               </>
             )}
@@ -147,12 +135,9 @@ export default function SellerDashboardLayout({ navItems, title, children }: Sel
             href="/"
             target="_blank"
             rel="noopener noreferrer"
-            className="flex items-center gap-2 px-4 py-1.5 rounded-xl bg-teal-600 hover:bg-teal-700 text-white text-sm font-semibold transition-colors shadow-sm"
+            className="flex items-center gap-2 px-4 py-1.5 rounded-xl bg-[#A4860E] hover:bg-[#8a7009] text-white text-sm font-semibold transition-colors shadow-sm"
           >
-            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
-                d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
-            </svg>
+            <i className="fa-solid fa-arrow-up-right-from-square text-xs" />
             Visit Website
           </Link>
         </header>
@@ -170,15 +155,11 @@ export default function SellerDashboardLayout({ navItems, title, children }: Sel
           <div className="fixed inset-y-0 left-0 z-50 w-72 bg-gray-900 text-white flex flex-col md:hidden">
             <div className="px-5 py-5 border-b border-gray-800 flex items-center justify-between">
               <div className="flex items-center gap-2.5">
-                <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-teal-400 to-teal-600 flex items-center justify-center">
-                  <span className="text-white font-black text-sm">M</span>
-                </div>
+                <img src="/main_logo.png" alt="CampusGo" className="h-8 w-auto object-contain" />
                 <span className="font-black text-white">CampusGo</span>
               </div>
-              <button onClick={() => setMobileOpen(false)} className="p-1.5 rounded-xl hover:bg-gray-800 text-gray-400">
-                <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                </svg>
+              <button onClick={() => setMobileOpen(false)} className="p-1.5 rounded-xl hover:bg-gray-800 text-gray-400 flex items-center justify-center">
+                <i className="fa-solid fa-xmark text-lg" />
               </button>
             </div>
 
@@ -191,7 +172,7 @@ export default function SellerDashboardLayout({ navItems, title, children }: Sel
                     href={item.href}
                     onClick={() => setMobileOpen(false)}
                     className={`flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all ${
-                      active ? "bg-teal-600 text-white" : "text-gray-400 hover:bg-gray-800 hover:text-white"
+                      active ? "bg-[#A4860E] text-white" : "text-gray-400 hover:bg-gray-800 hover:text-white"
                     }`}
                   >
                     <span>{item.icon}</span>
@@ -204,18 +185,12 @@ export default function SellerDashboardLayout({ navItems, title, children }: Sel
             <div className="px-3 py-4 border-t border-gray-800 space-y-1">
               <Link href="/" target="_blank" onClick={() => setMobileOpen(false)}
                 className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-gray-400 hover:bg-gray-800 hover:text-white transition-all">
-                <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
-                    d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
-                </svg>
+                <i className="fa-solid fa-arrow-up-right-from-square w-5 text-center" />
                 Visit Website
               </Link>
               <button onClick={() => { setMobileOpen(false); setConfirmLogout(true); }}
                 className="flex items-center gap-3 w-full px-3 py-2.5 rounded-xl text-sm font-medium text-gray-400 hover:bg-red-900/40 hover:text-red-400 transition-all">
-                <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
-                    d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
-                </svg>
+                <i className="fa-solid fa-right-from-bracket w-5 text-center" />
                 Sign Out
               </button>
             </div>
@@ -229,10 +204,7 @@ export default function SellerDashboardLayout({ navItems, title, children }: Sel
           <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" onClick={() => setConfirmLogout(false)} />
           <div className="relative bg-white rounded-2xl shadow-2xl p-6 w-full max-w-sm z-10">
             <div className="flex items-center justify-center w-14 h-14 rounded-full bg-red-100 mx-auto mb-4">
-              <svg className="w-7 h-7 text-red-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
-                  d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
-              </svg>
+              <i className="fa-solid fa-right-from-bracket text-red-600 text-2xl" />
             </div>
             <h2 className="text-lg font-bold text-gray-900 text-center mb-1">Sign out?</h2>
             <p className="text-sm text-gray-500 text-center mb-6">You&apos;ll be redirected to the login page.</p>
@@ -259,17 +231,17 @@ export default function SellerDashboardLayout({ navItems, title, children }: Sel
                 key={item.href}
                 href={item.href}
                 className={`flex flex-col items-center gap-0.5 px-3 py-1.5 rounded-xl transition-colors min-w-0 ${
-                  active ? "text-[#2563EB]" : "text-gray-400"
+                  active ? "text-[#A4860E]" : "text-gray-400"
                 }`}
               >
-                <span className={`${active ? "text-[#2563EB]" : "text-gray-400"}`}>
+                <span className={`${active ? "text-[#A4860E]" : "text-gray-400"}`}>
                   {item.icon}
                 </span>
-                <span className={`text-[10px] font-medium truncate max-w-[60px] ${active ? "text-[#2563EB]" : "text-gray-500"}`}>
+                <span className={`text-[10px] font-medium truncate max-w-[60px] ${active ? "text-[#A4860E]" : "text-gray-500"}`}>
                   {item.label}
                 </span>
                 {active && (
-                  <span className="w-1 h-1 rounded-full bg-[#2563EB]" />
+                  <span className="w-1 h-1 rounded-full bg-[#A4860E]" />
                 )}
               </Link>
             );

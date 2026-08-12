@@ -33,7 +33,7 @@ export async function POST(req: NextRequest) {
       subject: "Reset your CampusGo password",
       html: `
         <div style="font-family: Arial, sans-serif; max-width: 520px; margin: 0 auto; background: #f9fafb; border-radius: 16px; overflow: hidden;">
-          <div style="background: #059669; padding: 32px 40px; text-align: center;">
+          <div style="background: #A4860E; padding: 32px 40px; text-align: center;">
             <h1 style="color: white; margin: 0; font-size: 24px; font-weight: 900; letter-spacing: -0.5px;">CampusGo</h1>
           </div>
           <div style="padding: 40px;">
@@ -43,13 +43,13 @@ export async function POST(req: NextRequest) {
               We received a request to reset the password for your CampusGo account. Click the button below to choose a new password. This link expires in <strong>1 hour</strong>.
             </p>
             <a href="${resetUrl}"
-              style="display: inline-block; background: #059669; color: white; text-decoration: none; font-weight: 700; font-size: 15px; padding: 14px 32px; border-radius: 12px; margin-bottom: 28px;">
+              style="display: inline-block; background: #A4860E; color: white; text-decoration: none; font-weight: 700; font-size: 15px; padding: 14px 32px; border-radius: 12px; margin-bottom: 28px;">
               Reset My Password
             </a>
             <p style="color: #9ca3af; font-size: 12px; line-height: 1.6; margin: 0;">
               If you didn't request this, you can safely ignore this email. Your password won't change.<br/><br/>
               Or copy this link:<br/>
-              <span style="color: #059669; word-break: break-all;">${resetUrl}</span>
+              <span style="color: #A4860E; word-break: break-all;">${resetUrl}</span>
             </p>
           </div>
         </div>
