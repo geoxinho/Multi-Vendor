@@ -19,6 +19,7 @@ interface ProductFormProps {
     images?: string[];
     tags?: string[];
     status?: string;
+    variants?: { sizes: string[]; colors: string[] };
   };
   mode: "create" | "edit";
 }
@@ -41,9 +42,15 @@ export default function ProductForm({ initialData = {}, mode }: ProductFormProps
     stock: initialData.stock ?? 1,
     tags: initialData.tags ?? ([] as string[]),
     status: initialData.status ?? "active",
+    variants: {
+      sizes: initialData.variants?.sizes ?? ([] as string[]),
+      colors: initialData.variants?.colors ?? ([] as string[]),
+    },
   });
-  
+
   const [tagInput, setTagInput] = useState("");
+  const [sizeInput, setSizeInput] = useState("");
+  const [colorInput, setColorInput] = useState("");
 
   // Already-uploaded image URLs (Cloudinary)
   const [uploadedImages, setUploadedImages] = useState<string[]>(initialData.images ?? []);
@@ -154,6 +161,7 @@ export default function ProductForm({ initialData = {}, mode }: ProductFormProps
       stock: Number(form.stock),
       images: allImages,
       tags: form.tags,
+      variants: form.variants,
     };
 
     const parsed = productSchema.safeParse(payload);
@@ -182,25 +190,65 @@ export default function ProductForm({ initialData = {}, mode }: ProductFormProps
     router.refresh();
   };
 
+  const addTag = (raw: string) => {
+    const newTag = raw.trim().toLowerCase().replace(/,$/, "");
+    if (newTag && !form.tags.includes(newTag)) {
+      if (form.tags.length >= 15) {
+        setError("Maximum 15 tags allowed");
+        return;
+      }
+      setForm((f) => ({ ...f, tags: [...f.tags, newTag] }));
+      setError("");
+    }
+    setTagInput("");
+  };
+
   const handleTagKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === "Enter" || e.key === ",") {
       e.preventDefault();
-      const newTag = tagInput.trim().toLowerCase();
-      if (newTag && !form.tags.includes(newTag)) {
-        if (form.tags.length >= 15) {
-          setError("Maximum 15 tags allowed");
-          return;
-        }
-        setForm((f) => ({ ...f, tags: [...f.tags, newTag] }));
-        setError("");
-      }
-      setTagInput("");
+      addTag(tagInput);
+    }
+  };
+
+  const handleTagChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const val = e.target.value;
+    if (val.endsWith(",")) {
+      addTag(val);
+    } else {
+      setTagInput(val);
     }
   };
 
   const removeTag = (tagToRemove: string) => {
     setForm((f) => ({ ...f, tags: f.tags.filter((t) => t !== tagToRemove) }));
     setError("");
+  };
+
+  // ── Variants helpers ────────────────────────────────────────────
+  const VARIANT_KEYWORDS = ["cloth", "fashion", "wear", "shoe", "sneaker", "boot", "apparel", "dress", "shirt", "trouser", "jean", "top", "skirt", "jacket", "hoodie", "bag", "hat", "cap", "accessories"];
+
+  const selectedCategoryName = categories.find((c) => c._id === form.category)?.name?.toLowerCase() ?? "";
+  const showVariants = VARIANT_KEYWORDS.some((kw) => selectedCategoryName.includes(kw));
+
+  const addVariantChip = (type: "sizes" | "colors", raw: string) => {
+    const val = raw.trim().replace(/,$/, "");
+    if (!val) return;
+    setForm((f) => ({
+      ...f,
+      variants: {
+        ...f.variants,
+        [type]: f.variants[type].includes(val) ? f.variants[type] : [...f.variants[type], val],
+      },
+    }));
+    if (type === "sizes") setSizeInput("");
+    else setColorInput("");
+  };
+
+  const removeVariantChip = (type: "sizes" | "colors", val: string) => {
+    setForm((f) => ({
+      ...f,
+      variants: { ...f.variants, [type]: f.variants[type].filter((v) => v !== val) },
+    }));
   };
 
   const totalImages = uploadedImages.length + pendingImages.length;
@@ -365,14 +413,24 @@ export default function ProductForm({ initialData = {}, mode }: ProductFormProps
             <input
               type="text"
               value={tagInput}
-              onChange={(e) => setTagInput(e.target.value)}
+              onChange={handleTagChange}
               onKeyDown={handleTagKeyDown}
               disabled={form.tags.length >= 15}
-              placeholder={form.tags.length === 0 ? "e.g. iphone, apple (press Enter to add)" : form.tags.length >= 15 ? "Maximum tags reached" : "Add another tag..."}
-              className="flex-1 min-w-[150px] bg-transparent text-sm focus:outline-none disabled:cursor-not-allowed placeholder-gray-400"
+              placeholder={form.tags.length === 0 ? "e.g. iphone, apple" : form.tags.length >= 15 ? "Maximum tags reached" : "Add another tag..."}
+              className="flex-1 min-w-[100px] bg-transparent text-sm focus:outline-none disabled:cursor-not-allowed placeholder-gray-400"
             />
+            {tagInput.trim() && form.tags.length < 15 && (
+              <button
+                type="button"
+                onClick={() => addTag(tagInput)}
+                className="shrink-0 px-3 py-1 rounded-lg text-xs font-bold text-white transition-colors"
+                style={{ background: "#A4860E" }}
+              >
+                Add
+              </button>
+            )}
           </div>
-          <p className="text-xs text-gray-400 mt-1.5">These tags are hidden from buyers but help your product appear in search results. Press Enter or comma to add.</p>
+          <p className="text-xs text-gray-400 mt-1.5">Tags are hidden from buyers but boost search. Type a tag and press <strong>Enter</strong>, tap <strong>Add</strong>, or type a comma.</p>
         </div>
 
         <div className="grid grid-cols-2 gap-4">
@@ -381,13 +439,13 @@ export default function ProductForm({ initialData = {}, mode }: ProductFormProps
             <input type="number" required min={0} value={form.price}
               onChange={(e) => setForm((f) => ({ ...f, price: e.target.value }))}
               placeholder="5000"
-              className="w-full px-4 py-3 rounded-xl border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-green-500 transition" />
+              className="w-full px-4 py-3 rounded-xl border border-gray-200 text-sm focus:outline-none transition" />
           </div>
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1.5">Stock Quantity</label>
             <input type="number" required min={1} value={form.stock}
               onChange={(e) => setForm((f) => ({ ...f, stock: Number(e.target.value) }))}
-              className="w-full px-4 py-3 rounded-xl border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-green-500 transition" />
+              className="w-full px-4 py-3 rounded-xl border border-gray-200 text-sm focus:outline-none transition" />
           </div>
         </div>
 
@@ -396,7 +454,7 @@ export default function ProductForm({ initialData = {}, mode }: ProductFormProps
             <label className="block text-sm font-medium text-gray-700 mb-1.5">Condition</label>
             <select value={form.condition}
               onChange={(e) => setForm((f) => ({ ...f, condition: e.target.value as "new" | "used" }))}
-              className="w-full px-4 py-3 rounded-xl border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-green-500 transition bg-white">
+              className="w-full px-4 py-3 rounded-xl border border-gray-200 text-sm focus:outline-none transition bg-white">
               <option value="new">New</option>
               <option value="used">Used</option>
             </select>
@@ -418,7 +476,7 @@ export default function ProductForm({ initialData = {}, mode }: ProductFormProps
             ) : (
               <select required value={form.category}
                 onChange={(e) => setForm((f) => ({ ...f, category: e.target.value }))}
-                className="w-full px-4 py-3 rounded-xl border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-green-500 transition bg-white">
+                className="w-full px-4 py-3 rounded-xl border border-gray-200 text-sm focus:outline-none transition bg-white">
                 <option value="">Select a category</option>
                 {categories.map((c) => (
                   <option key={c._id} value={c._id}>{c.name}</option>
@@ -428,18 +486,85 @@ export default function ProductForm({ initialData = {}, mode }: ProductFormProps
           </div>
         </div>
 
+        {/* ── Variants: Size & Colour (shown only for fashion/shoe categories) ── */}
+        {showVariants && (
+          <div className="space-y-4 pt-2 border-t border-gray-100">
+            <div className="flex items-center gap-2">
+              <span className="text-sm font-semibold text-gray-700">Product Variants</span>
+              <span className="text-xs px-2 py-0.5 rounded-full font-bold text-white" style={{ background: "#A4860E" }}>
+                Sizes &amp; Colours
+              </span>
+            </div>
+
+            {/* Sizes */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1.5">Available Sizes</label>
+              <div className="w-full p-2 min-h-[48px] rounded-xl border border-gray-200 bg-white flex flex-wrap gap-2 items-center focus-within:border-[#A4860E] transition">
+                {form.variants.sizes.map((s, i) => (
+                  <span key={i} className="inline-flex items-center gap-1.5 px-3 py-1 rounded-lg text-sm font-bold border text-white" style={{ background: "#A4860E", borderColor: "#8a6f0b" }}>
+                    {s}
+                    <button type="button" onClick={() => removeVariantChip("sizes", s)} className="opacity-80 hover:opacity-100 focus:outline-none">
+                      <i className="fa-solid fa-xmark text-[10px]" />
+                    </button>
+                  </span>
+                ))}
+                <input
+                  type="text"
+                  value={sizeInput}
+                  onChange={(e) => { const v = e.target.value; if (v.endsWith(",")) { addVariantChip("sizes", v); } else { setSizeInput(v); } }}
+                  onKeyDown={(e) => { if (e.key === "Enter" || e.key === ",") { e.preventDefault(); addVariantChip("sizes", sizeInput); } }}
+                  placeholder="e.g. S, M, L, XL, 42"
+                  className="flex-1 min-w-[120px] bg-transparent text-sm focus:outline-none placeholder-gray-400"
+                />
+                {sizeInput.trim() && (
+                  <button type="button" onClick={() => addVariantChip("sizes", sizeInput)} className="shrink-0 px-3 py-1 rounded-lg text-xs font-bold text-white" style={{ background: "#A4860E" }}>Add</button>
+                )}
+              </div>
+              <p className="text-xs text-gray-400 mt-1">Type a size and press Enter, tap Add, or use commas.</p>
+            </div>
+
+            {/* Colours */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1.5">Available Colours</label>
+              <div className="w-full p-2 min-h-[48px] rounded-xl border border-gray-200 bg-white flex flex-wrap gap-2 items-center focus-within:border-[#A4860E] transition">
+                {form.variants.colors.map((c, i) => (
+                  <span key={i} className="inline-flex items-center gap-1.5 px-3 py-1 rounded-lg text-sm font-semibold border border-gray-200 bg-gray-50 text-gray-800">
+                    {c}
+                    <button type="button" onClick={() => removeVariantChip("colors", c)} className="text-gray-400 hover:text-gray-700 focus:outline-none">
+                      <i className="fa-solid fa-xmark text-[10px]" />
+                    </button>
+                  </span>
+                ))}
+                <input
+                  type="text"
+                  value={colorInput}
+                  onChange={(e) => { const v = e.target.value; if (v.endsWith(",")) { addVariantChip("colors", v); } else { setColorInput(v); } }}
+                  onKeyDown={(e) => { if (e.key === "Enter" || e.key === ",") { e.preventDefault(); addVariantChip("colors", colorInput); } }}
+                  placeholder="e.g. Red, Black, Navy Blue"
+                  className="flex-1 min-w-[120px] bg-transparent text-sm focus:outline-none placeholder-gray-400"
+                />
+                {colorInput.trim() && (
+                  <button type="button" onClick={() => addVariantChip("colors", colorInput)} className="shrink-0 px-3 py-1 rounded-lg text-xs font-bold text-white" style={{ background: "#A4860E" }}>Add</button>
+                )}
+              </div>
+              <p className="text-xs text-gray-400 mt-1">Type a colour and press Enter, tap Add, or use commas.</p>
+            </div>
+          </div>
+        )}
+
         {mode === "edit" && (
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1.5">Listing Status</label>
             <select value={form.status}
               onChange={(e) => setForm((f) => ({ ...f, status: e.target.value }))}
-              className="w-full px-4 py-3 rounded-xl border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-green-500 transition bg-white">
+              className="w-full px-4 py-3 rounded-xl border border-gray-200 text-sm focus:outline-none transition bg-white">
               <option value="active">Active — visible to buyers</option>
               <option value="inactive">Inactive — hidden from buyers</option>
             </select>
           </div>
         )}
       </div>
+
 
       {error && (
         <div className="flex items-start gap-2 text-sm text-red-700 bg-red-50 px-4 py-3 rounded-xl border border-red-100">

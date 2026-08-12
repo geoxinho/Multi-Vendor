@@ -15,6 +15,10 @@ export interface IProduct extends Document {
   status: "active" | "inactive";
   isFeatured: boolean;
   tags: string[];
+  variants: {
+    sizes: string[];
+    colors: string[];
+  };
   createdAt: Date;
 }
 
@@ -34,6 +38,10 @@ const ProductSchema = new Schema<IProduct>(
     status: { type: String, enum: ["active", "inactive"], default: "active" },
     isFeatured: { type: Boolean, default: false },
     tags: [{ type: String, trim: true }],
+    variants: {
+      sizes: [{ type: String, trim: true }],
+      colors: [{ type: String, trim: true }],
+    },
   },
   { timestamps: true }
 );

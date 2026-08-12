@@ -4,12 +4,12 @@
 @theme inline {
   --font-sans: var(--font-inter);
 
-  /* ── Minimalist Design Tokens ──────────────────────────────────── */
+  /* ── Design Tokens ─────────────────────────────────────────────── */
 
-  /* Accent — ONE color: blue #2563EB */
-  --color-accent:        #2563EB;
-  --color-accent-dark:   #1D4ED8;
-  --color-accent-light:  #EFF6FF;
+  /* Primary accent — Gold/Bronze #A4860E */
+  --color-accent:        #A4860E;
+  --color-accent-dark:   #8a6f0b;
+  --color-accent-light:  #fdf8e8;
 
   /* Backgrounds */
   --color-background:    #FFFFFF;
@@ -25,7 +25,7 @@
   --color-border:        #E5E5E5;
   --color-border-dark:   #D0D0D0;
 
-  /* Status — kept minimal, only used for feedback */
+  /* Status */
   --color-success:       #16A34A;
   --color-danger:        #DC2626;
   --color-warning:       #D97706;
@@ -50,11 +50,17 @@ body {
 ::-webkit-scrollbar-thumb { background: #D0D0D0; border-radius: 99px; }
 ::-webkit-scrollbar-thumb:hover { background: #B0B0B0; }
 
-/* ── Focus ring ─────────────────────────────────────────────────── */
+/* ── Focus ring — subtle, no blue ──────────────────────────────── */
 *:focus-visible {
-  outline: 2px solid #2563EB;
+  outline: 2px solid #A4860E;
   outline-offset: 2px;
   border-radius: 4px;
+}
+
+/* Remove default blue focus ring from inputs/selects globally */
+input:focus, textarea:focus, select:focus, button:focus {
+  outline: none;
+  box-shadow: none;
 }
 
 /* ── Transitions ────────────────────────────────────────────────── */
@@ -97,7 +103,7 @@ body {
   justify-content: center;
   gap: 0.5rem;
   padding: 0.625rem 1.25rem;
-  background: #2563EB;
+  background: #A4860E;
   color: #ffffff;
   font-weight: 600;
   font-size: 0.875rem;
@@ -106,7 +112,7 @@ body {
   cursor: pointer;
   transition: background 150ms;
 }
-.btn-accent:hover { background: #1D4ED8; }
+.btn-accent:hover { background: #8a6f0b; }
 .btn-accent:disabled { opacity: 0.55; cursor: not-allowed; }
 
 /* ── Ghost button ───────────────────────────────────────────────── */
@@ -137,5 +143,5 @@ body {
   color: #111111;
   transition: border-color 150ms;
 }
-.input-base:focus { outline: none; border-color: #2563EB; }
+.input-base:focus { outline: none; border-color: #A4860E; box-shadow: none; }
 .input-base::placeholder { color: #9B9B9B; }

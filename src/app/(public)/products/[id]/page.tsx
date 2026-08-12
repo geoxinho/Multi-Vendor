@@ -140,9 +140,17 @@ export default async function ProductDetailPage({ params }: Props) {
             )}
           </div>
 
-          <h1 className="text-2xl md:text-3xl font-bold text-gray-900 mb-3">
+          <h1 className="text-2xl md:text-3xl font-bold text-gray-900 mb-1">
             {product.title || "Untitled Product"}
           </h1>
+
+          {/* Sold by — inline under title */}
+          <div className="flex items-center gap-2 mb-3">
+            <span className="text-xs text-gray-400">Sold by</span>
+            <span className="text-xs font-semibold text-gray-700">
+              {product.seller?.storeName || product.seller?.name || "Unknown Seller"}
+            </span>
+          </div>
 
           <div className="flex items-center gap-3 mb-4">
             <RatingStars
@@ -193,34 +201,40 @@ export default async function ProductDetailPage({ params }: Props) {
             </span>
           </div>
 
+          {/* Variants */}
+          {(product.variants?.sizes?.length > 0 || product.variants?.colors?.length > 0) && (
+            <div className="mb-6 space-y-3">
+              {product.variants?.sizes?.length > 0 && (
+                <div>
+                  <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">Sizes</p>
+                  <div className="flex flex-wrap gap-2">
+                    {product.variants.sizes.map((s: string) => (
+                      <span key={s} className="px-3 py-1 rounded-lg text-sm font-bold border text-white" style={{ background: "#A4860E", borderColor: "#8a6f0b" }}>
+                        {s}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              )}
+              {product.variants?.colors?.length > 0 && (
+                <div>
+                  <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">Colours</p>
+                  <div className="flex flex-wrap gap-2">
+                    {product.variants.colors.map((c: string) => (
+                      <span key={c} className="px-3 py-1 rounded-lg text-sm font-semibold border border-gray-200 bg-gray-50 text-gray-800">
+                        {c}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+
           {/* Buy Now */}
           <BuyNowButton product={product} />
 
-          {/* Seller info */}
-          <div className="mt-8 p-4 bg-[#FAFAFA] rounded-md border border-[#E5E5E5]">
-            <p className="text-xs font-semibold text-[#9B9B9B] uppercase tracking-wider mb-2">
-              Sold By
-            </p>
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-full bg-[#EFF6FF] flex items-center justify-center shrink-0">
-                <span className="text-[#2563EB] font-bold">
-                  {product.seller?.name?.[0]?.toUpperCase() || "?"}
-                </span>
-              </div>
-              <div>
-                <p className="font-semibold text-gray-900">
-                  {product.seller?.storeName ||
-                    product.seller?.name ||
-                    "Unknown Seller"}
-                </p>
-                {product.seller?.storeDescription && (
-                  <p className="text-xs text-gray-500 mt-0.5 line-clamp-2">
-                    {product.seller.storeDescription}
-                  </p>
-                )}
-              </div>
-            </div>
-          </div>
+
         </div>
       </div>
 
