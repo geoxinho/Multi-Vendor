@@ -44,6 +44,7 @@ export default function Navbar() {
   
   const [cartOpen, setCartOpen] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [mobileSearchOpen, setMobileSearchOpen] = useState(false);
   const [userMenuOpen, setUserMenuOpen] = useState(false);
   const [confirmLogout, setConfirmLogout] = useState(false);
   const [becomeSellerOpen, setBecomeSellerOpen] = useState(false);
@@ -112,13 +113,11 @@ export default function Navbar() {
   const avatarGradient = isAdmin
     ? "from-purple-500 to-violet-600"
     : isSeller
-    ? "from-emerald-500 to-teal-600"
-    : "from-blue-500 to-indigo-600";
+    ? "from-[#A4860E] to-[#c9a820]"
+    : "from-gray-400 to-gray-600";
   const roleBadgeStyle = isAdmin
     ? "bg-purple-100 text-purple-700 border-purple-200"
-    : isSeller
-    ? "bg-emerald-100 text-emerald-700 border-emerald-200"
-    : "bg-blue-100 text-blue-700 border-blue-200";
+    : "bg-[#fdf8e8] text-[#A4860E] border-[#e8d48a]";
 
   return (
     <>
@@ -140,7 +139,7 @@ export default function Navbar() {
             {/* Left: Logo */}
             <div className="flex-1 flex justify-start">
               <Link href="/" className="flex items-center shrink-0 group">
-                <img src="/logo.png" alt="CampusGo" className="h-11 w-auto object-contain group-hover:scale-105 transition-transform duration-300" />
+                <img src="/main_logo.png" alt="CampusGo" className="h-11 w-auto object-contain group-hover:scale-105 transition-transform duration-300" />
               </Link>
             </div>
 
@@ -168,8 +167,12 @@ export default function Navbar() {
 
               <div className="flex items-center gap-1.5 pl-2 lg:pl-0">
                 {/* Search Toggle Mobile */}
-                <button className="md:hidden w-10 h-10 rounded-full flex items-center justify-center text-gray-500 hover:text-gray-900 hover:bg-gray-100 transition-colors">
-                  <i className="fa-solid fa-magnifying-glass" />
+                <button
+                  onClick={() => setMobileSearchOpen((p) => !p)}
+                  className="md:hidden w-10 h-10 rounded-full flex items-center justify-center text-gray-500 hover:text-gray-900 hover:bg-gray-100 transition-colors"
+                  aria-label="Toggle search"
+                >
+                  <i className={`fa-solid ${mobileSearchOpen ? "fa-xmark" : "fa-magnifying-glass"}`} />
                 </button>
 
                 {isbuyer && (
@@ -179,9 +182,9 @@ export default function Navbar() {
                   </Link>
                 )}
 
-                <button onClick={() => setCartOpen(true)} className="relative w-10 h-10 rounded-full flex items-center justify-center text-gray-500 hover:text-blue-600 hover:bg-blue-50 transition-colors" aria-label="Open cart">
+                <button onClick={() => setCartOpen(true)} className="relative w-10 h-10 rounded-full flex items-center justify-center text-gray-500 hover:text-[#A4860E] hover:bg-[#fdf8e8] transition-colors" aria-label="Open cart">
                   <i className="fa-solid fa-cart-shopping text-lg" />
-                  {cartCount > 0 && <span className="absolute top-0 right-0 w-4 h-4 bg-blue-600 text-white text-[9px] font-bold rounded-full flex items-center justify-center border-2 border-white">{cartCount > 9 ? "9+" : cartCount}</span>}
+                  {cartCount > 0 && <span className="absolute top-0 right-0 w-4 h-4 bg-[#A4860E] text-white text-[9px] font-bold rounded-full flex items-center justify-center border-2 border-white">{cartCount > 9 ? "9+" : cartCount}</span>}
                 </button>
 
                 {/* Mobile Menu Toggle */}
@@ -219,15 +222,17 @@ export default function Navbar() {
                                 <p className="text-xs text-gray-500 truncate">{session.user.email}</p>
                               </div>
                             </div>
-                            <div className="mt-3">
-                              <span className={`inline-flex items-center px-2.5 py-1 rounded-md text-[10px] font-bold uppercase tracking-wider border ${roleBadgeStyle}`}>
-                                {role}
-                              </span>
-                            </div>
+                            {(isSeller || isAdmin) && (
+                              <div className="mt-3">
+                                <span className={`inline-flex items-center px-2.5 py-1 rounded-md text-[10px] font-bold uppercase tracking-wider border ${roleBadgeStyle}`}>
+                                  {role}
+                                </span>
+                              </div>
+                            )}
                           </div>
 
                           <div className="p-2">
-                            <Link href={`/dashboard/${role}`} className="flex items-center gap-3 px-3 py-2 rounded-xl text-sm font-semibold text-gray-700 hover:text-blue-600 hover:bg-blue-50 transition-all">
+                            <Link href={`/dashboard/${role}`} className="flex items-center gap-3 px-3 py-2 rounded-xl text-sm font-semibold text-gray-700 hover:text-[#A4860E] hover:bg-[#fdf8e8] transition-all">
                               <i className="fa-solid fa-grid-2 w-4 text-center" />
                               Dashboard
                             </Link>
@@ -275,6 +280,10 @@ export default function Navbar() {
         </header>
       </div>
 
+      {/* ── MOBILE SEARCH PANEL ─────────────────────────────────────────── */}
+      <div className={`md:hidden sticky top-16 left-0 right-0 z-30 bg-white border-b border-gray-200 overflow-hidden transition-all duration-300 ease-in-out ${mobileSearchOpen ? "max-h-20 py-3 px-4 opacity-100" : "max-h-0 py-0 px-4 opacity-0"}`}>
+        <SearchBar />
+      </div>
 
       {/* ── MOBILE SIDE DRAWER ──────────────────────────────────────────── */}
       <div className={`fixed inset-0 z-[100] transition-all duration-300 lg:hidden ${mobileMenuOpen ? "opacity-100 pointer-events-auto" : "opacity-0 pointer-events-none"}`}>
@@ -287,7 +296,7 @@ export default function Navbar() {
           {/* Header */}
           <div className="flex items-center justify-between px-6 py-5 border-b border-gray-100 shrink-0">
             <Link href="/" onClick={() => setMobileMenuOpen(false)} className="flex items-center">
-              <img src="/logo.png" alt="CampusGo" className="h-9 w-auto object-contain" />
+              <img src="/main_logo.png" alt="CampusGo" className="h-9 w-auto object-contain" />
             </Link>
             <button onClick={() => setMobileMenuOpen(false)} className="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center text-gray-900 hover:bg-gray-200 transition-colors">
               <i className="fa-solid fa-xmark" />
@@ -305,12 +314,14 @@ export default function Navbar() {
                   <div className="min-w-0">
                     <p className="text-base font-bold text-gray-900 truncate">{session.user.name}</p>
                     <p className="text-xs text-gray-500 truncate">{session.user.email}</p>
-                    <span className="inline-block mt-1 text-[9px] font-bold px-2 py-0.5 bg-gray-200 text-gray-700 rounded-md uppercase">{role}</span>
+                    {(isSeller || isAdmin) && (
+                      <span className="inline-block mt-1 text-[9px] font-bold px-2 py-0.5 bg-[#fdf8e8] text-[#A4860E] rounded-md uppercase border border-[#e8d48a]">{role}</span>
+                    )}
                   </div>
                 </div>
 
                 <div className="flex flex-col gap-2 text-left">
-                  <Link href={`/dashboard/${role}`} onClick={() => setMobileMenuOpen(false)} className="flex items-center gap-3 px-3 py-2 rounded-xl text-sm font-bold text-gray-700 hover:text-blue-600 hover:bg-blue-50 transition-colors">
+                  <Link href={`/dashboard/${role}`} onClick={() => setMobileMenuOpen(false)} className="flex items-center gap-3 px-3 py-2 rounded-xl text-sm font-bold text-gray-700 hover:text-[#A4860E] hover:bg-[#fdf8e8] transition-colors">
                     <i className="fa-solid fa-grid-2 w-4 text-center" />
                     Dashboard
                   </Link>

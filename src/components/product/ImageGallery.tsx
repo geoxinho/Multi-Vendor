@@ -52,7 +52,7 @@ export default function ImageGallery({ images, title }: ImageGalleryProps) {
           src={all[active]}
           alt={title}
           fill
-          className="object-contain transition-opacity duration-200"
+          className="object-cover transition-opacity duration-200"
           priority
           sizes="(max-width: 768px) 100vw, 50vw"
           draggable={false}
@@ -119,7 +119,7 @@ export default function ImageGallery({ images, title }: ImageGalleryProps) {
                 src={img}
                 alt={`${title} view ${i + 1}`}
                 fill
-                className="object-contain bg-[#FAFAFA]"
+                className="object-cover"
                 sizes="64px"
               />
             </button>
