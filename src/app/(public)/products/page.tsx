@@ -83,9 +83,7 @@ function ProductsContent() {
           onClick={() => setIsFilterOpen(!isFilterOpen)}
           className="flex items-center gap-2 px-4 py-2 bg-[#FAFAFA] text-[#111111] border border-[#E5E5E5] rounded-md font-medium text-sm"
         >
-          <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z" />
-          </svg>
+          <i className="fa-solid fa-filter text-xs" />
           Filters
         </button>
       </div>
@@ -97,9 +95,7 @@ function ProductsContent() {
             <div className="flex justify-between items-center pb-2 border-b border-[#E5E5E5]">
               <h2 className="font-bold text-[#111111] text-sm uppercase tracking-wider">Filters</h2>
               <button className="lg:hidden p-1 text-[#6B6B6B]" onClick={() => setIsFilterOpen(false)}>
-                <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                </svg>
+                <i className="fa-solid fa-xmark" />
               </button>
             </div>
 
@@ -178,7 +174,7 @@ function ProductsContent() {
             <EmptyState
               title="No products found"
               description="Try adjusting your filters or search terms."
-              icon={<svg className="w-12 h-12" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>}
+              icon={<i className="fa-regular fa-face-frown text-5xl text-[#9B9B9B]" />}
             />
           ) : (
             <>

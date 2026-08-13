@@ -68,65 +68,65 @@ function LoginForm() {
   };
 
   return (
-    <div className="min-h-screen bg-white flex items-center justify-center px-4 py-12">
-      <div className="w-full max-w-sm">
+    <div className="min-h-screen bg-gradient-to-br from-[#fdf8e8]/30 via-white to-white flex items-center justify-center px-4 py-12">
+      <div className="w-full max-w-md">
         {/* Logo */}
         <div className="text-center mb-8">
           <Link href="/" className="inline-flex items-center gap-2">
-            <img src="/logo.png" alt="CampusGo" className="h-8 w-auto object-contain" />
-            <span className="font-bold text-xl text-[#111111]">Campus<span className="text-[#A4860E]">Go</span></span>
+            <img src="/main_logo.png" alt="CampusGo" className="h-10 w-auto object-contain" />
+            <span className="font-bold text-2xl text-[#111111]">Campus<span className="text-[#A4860E]">Go</span></span>
           </Link>
-          <h1 className="text-xl font-bold text-[#111111] mt-6 mb-1">Sign in</h1>
-          <p className="text-sm text-[#6B6B6B]">Welcome back.</p>
+          <h1 className="text-2xl font-bold text-[#111111] mt-6 mb-1">Sign in</h1>
+          <p className="text-sm text-[#6B6B6B]">Welcome back to CampusGo.</p>
         </div>
 
-        <div className="border border-[#E5E5E5] rounded-lg p-6">
+        <div className="border border-[#E5E5E5] rounded-2xl p-7 bg-white shadow-lg shadow-gray-100/50">
           <form onSubmit={handleSubmit} className="space-y-4">
             <div>
-              <label className="block text-xs font-medium text-[#111111] mb-1.5">Email</label>
+              <label className="block text-xs font-semibold text-[#111111] mb-1.5">Email</label>
               <div className="relative">
-                <i className="fa-solid fa-envelope absolute left-3 top-1/2 -translate-y-1/2 text-[#9B9B9B] text-xs" />
+                <i className="fa-solid fa-envelope absolute left-3.5 top-1/2 -translate-y-1/2 text-[#9B9B9B] text-xs" />
                 <input
                   type="email"
                   required
                   value={form.email}
                   onChange={(e) => setForm((f) => ({ ...f, email: e.target.value }))}
                   placeholder="you@example.com"
-                  className="w-full pl-9 pr-4 py-2.5 rounded-md border border-[#E5E5E5] text-sm text-[#111111] placeholder:text-[#9B9B9B] focus:outline-none focus:border-[#A4860E] transition-colors bg-white"
+                  className="w-full pl-9 pr-4 py-3 rounded-xl border border-[#E5E5E5] text-sm text-[#111111] placeholder:text-[#9B9B9B] focus:outline-none focus:border-[#A4860E] focus:ring-1 focus:ring-[#A4860E]/20 transition-all bg-white"
                 />
               </div>
             </div>
 
             <div>
               <div className="flex items-center justify-between mb-1.5">
-                <label className="text-xs font-medium text-[#111111]">Password</label>
-                <Link href="/auth/forgot-password" className="text-xs text-[#A4860E] hover:underline">
+                <label className="text-xs font-semibold text-[#111111]">Password</label>
+                <Link href="/auth/forgot-password" className="text-xs text-[#A4860E] hover:underline font-medium">
                   Forgot password?
                 </Link>
               </div>
               <div className="relative">
-                <i className="fa-solid fa-key absolute left-3 top-1/2 -translate-y-1/2 text-[#9B9B9B] text-xs" />
+                <i className="fa-solid fa-key absolute left-3.5 top-1/2 -translate-y-1/2 text-[#9B9B9B] text-xs" />
                 <input
                   type={showPassword ? "text" : "password"}
                   required
                   value={form.password}
                   onChange={(e) => setForm((f) => ({ ...f, password: e.target.value }))}
                   placeholder="••••••••"
-                  className="w-full pl-9 pr-10 py-2.5 rounded-md border border-[#E5E5E5] text-sm text-[#111111] focus:outline-none focus:border-[#A4860E] transition-colors bg-white"
+                  className="w-full pl-9 pr-10 py-3 rounded-xl border border-[#E5E5E5] text-sm text-[#111111] focus:outline-none focus:border-[#A4860E] focus:ring-1 focus:ring-[#A4860E]/20 transition-all bg-white"
                 />
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-2 top-1/2 -translate-y-1/2 p-2 text-[#9B9B9B] hover:text-[#6B6B6B] transition-colors z-10"
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-[#9B9B9B] hover:text-[#6B6B6B] transition-colors"
                   tabIndex={-1}
                 >
-                  <i className={`fa-solid ${showPassword ? "fa-eye-slash" : "fa-eye"}`} />
+                  <i className={`fa-solid ${showPassword ? "fa-eye-slash" : "fa-eye"} text-xs`} />
                 </button>
               </div>
             </div>
 
             {error && (
-              <div className="flex items-start gap-2 p-3 bg-[#FEF2F2] border border-[#FCA5A5] rounded-md text-xs text-[#DC2626]">
+              <div className="flex items-start gap-2.5 p-3.5 bg-[#FEF2F2] border border-[#FCA5A5] rounded-xl text-xs text-[#DC2626]">
                 <i className="fa-solid fa-circle-exclamation mt-0.5 shrink-0" />
                 <span>{error}</span>
               </div>
@@ -135,16 +135,21 @@ function LoginForm() {
             <button
               type="submit"
               disabled={loading}
-              className="w-full py-2.5 bg-[#A4860E] hover:bg-[#8a6f0b] text-white font-semibold rounded-md transition-colors text-sm disabled:opacity-60 disabled:cursor-not-allowed mt-2"
+              className="w-full py-3 bg-[#A4860E] hover:bg-[#8a6f0b] text-white font-bold rounded-xl transition-all text-sm disabled:opacity-60 disabled:cursor-not-allowed mt-2 shadow-lg shadow-[#A4860E]/20"
             >
-              {loading ? "Signing in…" : "Sign In"}
+              {loading ? (
+                <span className="flex items-center justify-center gap-2">
+                  <i className="fa-solid fa-circle-notch animate-spin text-xs" />
+                  Signing in…
+                </span>
+              ) : "Sign In"}
             </button>
           </form>
         </div>
 
         <p className="text-center text-sm text-[#6B6B6B] mt-6">
           Don&apos;t have an account?{" "}
-          <Link href="/auth/register" className="text-[#A4860E] font-medium hover:underline">
+          <Link href="/auth/register" className="text-[#A4860E] font-semibold hover:underline">
             Create one
           </Link>
         </p>

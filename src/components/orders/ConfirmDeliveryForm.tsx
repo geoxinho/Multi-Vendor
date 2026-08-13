@@ -55,17 +55,17 @@ export default function ConfirmDeliveryForm({ orderId, onSuccess }: ConfirmDeliv
 
   if (success) {
     return (
-      <div className="p-4 bg-green-50 border border-green-200 text-green-800 rounded-xl text-sm font-semibold flex items-center gap-2">
+      <div className="p-4 bg-[#fdf8e8] border border-[#e8d48a] text-[#A4860E] rounded-xl text-sm font-semibold flex items-center gap-2">
         <i className="fa-solid fa-circle-check text-lg shrink-0" style={{ color: "#A4860E" }} />
-        <span>Delivery verified & confirmed successfully! <i className="fa-solid fa-champagne-glasses text-green-600" /></span>
+        <span>Delivery verified & confirmed successfully! <i className="fa-solid fa-champagne-glasses text-[#A4860E]" /></span>
       </div>
     );
   }
 
   return (
-    <div className="bg-gradient-to-br from-green-50/50 to-yellow-50/30 rounded-2xl border border-green-100 p-5 shadow-sm">
-      <h3 className="text-sm font-bold text-green-800 flex items-center gap-2 mb-2">
-        <i className="fa-solid fa-box text-green-600" />
+    <div className="bg-gradient-to-br from-[#fdf8e8]/50 to-yellow-50/30 rounded-2xl border border-[#e8d48a] p-5 shadow-sm">
+      <h3 className="text-sm font-bold text-[#A4860E] flex items-center gap-2 mb-2">
+        <i className="fa-solid fa-box text-[#A4860E]" />
         <span>Confirm Delivery Receipt</span>
       </h3>
       <p className="text-xs text-gray-500 mb-4 leading-relaxed">
@@ -87,7 +87,7 @@ export default function ConfirmDeliveryForm({ orderId, onSuccess }: ConfirmDeliv
         <button
           type="submit"
           disabled={loading || pin.length !== 6}
-          className="px-5 py-2.5 bg-green-600 hover:bg-green-700 text-white text-sm font-bold rounded-xl transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-sm shrink-0"
+          className="px-5 py-2.5 bg-[#A4860E] hover:bg-[#8a7009] text-white text-sm font-bold rounded-xl transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-sm shrink-0"
         >
           {loading ? "Verifying..." : "Confirm Delivery"}
         </button>

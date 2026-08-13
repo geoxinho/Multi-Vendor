@@ -22,8 +22,12 @@ export default function AdminDashboardLayout({ navItems, children }: AdminDashbo
   const [confirmLogout, setConfirmLogout] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
 
-  const isActive = (href: string) =>
-    pathname === href || (href.length > 1 && pathname.startsWith(href + "/"));
+  const isActive = (href: string) => {
+    if (href === "/dashboard/admin") {
+      return pathname === href;
+    }
+    return pathname === href || pathname.startsWith(href + "/");
+  };
 
   return (
     <div className="flex h-screen bg-gray-50 overflow-hidden">
@@ -34,12 +38,10 @@ export default function AdminDashboardLayout({ navItems, children }: AdminDashbo
         {/* Brand */}
         <div className="px-5 py-5 border-b border-gray-800">
           <div className="flex items-center gap-2.5">
-            <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-purple-500 to-indigo-700 flex items-center justify-center shadow">
-              <i className="fa-solid fa-shield-halved text-white text-xs" />
-            </div>
+            <img src="/main_logo.png" alt="CampusGo" className="h-8 w-auto object-contain" />
             <div>
               <p className="font-black text-white text-base leading-tight">CampusGo</p>
-              <p className="text-xs text-purple-400 leading-tight">Admin Panel</p>
+              <p className="text-xs text-[#A4860E] leading-tight">Admin Panel</p>
             </div>
           </div>
         </div>
@@ -48,12 +50,12 @@ export default function AdminDashboardLayout({ navItems, children }: AdminDashbo
         {session?.user && (
           <div className="px-5 py-4 border-b border-gray-800">
             <div className="flex items-center gap-3">
-              <div className="w-9 h-9 rounded-full bg-gradient-to-br from-purple-500 to-indigo-600 flex items-center justify-center text-white font-bold text-sm shrink-0">
+              <div className="w-9 h-9 rounded-full bg-gradient-to-br from-[#A4860E] to-[#c9a820] flex items-center justify-center text-white font-bold text-sm shrink-0">
                 {session.user.name?.[0]?.toUpperCase()}
               </div>
               <div className="min-w-0">
                 <p className="text-sm font-semibold text-white truncate">{session.user.name}</p>
-                <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-purple-900 text-purple-300">Administrator</span>
+                <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-[#fdf8e8] text-[#A4860E] border border-[#e8d48a]">Administrator</span>
               </div>
             </div>
           </div>
@@ -70,13 +72,13 @@ export default function AdminDashboardLayout({ navItems, children }: AdminDashbo
                 href={item.href}
                 className={`flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all ${
                   active
-                    ? "bg-purple-600 text-white shadow-sm"
+                    ? "bg-[#A4860E] text-white shadow-sm"
                     : "text-gray-400 hover:bg-gray-800 hover:text-white"
                 }`}
               >
                 <span className={active ? "text-white" : "text-gray-500"}>{item.icon}</span>
                 {item.label}
-                {active && <span className="ml-auto w-1.5 h-1.5 rounded-full bg-purple-300" />}
+                {active && <span className="ml-auto w-1.5 h-1.5 rounded-full bg-[#F0C040]" />}
               </Link>
             );
           })}
@@ -118,7 +120,7 @@ export default function AdminDashboardLayout({ navItems, children }: AdminDashbo
           </button>
 
           <div className="hidden md:flex items-center gap-2 text-sm text-gray-500">
-            <span className="font-bold text-purple-700">Admin Panel</span>
+            <span className="font-bold text-[#A4860E]">Admin Panel</span>
             {pathname.split("/").filter(Boolean).length > 2 && (
               <>
                 <i className="fa-solid fa-chevron-right text-xs text-gray-300" />
@@ -131,7 +133,7 @@ export default function AdminDashboardLayout({ navItems, children }: AdminDashbo
             href="/"
             target="_blank"
             rel="noopener noreferrer"
-            className="flex items-center gap-2 px-4 py-1.5 rounded-xl bg-purple-600 hover:bg-purple-700 text-white text-sm font-semibold transition-colors shadow-sm"
+            className="flex items-center gap-2 px-4 py-1.5 rounded-xl bg-[#A4860E] hover:bg-[#8a7009] text-white text-sm font-semibold transition-colors shadow-sm"
           >
             <i className="fa-solid fa-arrow-up-right-from-square text-xs" />
             Visit Website
@@ -149,7 +151,10 @@ export default function AdminDashboardLayout({ navItems, children }: AdminDashbo
           <div className="fixed inset-0 z-40 bg-black/50 md:hidden" onClick={() => setMobileOpen(false)} />
           <div className="fixed inset-y-0 left-0 z-50 w-72 bg-gray-950 text-white flex flex-col md:hidden">
             <div className="px-5 py-5 border-b border-gray-800 flex items-center justify-between">
-              <span className="font-black text-white">Admin Panel</span>
+              <div className="flex items-center gap-2.5">
+                <img src="/main_logo.png" alt="CampusGo" className="h-8 w-auto object-contain" />
+                <span className="font-black text-white">CampusGo</span>
+              </div>
               <button onClick={() => setMobileOpen(false)} className="p-1.5 rounded-xl hover:bg-gray-800 text-gray-400 flex items-center justify-center">
                 <i className="fa-solid fa-xmark text-lg" />
               </button>
@@ -160,7 +165,7 @@ export default function AdminDashboardLayout({ navItems, children }: AdminDashbo
                 return (
                   <Link key={item.href} href={item.href} onClick={() => setMobileOpen(false)}
                     className={`flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all ${
-                      active ? "bg-purple-600 text-white" : "text-gray-400 hover:bg-gray-800 hover:text-white"
+                      active ? "bg-[#A4860E] text-white" : "text-gray-400 hover:bg-gray-800 hover:text-white"
                     }`}>
                     <span>{item.icon}</span>
                     {item.label}

@@ -6,58 +6,48 @@ export const registerSchema = z.object({
   password: z.string().min(6, "Password must be at least 6 characters"),
   role: z.enum(["buyer", "seller"]),
   phone: z.string().regex(/^\+?[0-9]{10,15}$/, "Mobile number must be between 10 to 15 digits"),
-  hearAboutUs: z.string().min(1, "Please select how you heard about us"),
-  school: z.string().min(1, "Please select your school"),
+  hearAboutUs: z.string().optional(),
+  school: z.string().optional(),
   nin: z.string().optional(),
   sellerCategory: z.string().optional(),
   storeName: z.string().optional(),
   storeDescription: z.string().optional(),
   bankName: z.string().optional(),
+  bankCode: z.string().optional(),
   accountNumber: z.string().optional(),
   accountName: z.string().optional(),
+  passport: z.string().optional(),
+  confirmPassword: z.string().optional(),
 }).superRefine((data, ctx) => {
+  if (data.role === "buyer") {
+    if (!data.school || data.school.trim() === "") {
+      ctx.addIssue({ code: z.ZodIssueCode.custom, path: ["school"], message: "Please select your school" });
+    }
+    if (!data.hearAboutUs || data.hearAboutUs.trim() === "") {
+      ctx.addIssue({ code: z.ZodIssueCode.custom, path: ["hearAboutUs"], message: "Please select how you heard about us" });
+    }
+  }
   if (data.role === "seller") {
+    if (!data.passport || data.passport.trim() === "") {
+      ctx.addIssue({ code: z.ZodIssueCode.custom, path: ["passport"], message: "Passport photograph upload is required for sellers" });
+    }
     if (!data.nin || !/^\d{11}$/.test(data.nin)) {
-      ctx.addIssue({
-        code: z.ZodIssueCode.custom,
-        path: ["nin"],
-        message: "NIN must be exactly 11 digits for sellers",
-      });
+      ctx.addIssue({ code: z.ZodIssueCode.custom, path: ["nin"], message: "NIN must be exactly 11 digits for sellers" });
     }
     if (!data.sellerCategory || data.sellerCategory.trim() === "") {
-      ctx.addIssue({
-        code: z.ZodIssueCode.custom,
-        path: ["sellerCategory"],
-        message: "Please select a product category for your store",
-      });
+      ctx.addIssue({ code: z.ZodIssueCode.custom, path: ["sellerCategory"], message: "Please select a product category for your store" });
     }
     if (!data.storeName || data.storeName.trim() === "") {
-      ctx.addIssue({
-        code: z.ZodIssueCode.custom,
-        path: ["storeName"],
-        message: "Store name is required for sellers",
-      });
+      ctx.addIssue({ code: z.ZodIssueCode.custom, path: ["storeName"], message: "Store name is required for sellers" });
     }
     if (!data.bankName || data.bankName.trim() === "") {
-      ctx.addIssue({
-        code: z.ZodIssueCode.custom,
-        path: ["bankName"],
-        message: "Bank name is required for sellers",
-      });
+      ctx.addIssue({ code: z.ZodIssueCode.custom, path: ["bankName"], message: "Bank name is required for sellers" });
     }
     if (!data.accountNumber || !/^\d{10}$/.test(data.accountNumber)) {
-      ctx.addIssue({
-        code: z.ZodIssueCode.custom,
-        path: ["accountNumber"],
-        message: "Account number must be 10 digits",
-      });
+      ctx.addIssue({ code: z.ZodIssueCode.custom, path: ["accountNumber"], message: "Account number must be 10 digits" });
     }
     if (!data.accountName || data.accountName.trim() === "") {
-      ctx.addIssue({
-        code: z.ZodIssueCode.custom,
-        path: ["accountName"],
-        message: "Account name is required for sellers",
-      });
+      ctx.addIssue({ code: z.ZodIssueCode.custom, path: ["accountName"], message: "Account must be verified before registering" });
     }
   }
 });
@@ -76,6 +66,10 @@ export const productSchema = z.object({
   stock: z.number().int().min(1, "Stock must be at least 1"),
   images: z.array(z.string()).min(1, "At least one image is required"),
   tags: z.array(z.string()).max(15, "Maximum 15 tags allowed").optional(),
+  variants: z.object({
+    sizes: z.array(z.string()).default([]),
+    colors: z.array(z.string()).default([]),
+  }).optional().default({ sizes: [], colors: [] }),
 });
 
 export const reviewSchema = z.object({

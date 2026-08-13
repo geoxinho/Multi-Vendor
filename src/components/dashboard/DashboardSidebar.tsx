@@ -39,7 +39,7 @@ export default function DashboardSidebar({ title, navItems }: DashboardSidebarPr
                   href={item.href}
                   className={`flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-colors ${
                     active
-                      ? "bg-blue-50 text-[#A4860E]"
+                      ? "bg-[#fdf8e8] text-[#A4860E]"
                       : "text-gray-600 hover:bg-gray-50 hover:text-gray-900"
                   }`}
                 >

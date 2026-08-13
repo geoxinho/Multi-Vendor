@@ -18,7 +18,7 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const { name, email, password, role, phone, hearAboutUs, school, nin, sellerCategory, storeName, storeDescription, bankName, accountNumber, accountName } = parsed.data;
+    const { name, email, password, role, phone, hearAboutUs, school, nin, sellerCategory, storeName, storeDescription, bankName, bankCode, accountNumber, accountName, passport } = parsed.data;
 
     const hasSMTP = !!(process.env.SMTP_HOST && process.env.SMTP_USER && process.env.SMTP_PASS);
 
@@ -49,10 +49,12 @@ export async function POST(req: NextRequest) {
       nin: role === "seller" ? nin : "",
       sellerCategory: role === "seller" ? sellerCategory : "",
       school,
+      passport: role === "seller" ? (passport ?? "") : "",
       storeName: role === "seller" ? (storeName ?? "") : "",
       storeDescription: role === "seller" ? (storeDescription ?? "") : "",
       bankDetails: role === "seller" ? {
         bankName: bankName ?? "",
+        bankCode: bankCode ?? "",
         accountNumber: accountNumber ?? "",
         accountName: accountName ?? "",
       } : undefined,

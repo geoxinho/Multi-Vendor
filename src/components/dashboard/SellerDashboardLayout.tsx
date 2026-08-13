@@ -23,8 +23,12 @@ export default function SellerDashboardLayout({ navItems, title, children }: Sel
   const [confirmLogout, setConfirmLogout] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
 
-  const isActive = (href: string) =>
-    pathname === href || (href.length > 1 && pathname.startsWith(href + "/"));
+  const isActive = (href: string) => {
+    if (href === "/dashboard/seller") {
+      return pathname === href;
+    }
+    return pathname === href || pathname.startsWith(href + "/");
+  };
 
   return (
     <div className="flex h-screen bg-gray-50 overflow-hidden">

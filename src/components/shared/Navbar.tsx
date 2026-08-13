@@ -205,7 +205,9 @@ export default function Navbar() {
                         </div>
                         <div className="text-left">
                           <p className="text-[13px] font-bold text-gray-900 leading-none max-w-[100px] truncate">{session.user.name}</p>
-                          <p className="text-[10px] capitalize text-gray-500 leading-none mt-0.5">{role}</p>
+                          {role !== "buyer" && (
+                            <p className="text-[10px] capitalize text-gray-500 leading-none mt-0.5">{role}</p>
+                          )}
                         </div>
                         <i className={`fa-solid fa-chevron-down text-[10px] text-gray-400 ml-1 transition-transform duration-300 ${userMenuOpen ? "rotate-180" : ""}`} />
                       </button>

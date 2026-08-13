@@ -38,7 +38,12 @@ export default async function EditProductPage({ params }: Props) {
           category: data.category,
           stock: data.stock,
           images: data.images,
+          tags: data.tags ?? [],
           status: data.status,
+          variants: {
+            sizes: data.variants?.sizes ?? [],
+            colors: data.variants?.colors ?? [],
+          },
         }}
       />
     </div>

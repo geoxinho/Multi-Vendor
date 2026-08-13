@@ -19,8 +19,10 @@ export interface IUser extends Document {
   hearAboutUs?: string;
   sellerCategory?: string;
   school?: string;
+  passport?: string;
   bankDetails?: {
     bankName: string;
+    bankCode: string;
     accountNumber: string;
     accountName: string;
   };
@@ -51,6 +53,7 @@ const UserSchema = new Schema<IUser>(
     hearAboutUs: { type: String, default: "" },
     sellerCategory: { type: String, default: "" },
     school: { type: String, default: "" },
+    passport: { type: String, default: "" },
     bankDetails: {
       bankName: { type: String, default: "" },
       bankCode: { type: String, default: "" },

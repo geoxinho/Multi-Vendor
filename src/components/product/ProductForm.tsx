@@ -274,19 +274,17 @@ export default function ProductForm({ initialData = {}, mode }: ProductFormProps
             onClick={() => fileRef.current?.click()}
             className={`mb-4 border-2 border-dashed rounded-xl p-8 text-center cursor-pointer transition-all ${
               dragging
-                ? "border-green-400 bg-green-50 scale-[1.01]"
-                : "border-gray-200 hover:border-green-300 hover:bg-gray-50"
+                ? "border-[#A4860E] bg-[#fdf8e8] scale-[1.01]"
+                : "border-gray-200 hover:border-[#A4860E]/50 hover:bg-gray-50"
             }`}
           >
-            <div className={`w-12 h-12 mx-auto mb-3 rounded-xl flex items-center justify-center ${dragging ? "bg-green-100" : "bg-gray-100"}`}>
-              <svg className={`w-6 h-6 ${dragging ? "text-green-600" : "text-gray-400"}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
-              </svg>
+            <div className={`w-12 h-12 mx-auto mb-3 rounded-xl flex items-center justify-center ${dragging ? "bg-[#fdf8e8]" : "bg-gray-100"}`}>
+              <i className={`fa-solid fa-image text-2xl ${dragging ? "text-[#A4860E]" : "text-gray-400"}`} />
             </div>
             <p className="text-sm font-medium text-gray-700">
               {dragging ? "Drop to add images" : "Drag & drop images here"}
             </p>
-            <p className="text-xs text-gray-400 mt-1">or <span className="text-green-600 font-medium">click to browse</span> — JPG, PNG, WEBP (max 8)</p>
+            <p className="text-xs text-gray-400 mt-1">or <span className="text-[#A4860E] font-medium">click to browse</span> — JPG, PNG, WEBP (max 8)</p>
           </div>
         )}
 
@@ -313,7 +311,7 @@ export default function ProductForm({ initialData = {}, mode }: ProductFormProps
                   className="absolute top-1.5 right-1.5 w-6 h-6 bg-red-500 rounded-full text-white text-sm opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center shadow"
                 >×</button>
                 {i === 0 ? (
-                  <span className="absolute bottom-1.5 left-1.5 text-[10px] bg-green-600 text-white px-2 py-0.5 rounded-full font-semibold">Cover</span>
+                  <span className="absolute bottom-1.5 left-1.5 text-[10px] bg-[#A4860E] text-white px-2 py-0.5 rounded-full font-semibold">Cover</span>
                 ) : (
                   <button
                     type="button"
@@ -336,7 +334,7 @@ export default function ProductForm({ initialData = {}, mode }: ProductFormProps
                     className="absolute top-1.5 right-1.5 w-6 h-6 bg-red-500 rounded-full text-white text-sm opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center shadow"
                   >×</button>
                   {globalIndex === 0 ? (
-                    <span className="absolute bottom-1.5 left-1.5 text-[10px] bg-green-600 text-white px-2 py-0.5 rounded-full font-semibold">Cover</span>
+                    <span className="absolute bottom-1.5 left-1.5 text-[10px] bg-[#A4860E] text-white px-2 py-0.5 rounded-full font-semibold">Cover</span>
                   ) : (
                     <button
                       type="button"
@@ -382,7 +380,7 @@ export default function ProductForm({ initialData = {}, mode }: ProductFormProps
           <input type="text" required value={form.title}
             onChange={(e) => setForm((f) => ({ ...f, title: e.target.value }))}
             placeholder="e.g. iPhone 13 Pro Max 256GB"
-            className="w-full px-4 py-3 rounded-xl border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-green-500 transition" />
+            className="w-full px-4 py-3 rounded-xl border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-[#A4860E] transition" />
         </div>
 
         <div>
@@ -390,7 +388,7 @@ export default function ProductForm({ initialData = {}, mode }: ProductFormProps
           <textarea rows={4} required value={form.description}
             onChange={(e) => setForm((f) => ({ ...f, description: e.target.value }))}
             placeholder="Describe your product in detail — condition, specs, what's included..."
-            className="w-full px-4 py-3 rounded-xl border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-green-500 transition resize-none" />
+            className="w-full px-4 py-3 rounded-xl border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-[#A4860E] transition resize-none" />
         </div>
 
         <div>
@@ -401,11 +399,11 @@ export default function ProductForm({ initialData = {}, mode }: ProductFormProps
             </span>
           </div>
           
-          <div className={`w-full p-2 min-h-[52px] rounded-xl border bg-white focus-within:ring-2 focus-within:ring-green-500 transition flex flex-wrap gap-2 items-center ${form.tags.length >= 15 ? "border-red-200 bg-red-50" : "border-gray-200"}`}>
+          <div className={`w-full p-2 min-h-[52px] rounded-xl border bg-white focus-within:ring-2 focus-within:ring-[#A4860E] transition flex flex-wrap gap-2 items-center ${form.tags.length >= 15 ? "border-red-200 bg-red-50" : "border-gray-200"}`}>
             {form.tags.map((t, i) => (
-              <span key={i} className="inline-flex items-center gap-1.5 px-3 py-1 rounded-lg bg-green-50 text-green-700 text-sm font-medium border border-green-200 shadow-sm">
+              <span key={i} className="inline-flex items-center gap-1.5 px-3 py-1 rounded-lg bg-[#fdf8e8] text-[#A4860E] text-sm font-medium border border-[#e8d48a] shadow-sm">
                 {t}
-                <button type="button" onClick={() => removeTag(t)} className="text-green-500 hover:text-green-800 transition-colors focus:outline-none flex items-center justify-center">
+                <button type="button" onClick={() => removeTag(t)} className="text-[#A4860E] hover:text-[#8a7009] transition-colors focus:outline-none flex items-center justify-center">
                   <i className="fa-solid fa-xmark text-[10px]" />
                 </button>
               </span>
@@ -463,10 +461,7 @@ export default function ProductForm({ initialData = {}, mode }: ProductFormProps
             <label className="block text-sm font-medium text-gray-700 mb-1.5">Category</label>
             {categoriesLoading ? (
               <div className="w-full px-4 py-3 rounded-xl border border-gray-200 text-sm text-gray-400 bg-gray-50 flex items-center gap-2">
-                <svg className="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24">
-                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/>
-                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/>
-                </svg>
+                <i className="fa-solid fa-circle-notch animate-spin" />
                 Loading…
               </div>
             ) : categories.length === 0 ? (
@@ -577,13 +572,10 @@ export default function ProductForm({ initialData = {}, mode }: ProductFormProps
         <button
           type="submit"
           disabled={loading || categoriesLoading}
-          className="px-8 py-3 bg-green-600 text-white font-semibold rounded-xl hover:bg-green-700 transition-colors disabled:opacity-60 flex items-center gap-2"
+          className="px-8 py-3 bg-[#A4860E] text-white font-semibold rounded-xl hover:bg-[#8a7009] transition-colors disabled:opacity-60 flex items-center gap-2"
         >
           {loading && (
-            <svg className="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24">
-              <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/>
-              <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/>
-            </svg>
+            <i className="fa-solid fa-circle-notch animate-spin" />
           )}
           {loading ? loadingMsg || "Saving…" : mode === "create" ? "List Product" : "Save Changes"}
         </button>

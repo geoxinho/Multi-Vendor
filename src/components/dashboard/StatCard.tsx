@@ -8,9 +8,9 @@ interface StatCardProps {
 }
 
 const colorMap = {
-  green: { bg: "bg-green-50", icon: "text-green-600", border: "border-green-100" },
-  gold:  { bg: "bg-yellow-50", icon: "text-yellow-600", border: "border-yellow-100" },
-  blue:  { bg: "bg-blue-50", icon: "text-blue-600", border: "border-blue-100" },
+  green: { bg: "bg-[#fdf8e8]", icon: "text-[#A4860E]", border: "border-[#e8d48a]" },
+  gold:  { bg: "bg-[#fdf8e8]", icon: "text-[#A4860E]", border: "border-[#e8d48a]" },
+  blue:  { bg: "bg-[#fdf8e8]", icon: "text-[#A4860E]", border: "border-[#e8d48a]" },
   red:   { bg: "bg-red-50", icon: "text-red-600", border: "border-red-100" },
 };
 

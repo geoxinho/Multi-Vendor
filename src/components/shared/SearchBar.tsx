@@ -106,11 +106,19 @@ export default function SearchBar({ defaultValue = "" }: SearchBarProps) {
             <div>
               <p className="px-3 pt-2.5 pb-1 text-[10px] font-semibold text-[#9B9B9B] uppercase tracking-widest">Search Tags</p>
               {suggestions.tags.map((tag) => (
-                <button key={tag} onMouseDown={() => {
-                  setQ(tag); setOpen(false);
-                  router.push(`/products?search=${encodeURIComponent(tag)}`);
-                }}
-                  className="w-full flex items-center gap-2.5 px-3 py-2 hover:bg-[#F5F5F5] text-left transition-colors">
+                <button key={tag}
+                  onMouseDown={(e) => {
+                    e.preventDefault();
+                    setQ(tag); setOpen(false);
+                    router.push(`/products?search=${encodeURIComponent(tag)}`);
+                  }}
+                  onTouchStart={(e) => {
+                    e.preventDefault();
+                    setQ(tag); setOpen(false);
+                    router.push(`/products?search=${encodeURIComponent(tag)}`);
+                  }}
+                  className="w-full flex items-center gap-2.5 px-3 py-2 hover:bg-[#F5F5F5] text-left transition-colors"
+                >
                   <div className="w-6 h-6 rounded bg-gray-100 flex items-center justify-center shrink-0">
                     <i className="fa-solid fa-magnifying-glass text-[10px] text-gray-500" />
                   </div>
@@ -124,8 +132,11 @@ export default function SearchBar({ defaultValue = "" }: SearchBarProps) {
             <div className={suggestions.tags.length > 0 ? "border-t border-[#E5E5E5]" : ""}>
               <p className="px-3 pt-2.5 pb-1 text-[10px] font-semibold text-[#9B9B9B] uppercase tracking-widest">Categories</p>
               {suggestions.categories.map((cat) => (
-                <button key={cat._id} onMouseDown={() => goToCategory(cat._id, cat.name)}
-                  className="w-full flex items-center gap-2.5 px-3 py-2 hover:bg-[#F5F5F5] text-left transition-colors">
+                <button key={cat._id}
+                  onMouseDown={(e) => { e.preventDefault(); goToCategory(cat._id, cat.name); }}
+                  onTouchStart={(e) => { e.preventDefault(); goToCategory(cat._id, cat.name); }}
+                  className="w-full flex items-center gap-2.5 px-3 py-2 hover:bg-[#F5F5F5] text-left transition-colors"
+                >
                   <div className="w-6 h-6 rounded bg-[#fdf8e8] flex items-center justify-center shrink-0">
                     <i className="fa-solid fa-tag text-[10px] text-[#A4860E]" />
                   </div>
@@ -140,8 +151,11 @@ export default function SearchBar({ defaultValue = "" }: SearchBarProps) {
             <div className={suggestions.categories.length > 0 || suggestions.tags.length > 0 ? "border-t border-[#E5E5E5]" : ""}>
               <p className="px-3 pt-2.5 pb-1 text-[10px] font-semibold text-[#9B9B9B] uppercase tracking-widest">Products</p>
               {suggestions.products.map((p) => (
-                <button key={p._id} onMouseDown={() => goToProduct(p._id)}
-                  className="w-full flex items-center gap-2.5 px-3 py-2 hover:bg-[#F5F5F5] text-left transition-colors">
+                <button key={p._id}
+                  onMouseDown={(e) => { e.preventDefault(); goToProduct(p._id); }}
+                  onTouchStart={(e) => { e.preventDefault(); goToProduct(p._id); }}
+                  className="w-full flex items-center gap-2.5 px-3 py-2 hover:bg-[#F5F5F5] text-left transition-colors"
+                >
                   <div className="relative w-8 h-8 rounded overflow-hidden bg-[#F5F5F5] shrink-0 border border-[#E5E5E5]">
                     {p.images[0] ? (
                       <Image src={p.images[0]} alt={p.title} fill className="object-cover" sizes="32px" />
@@ -161,8 +175,11 @@ export default function SearchBar({ defaultValue = "" }: SearchBarProps) {
           )}
 
           <div className="border-t border-[#E5E5E5] px-3 py-2">
-            <button onMouseDown={handleSubmit as unknown as React.MouseEventHandler}
-              className="w-full text-center text-sm text-[#A4860E] hover:underline font-medium py-1">
+            <button
+              onMouseDown={(e) => { e.preventDefault(); handleSubmit(e); }}
+              onTouchStart={(e) => { e.preventDefault(); handleSubmit(e); }}
+              className="w-full text-center text-sm text-[#A4860E] hover:underline font-medium py-1"
+            >
               See all results for &ldquo;{q}&rdquo; →
             </button>
           </div>

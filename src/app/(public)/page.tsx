@@ -5,6 +5,7 @@ import { Product } from "@/models/Product";
 import { User } from "@/models/User";
 import { Category } from "@/models/Category";
 import ProductGrid from "@/components/product/ProductGrid";
+import Onboarding from "@/components/shared/Onboarding";
 import type { Metadata } from "next";
 
 const HOME_DESCRIPTION =
@@ -69,112 +70,112 @@ const CAT_STYLING: Record<
   electronics: {
     icon: "fa-laptop",
     bg: "bg-[#fdf8e8]",
-    border: "border-[#BFDBFE]/60",
-    text: "text-[#1E40AF]",
-    iconBg: "bg-[#DBEAFE]",
+    border: "border-[#e8d48a]/60",
+    text: "text-[#A4860E]",
+    iconBg: "bg-[#fdf8e8]",
   },
   fashion: {
     icon: "fa-shirt",
-    bg: "bg-[#FDF2F8]",
-    border: "border-[#FBCFE8]/60",
-    text: "text-[#9D174D]",
-    iconBg: "bg-[#FCE7F3]",
+    bg: "bg-[#FFF5F5]",
+    border: "border-[#FED7D7]/60",
+    text: "text-[#A4860E]",
+    iconBg: "bg-[#FEE2E2]",
   },
   phones: {
     icon: "fa-mobile-screen",
-    bg: "bg-[#F5F3FF]",
-    border: "border-[#DDD6FE]/60",
-    text: "text-[#5B21B6]",
-    iconBg: "bg-[#EDE9FE]",
+    bg: "bg-[#FFFBEB]",
+    border: "border-[#FEF3C7]/60",
+    text: "text-[#A4860E]",
+    iconBg: "bg-[#FEF08A]",
   },
   shoes: {
     icon: "fa-shoe-prints",
     bg: "bg-[#FFF7ED]",
     border: "border-[#FFEDD5]/60",
-    text: "text-[#9A3412]",
+    text: "text-[#A4860E]",
     iconBg: "bg-[#FFD8A8]",
   },
   books: {
     icon: "fa-book",
-    bg: "bg-[#ECFDF5]",
-    border: "border-[#A7F3D0]/60",
-    text: "text-[#065F46]",
-    iconBg: "bg-[#D1FAE5]",
+    bg: "bg-[#fdf8e8]",
+    border: "border-[#e8d48a]/60",
+    text: "text-[#A4860E]",
+    iconBg: "bg-[#fdf8e8]",
   },
   beauty: {
     icon: "fa-spray-can-sparkles",
     bg: "bg-[#FFF5F5]",
     border: "border-[#FED7D7]/60",
-    text: "text-[#9B2C2C]",
+    text: "text-[#A4860E]",
     iconBg: "bg-[#FEE2E2]",
   },
   furniture: {
     icon: "fa-couch",
     bg: "bg-[#FFFBEB]",
     border: "border-[#FEF3C7]/60",
-    text: "text-[#92400E]",
+    text: "text-[#A4860E]",
     iconBg: "bg-[#FEF08A]",
   },
   sports: {
     icon: "fa-futbol",
-    bg: "bg-[#F0FDF4]",
-    border: "border-[#BBF7D0]/60",
-    text: "text-[#166534]",
-    iconBg: "bg-[#DCFCE7]",
+    bg: "bg-[#FFF7ED]",
+    border: "border-[#FFEDD5]/60",
+    text: "text-[#A4860E]",
+    iconBg: "bg-[#FFD8A8]",
   },
   food: {
     icon: "fa-apple-whole",
     bg: "bg-[#FFF5F5]",
     border: "border-[#FED7D7]/60",
-    text: "text-[#9B2C2C]",
+    text: "text-[#A4860E]",
     iconBg: "bg-[#FEE2E2]",
   },
   gaming: {
     icon: "fa-gamepad",
-    bg: "bg-[#F5F3FF]",
-    border: "border-[#DDD6FE]/60",
-    text: "text-[#5B21B6]",
-    iconBg: "bg-[#EDE9FE]",
+    bg: "bg-[#FFFBEB]",
+    border: "border-[#FEF3C7]/60",
+    text: "text-[#A4860E]",
+    iconBg: "bg-[#FEF08A]",
   },
   toys: {
     icon: "fa-child-reaching",
     bg: "bg-[#FFFBEB]",
     border: "border-[#FEF3C7]/60",
-    text: "text-[#92400E]",
+    text: "text-[#A4860E]",
     iconBg: "bg-[#FEF08A]",
   },
   health: {
     icon: "fa-pills",
-    bg: "bg-[#ECFDF5]",
-    border: "border-[#A7F3D0]/60",
-    text: "text-[#065F46]",
-    iconBg: "bg-[#D1FAE5]",
+    bg: "bg-[#fdf8e8]",
+    border: "border-[#e8d48a]/60",
+    text: "text-[#A4860E]",
+    iconBg: "bg-[#fdf8e8]",
   },
 };
 
 const FALLBACK_STYLES = [
   {
     bg: "bg-[#fdf8e8]",
-    border: "border-[#BFDBFE]/60",
-    text: "text-[#1E40AF]",
-    iconBg: "bg-[#DBEAFE]",
+    border: "border-[#e8d48a]/60",
+    text: "text-[#A4860E]",
+    iconBg: "bg-[#fdf8e8]",
   },
   {
-    bg: "bg-[#F5F3FF]",
-    border: "border-[#DDD6FE]/60",
-    text: "text-[#5B21B6]",
-    iconBg: "bg-[#EDE9FE]",
+    bg: "bg-[#FFF5F5]",
+    border: "border-[#FED7D7]/60",
+    text: "text-[#A4860E]",
+    iconBg: "bg-[#FEE2E2]",
   },
   {
-    bg: "bg-[#FDF2F8]",
-    border: "border-[#FBCFE8]/60",
-    text: "text-[#9D174D]",
-    iconBg: "bg-[#FCE7F3]",
+    bg: "bg-[#FFFBEB]",
+    border: "border-[#FEF3C7]/60",
+    text: "text-[#A4860E]",
+    iconBg: "bg-[#FEF08A]",
   },
   {
     bg: "bg-[#FFF7ED]",
     border: "border-[#FFEDD5]/60",
-    text: "text-[#9A3412]",
+    text: "text-[#A4860E]",
     iconBg: "bg-[#FFD8A8]",
   },
 ];
@@ -207,6 +208,7 @@ export default async function HomePage() {
 
   return (
     <div className="bg-white min-h-screen">
+      <Onboarding />
       <script
         type="application/ld+json"
         suppressHydrationWarning
@@ -214,18 +216,18 @@ export default async function HomePage() {
       />
 
       {/* ─── 1. HERO SECTION (Campus Trading Theme) ────────────── */}
-      <section className="relative border-b border-[#E5E5E5] bg-gradient-to-br from-[#F5F8FF] via-[#EEF4FF] to-white py-20 lg:py-28 overflow-hidden">
+      <section className="relative border-b border-[#E5E5E5] bg-gradient-to-br from-[#fdf8e8]/20 via-white to-white py-20 lg:py-28 overflow-hidden">
         {/* Background decorative glowing elements */}
         <div className="absolute inset-0 pointer-events-none overflow-hidden">
-          <div className="absolute -top-[10%] -right-[10%] w-[45vw] h-[45vw] rounded-full bg-blue-300/15 blur-[120px]" />
-          <div className="absolute top-[40%] left-[10%] w-[35vw] h-[35vw] rounded-full bg-indigo-300/10 blur-[100px]" />
+          <div className="absolute -top-[10%] -right-[10%] w-[45vw] h-[45vw] rounded-full bg-[#A4860E]/5 blur-[120px]" />
+          <div className="absolute top-[40%] left-[10%] w-[35vw] h-[35vw] rounded-full bg-[#A4860E]/2 blur-[100px]" />
         </div>
 
         <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 w-full">
           <div className="grid lg:grid-cols-12 gap-12 items-center">
             {/* Left — copy */}
             <div className="lg:col-span-7 animate-in fade-in slide-in-from-bottom-6 duration-700">
-              <span className="inline-flex items-center gap-2 px-3 py-1 rounded-md bg-[#fdf8e8] text-[#A4860E] text-xs font-semibold mb-6 border border-[#BFDBFE]">
+              <span className="inline-flex items-center gap-2 px-3 py-1 rounded-md bg-[#fdf8e8] text-[#A4860E] text-xs font-semibold mb-6 border border-[#e8d48a]">
                 <span className="w-1.5 h-1.5 rounded-full bg-[#A4860E] inline-block animate-pulse" />
                 Nigeria&apos;s Student Campus Marketplace
               </span>
@@ -233,7 +235,7 @@ export default async function HomePage() {
               <h1 className="text-4xl md:text-5xl lg:text-6xl font-extrabold text-[#111111] leading-[1.15] tracking-tight mb-6">
                 Buy & Sell,
                 <br />
-                <span className="bg-gradient-to-r from-[#A4860E] to-[#4F46E5] bg-clip-text text-transparent">
+                <span className="bg-gradient-to-r from-[#A4860E] to-[#b3951f] bg-clip-text text-transparent">
                   Trade on Campus.
                 </span>
               </h1>
@@ -247,22 +249,10 @@ export default async function HomePage() {
               <div className="flex flex-col sm:flex-row gap-4 mb-8">
                 <Link
                   href="/products"
-                  className="group inline-flex items-center justify-center gap-2 px-6 py-3 bg-[#A4860E] text-white font-bold rounded-md hover:bg-[#8a6f0b] hover:shadow-lg hover:shadow-blue-500/10 hover:-translate-y-0.5 transition-all duration-300 text-sm"
+                  className="group inline-flex items-center justify-center gap-2 px-6 py-3 bg-[#A4860E] text-white font-bold rounded-md hover:bg-[#8a6f0b] hover:shadow-lg hover:shadow-[#A4860E]/10 hover:-translate-y-0.5 transition-all duration-300 text-sm"
                 >
                   Browse Campus Listings
-                  <svg
-                    className="w-4 h-4 group-hover:translate-x-1 transition-transform"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    stroke="currentColor"
-                    strokeWidth={2.5}
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      d="M13 7l5 5m0 0l-5 5m5-5H6"
-                    />
-                  </svg>
+                  <i className="fa-solid fa-arrow-right text-xs group-hover:translate-x-1 transition-transform" />
                 </Link>
               </div>
 
@@ -361,19 +351,7 @@ export default async function HomePage() {
                 className="inline-flex items-center gap-1 text-sm font-medium text-[#A4860E] hover:underline"
               >
                 View all categories
-                <svg
-                  className="w-3.5 h-3.5"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
-                  strokeWidth={2.5}
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    d="M9 5l7 7-7 7"
-                  />
-                </svg>
+                <i className="fa-solid fa-chevron-right text-xs" />
               </Link>
             </div>
 
@@ -447,19 +425,7 @@ export default async function HomePage() {
             className="text-[#A4860E] hover:underline text-sm font-medium flex items-center gap-1"
           >
             See all products
-            <svg
-              className="w-3.5 h-3.5"
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
-              strokeWidth={2.5}
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                d="M9 5l7 7-7 7"
-              />
-            </svg>
+            <i className="fa-solid fa-chevron-right text-xs" />
           </Link>
         </div>
         {products.length > 0 ? (
@@ -487,13 +453,13 @@ export default async function HomePage() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="bg-gradient-to-br from-[#1E293B] via-[#0F172A] to-[#111111] text-white rounded-2xl p-8 lg:p-12 shadow-xl relative overflow-hidden">
             {/* Background glowing blur blob */}
-            <div className="absolute top-0 right-0 w-[30vw] h-[30vw] rounded-full bg-blue-500/10 blur-[100px] pointer-events-none" />
-            <div className="absolute bottom-0 left-0 w-[20vw] h-[20vw] rounded-full bg-indigo-500/10 blur-[80px] pointer-events-none" />
+            <div className="absolute top-0 right-0 w-[30vw] h-[30vw] rounded-full bg-[#A4860E]/10 blur-[100px] pointer-events-none" />
+            <div className="absolute bottom-0 left-0 w-[20vw] h-[20vw] rounded-full bg-[#A4860E]/5 blur-[80px] pointer-events-none" />
 
             <div className="relative grid md:grid-cols-2 gap-12 items-center">
               <div>
                 <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-md bg-white/10 text-white text-xs font-semibold border border-white/20 mb-4">
-                  <i className="fa-solid fa-graduation-cap text-blue-400" />{" "}
+                  <i className="fa-solid fa-graduation-cap text-[#A4860E]" />{" "}
                   Start Selling
                 </span>
                 <h2 className="text-2xl md:text-3xl font-bold leading-tight mb-4">
@@ -510,19 +476,7 @@ export default async function HomePage() {
                     className="inline-flex items-center justify-center gap-2 px-5 py-2.5 bg-[#A4860E] text-white font-bold rounded-md hover:bg-[#8a6f0b] transition-colors text-sm shadow-sm"
                   >
                     Start Selling on Campus
-                    <svg
-                      className="w-4 h-4"
-                      fill="none"
-                      viewBox="0 0 24 24"
-                      stroke="currentColor"
-                      strokeWidth={2.5}
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        d="M13 7l5 5m0 0l-5 5m5-5H6"
-                      />
-                    </svg>
+                    <i className="fa-solid fa-arrow-right text-xs" />
                   </Link>
                   <Link
                     href="/products"
@@ -554,7 +508,7 @@ export default async function HomePage() {
                     className="bg-white/5 border border-white/10 rounded-xl p-5 hover:bg-white/10 transition-colors duration-300"
                   >
                     <i
-                      className={`fa-solid ${s.faIcon} text-lg mb-2 block text-blue-400`}
+                      className={`fa-solid ${s.faIcon} text-lg mb-2 block text-[#A4860E]`}
                     />
                     <p className="text-xl font-bold text-white">{s.value}</p>
                     <p className="text-gray-400 text-xs mt-0.5">{s.label}</p>

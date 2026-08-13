@@ -36,12 +36,12 @@ interface Order {
 }
 
 const STATUS_COLOR: Record<string, string> = {
-  delivered:  "bg-green-100 text-green-700",
-  processing: "bg-blue-100 text-blue-700",
-  shipped:    "bg-purple-100 text-purple-700",
-  paid:       "bg-green-100 text-green-700",
-  pending:    "bg-yellow-100 text-yellow-700",
-  failed:     "bg-red-100 text-red-700",
+  delivered:  "bg-[#fdf8e8] text-[#A4860E] border border-[#e8d48a]",
+  processing: "bg-amber-50 text-amber-700 border border-amber-200",
+  shipped:    "bg-purple-50 text-purple-700 border border-purple-200",
+  paid:       "bg-[#fdf8e8] text-[#A4860E] border border-[#e8d48a]",
+  pending:    "bg-yellow-50 text-yellow-700 border border-yellow-200",
+  failed:     "bg-red-50 text-red-700 border border-red-200",
 };
 
 export default function SellerOrdersPage() {
@@ -132,21 +132,18 @@ export default function SellerOrdersPage() {
                           sizes="48px"
                         />
                       ) : (
-                        <div className="w-full h-full flex items-center justify-center text-gray-300">
-                          <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1}
-                              d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                          </svg>
-                        </div>
+                         <div className="w-full h-full flex items-center justify-center text-gray-400 bg-gray-50">
+                           <i className="fa-solid fa-image text-lg" />
+                         </div>
                       )}
                     </div>
                     <div className="flex-1 min-w-0">
                       <p className="text-sm font-medium text-gray-900 truncate">{item.title}</p>
                       <p className="text-xs text-gray-400">Qty: {item.quantity}</p>
                     </div>
-                    <p className="text-sm font-bold text-green-700 shrink-0">
-                      ₦{(item.price * item.quantity).toLocaleString()}
-                    </p>
+                     <p className="text-sm font-bold text-[#A4860E] shrink-0">
+                       ₦{(item.price * item.quantity).toLocaleString()}
+                     </p>
                   </div>
                 ))}
               </div>
@@ -160,44 +157,38 @@ export default function SellerOrdersPage() {
 
               {/* Message Buyer */}
               <div className="mb-4">
-                <Link 
-                  href={`/dashboard/seller/messages?orderId=${order._id}`}
-                  className="flex items-center gap-2 justify-center w-full bg-teal-50 border border-teal-200 text-teal-700 py-2.5 rounded-xl font-bold hover:bg-teal-100 transition-colors text-sm"
-                >
-                  <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
-                  </svg>
-                  Message Buyer
-                </Link>
+                 <Link 
+                   href={`/dashboard/seller/messages?orderId=${order._id}`}
+                   className="flex items-center gap-2 justify-center w-full bg-[#fdf8e8] border border-[#e8d48a] text-[#A4860E] py-2.5 rounded-xl font-bold hover:bg-[#fdf8e8]/50 transition-colors text-sm"
+                 >
+                   <i className="fa-solid fa-comment-dots text-sm" />
+                   Message Buyer
+                 </Link>
               </div>
 
               {/* Footer */}
               <div className="flex items-center justify-between pt-3 border-t border-gray-100">
-                <span className="font-bold text-green-700">Total: ₦{order.totalAmount.toLocaleString()}</span>
-                {order.deliveryStatus === "processing" && order.paymentStatus === "paid" && (
-                  <button
-                    onClick={() => handleShip(order._id)}
-                    className="px-4 py-2 bg-green-600 hover:bg-green-700 text-white text-sm font-semibold rounded-xl transition-colors shadow-sm"
-                  >
-                    Mark as Shipped
-                  </button>
-                )}
-                {order.deliveryStatus === "shipped" && (
-                  <span className="text-sm text-amber-600 font-semibold flex items-center gap-1">
-                    <svg className="w-4 h-4 animate-pulse" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-                    </svg>
-                    Shipped (Awaiting Buyer Confirmation)
-                  </span>
-                )}
-                {order.deliveryStatus === "delivered" && (
-                  <span className="text-sm text-green-600 font-medium flex items-center gap-1">
-                    <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                    </svg>
-                    Delivered & Verified
-                  </span>
-                )}
+                 <span className="font-bold text-[#A4860E]">Total: ₦{order.totalAmount.toLocaleString()}</span>
+                 {order.deliveryStatus === "processing" && order.paymentStatus === "paid" && (
+                   <button
+                     onClick={() => handleShip(order._id)}
+                     className="px-4 py-2 bg-[#A4860E] hover:bg-[#8a7009] text-white text-sm font-semibold rounded-xl transition-colors shadow-sm"
+                   >
+                     Mark as Shipped
+                   </button>
+                 )}
+                 {order.deliveryStatus === "shipped" && (
+                   <span className="text-sm text-amber-600 font-semibold flex items-center gap-1">
+                     <i className="fa-solid fa-clock animate-pulse" />
+                     Shipped (Awaiting Buyer Confirmation)
+                   </span>
+                 )}
+                 {order.deliveryStatus === "delivered" && (
+                   <span className="text-sm text-[#A4860E] font-medium flex items-center gap-1">
+                     <i className="fa-solid fa-circle-check" />
+                     Delivered & Verified
+                   </span>
+                 )}
               </div>
             </div>
           ))}
