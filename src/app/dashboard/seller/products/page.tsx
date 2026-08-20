@@ -22,7 +22,7 @@ export default function SellerProductsPage() {
   const [loading, setLoading] = useState(true);
 
   const fetchProducts = () => {
-    fetch("/api/products?limit=50")
+    fetch("/api/products?mine=true")
       .then((r) => r.json())
       .then((d) => { setProducts(d.products ?? []); setLoading(false); });
   };

@@ -1,15 +1,89 @@
 "use client";
 
 import { useState, useEffect, useRef, Suspense } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useSearchParams } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
 import { registerSchema } from "@/utils/validators";
 
 interface Bank { name: string; code: string; slug: string; }
 
+/* ── Reusable upload zone ─────────────────────────────────────────────── */
+function PassportUpload({
+  preview,
+  uploading,
+  uploaded,
+  onFileChange,
+}: {
+  preview: string;
+  uploading: boolean;
+  uploaded: boolean;
+  onFileChange: (file: File) => void;
+}) {
+  const ref = useRef<HTMLInputElement>(null);
+  return (
+    <div>
+      <label className="block text-xs font-semibold text-[#111111] mb-1.5">
+        Passport Photograph <span className="text-[#DC2626]">*</span>
+      </label>
+      <div
+        onClick={() => ref.current?.click()}
+        className={`relative border-2 border-dashed rounded-xl p-4 cursor-pointer transition-all flex items-center gap-4 ${
+          preview
+            ? "border-[#A4860E] bg-[#fdf8e8]/50"
+            : "border-[#E5E5E5] hover:border-[#A4860E]/50 hover:bg-[#fdf8e8]/30"
+        }`}
+      >
+        {preview ? (
+          <>
+            <div className="relative w-16 h-20 rounded-lg overflow-hidden border border-[#e8d48a] shrink-0">
+              <Image src={preview} alt="Passport preview" fill className="object-cover" />
+            </div>
+            <div>
+              {uploading ? (
+                <div className="flex items-center gap-2 text-[#A4860E] text-sm font-medium">
+                  <i className="fa-solid fa-circle-notch animate-spin text-xs" />
+                  Uploading…
+                </div>
+              ) : uploaded ? (
+                <div className="flex items-center gap-2 text-[#A4860E] text-sm font-semibold">
+                  <i className="fa-solid fa-circle-check text-xs" />
+                  Passport uploaded
+                </div>
+              ) : (
+                <div className="flex items-center gap-2 text-amber-600 text-sm">
+                  <i className="fa-solid fa-circle-notch animate-spin text-xs" />
+                  Processing…
+                </div>
+              )}
+              <p className="text-xs text-[#9B9B9B] mt-1">Click to change</p>
+            </div>
+          </>
+        ) : (
+          <div className="flex items-center gap-4 w-full">
+            <div className="w-12 h-12 rounded-xl bg-[#fdf8e8] flex items-center justify-center border border-[#e8d48a] shrink-0">
+              <i className="fa-solid fa-camera text-[#A4860E] text-lg" />
+            </div>
+            <div>
+              <p className="text-sm font-medium text-[#111111]">Upload passport photo</p>
+              <p className="text-xs text-[#9B9B9B] mt-0.5">JPG, PNG · Clear face · Max 5MB</p>
+            </div>
+          </div>
+        )}
+      </div>
+      <input
+        ref={ref}
+        type="file"
+        accept="image/*"
+        className="hidden"
+        onChange={(e) => { const f = e.target.files?.[0]; if (f) onFileChange(f); }}
+      />
+    </div>
+  );
+}
+
+/* ── Main form ────────────────────────────────────────────────────────── */
 function RegisterForm() {
-  const router = useRouter();
   const searchParams = useSearchParams();
   const defaultRole = (searchParams.get("role") as "buyer" | "seller") ?? "buyer";
 
@@ -22,12 +96,11 @@ function RegisterForm() {
     passport: "",
   });
 
-  // Passport
-  const passportRef = useRef<HTMLInputElement>(null);
-  const [passportPreview, setPassportPreview] = useState<string>("");
+  /* Passport — shared for both buyer and seller */
+  const [passportPreview, setPassportPreview] = useState("");
   const [passportUploading, setPassportUploading] = useState(false);
 
-  // Bank
+  /* Bank */
   const [banks, setBanks] = useState<Bank[]>([]);
   const [banksLoaded, setBanksLoaded] = useState(false);
   const [bankQuery, setBankQuery] = useState("");
@@ -39,15 +112,17 @@ function RegisterForm() {
   const [verifyError, setVerifyError] = useState("");
   const bankRef = useRef<HTMLDivElement>(null);
 
+  /* Misc */
   const [categories, setCategories] = useState<{ _id: string; name: string }[]>([]);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [agreedToTerms, setAgreedToTerms] = useState(false);
   const [isRegistered, setIsRegistered] = useState(false);
   const [isAutoVerified, setIsAutoVerified] = useState(false);
 
-  // Load categories & banks
+  /* Load categories & banks */
   useEffect(() => {
     fetch("/api/categories")
       .then((r) => r.json())
@@ -57,33 +132,32 @@ function RegisterForm() {
     fetch("/api/banks")
       .then((r) => r.json())
       .then((d) => {
-        if (Array.isArray(d.banks) && d.banks.length > 0) {
-          setBanks(d.banks);
-        }
+        if (Array.isArray(d.banks) && d.banks.length > 0) setBanks(d.banks);
         setBanksLoaded(true);
       })
       .catch(() => { setBanksLoaded(true); });
   }, []);
 
-  // Close bank dropdown on outside click
+  /* Close bank dropdown on outside click */
   useEffect(() => {
     const handler = (e: MouseEvent) => {
-      if (bankRef.current && !bankRef.current.contains(e.target as Node)) {
+      if (bankRef.current && !bankRef.current.contains(e.target as Node))
         setShowBankDropdown(false);
-      }
     };
     document.addEventListener("mousedown", handler);
     return () => document.removeEventListener("mousedown", handler);
   }, []);
 
-  // Filter bank suggestions
+  /* Bank autocomplete */
   const handleBankQueryChange = (q: string) => {
     setBankQuery(q);
     setForm((f) => ({ ...f, bankName: "", bankCode: "" }));
     setAccountVerified(false);
     setVerifyError("");
     if (q.length >= 2) {
-      const filtered = banks.filter((b) => b.name.toLowerCase().includes(q.toLowerCase())).slice(0, 6);
+      const filtered = banks
+        .filter((b) => b.name.toLowerCase().includes(q.toLowerCase()))
+        .slice(0, 7);
       setBankSuggestions(filtered);
       setShowBankDropdown(filtered.length > 0);
     } else {
@@ -98,10 +172,12 @@ function RegisterForm() {
     setBankSuggestions([]);
     setShowBankDropdown(false);
     setAccountVerified(false);
+    setManualAccountEntry(false);
     setVerifyError("");
+    setForm((f) => ({ ...f, bankName: bank.name, bankCode: bank.code, accountName: "" }));
   };
 
-  // Verify account once 10 digits + bank selected
+  /* Auto-verify when 10-digit account + bank code present */
   useEffect(() => {
     if (form.accountNumber.length === 10 && form.bankCode) {
       setVerifyingAccount(true);
@@ -118,20 +194,15 @@ function RegisterForm() {
         .then((r) => r.json())
         .then((d) => {
           if (d.accountName) {
-            // Auto-verified via Paystack
             setForm((f) => ({ ...f, accountName: d.accountName }));
             setAccountVerified(true);
           } else if (d.manual) {
-            // Paystack not available — allow manual entry
             setManualAccountEntry(true);
           } else {
-            setVerifyError(d.error || "Account not found. Please check the account number and bank.");
+            setVerifyError(d.error || "Account not found. Check the number and bank.");
           }
         })
-        .catch(() => {
-          // Network error — fall back to manual
-          setManualAccountEntry(true);
-        })
+        .catch(() => { setManualAccountEntry(true); })
         .finally(() => setVerifyingAccount(false));
     } else if (form.accountNumber.length < 10) {
       setAccountVerified(false);
@@ -142,51 +213,52 @@ function RegisterForm() {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [form.accountNumber, form.bankCode]);
 
-  // Passport upload via Cloudinary
+  /* Passport upload — uses server-side Cloudinary endpoint */
   const handlePassportChange = async (file: File) => {
-    if (!file) return;
     setPassportUploading(true);
-    const preview = URL.createObjectURL(file);
-    setPassportPreview(preview);
+    setPassportPreview(URL.createObjectURL(file));
+    setError("");
     try {
       const data = new FormData();
       data.append("file", file);
-      data.append("upload_preset", process.env.NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET ?? "campusgo_uploads");
-      const cloud = process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME ?? "demo";
-      const res = await fetch(`https://api.cloudinary.com/v1_1/${cloud}/image/upload`, { method: "POST", body: data });
+      const res = await fetch("/api/auth/upload-passport", { method: "POST", body: data });
       const json = await res.json();
-      if (json.secure_url) {
-        setForm((f) => ({ ...f, passport: json.secure_url }));
+      if (json.url) {
+        setForm((f) => ({ ...f, passport: json.url }));
       } else {
-        setError("Passport upload failed. Please try again.");
+        setError(json.error ?? "Passport upload failed. Please try again.");
+        setPassportPreview("");
       }
     } catch {
-      setError("Passport upload failed. Please try again.");
+      setError("Passport upload failed. Please check your connection and try again.");
+      setPassportPreview("");
     } finally {
       setPassportUploading(false);
     }
   };
 
+  /* Step navigation */
   const handleNext = () => {
     setError("");
     if (step === 2) {
       if (!form.name || !form.email || !form.password || !form.confirmPassword || !form.phone) {
-        setError("Please fill out all fields.");
-        return;
+        setError("Please fill out all fields."); return;
       }
       if (form.password !== form.confirmPassword) {
-        setError("Passwords do not match.");
-        return;
+        setError("Passwords do not match."); return;
       }
     }
-    setStep((prev) => prev + 1);
+    setStep((p) => p + 1);
   };
+  const handleBack = () => { setError(""); setStep((p) => p - 1); };
 
-  const handleBack = () => { setError(""); setStep((prev) => prev - 1); };
-
+  /* Submit */
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
+    if (!agreedToTerms) {
+      setError("You must agree to the Terms & Conditions to continue."); return;
+    }
     const parsed = registerSchema.safeParse(form);
     if (!parsed.success) { setError(parsed.error.issues[0].message); return; }
     setLoading(true);
@@ -200,14 +272,14 @@ function RegisterForm() {
       if (!res.ok) { setError(data.error); setLoading(false); return; }
       if (data.autoVerified) setIsAutoVerified(true);
       setIsRegistered(true);
-      setLoading(false);
     } catch {
       setError("Something went wrong. Try again.");
+    } finally {
       setLoading(false);
     }
   };
 
-  // ── Registered state ──────────────────────────────────────────────────
+  /* ── Registered success screen ───────────────────────────────────────── */
   if (isRegistered) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-[#fdf8e8]/30 via-white to-white flex items-center justify-center px-4 py-12">
@@ -223,11 +295,12 @@ function RegisterForm() {
               {isAutoVerified ? (
                 <>Your account <strong className="text-[#111111]">{form.email}</strong> is ready to use.</>
               ) : (
-                <>We&apos;ve sent a link to <strong className="text-[#111111]">{form.email}</strong>. Please verify to activate your account.</>
+                <>We&apos;ve sent a verification code to <strong className="text-[#111111]">{form.email}</strong>.</>
               )}
             </p>
             {isAutoVerified ? (
-              <Link href="/auth/login" className="block w-full py-3 bg-[#A4860E] hover:bg-[#8a6f0b] text-white font-semibold rounded-xl transition-colors text-sm shadow-lg shadow-[#A4860E]/20">
+              <Link href="/auth/login"
+                className="block w-full py-3 bg-[#A4860E] hover:bg-[#8a6f0b] text-white font-semibold rounded-xl transition-colors text-sm shadow-lg shadow-[#A4860E]/20">
                 Sign In
               </Link>
             ) : (
@@ -242,6 +315,7 @@ function RegisterForm() {
     );
   }
 
+  /* ── Shared style helpers ─────────────────────────────────────────────── */
   const inputClass = "w-full pl-9 pr-4 py-3 rounded-xl border border-[#E5E5E5] text-sm text-[#111111] placeholder:text-[#9B9B9B] focus:outline-none focus:border-[#A4860E] focus:ring-1 focus:ring-[#A4860E]/20 transition-all bg-white";
   const inputClassBare = "w-full px-4 py-3 rounded-xl border border-[#E5E5E5] text-sm text-[#111111] placeholder:text-[#9B9B9B] focus:outline-none focus:border-[#A4860E] focus:ring-1 focus:ring-[#A4860E]/20 transition-all bg-white";
   const labelClass = "block text-xs font-semibold text-[#111111] mb-1.5";
@@ -260,7 +334,7 @@ function RegisterForm() {
           <p className="text-sm text-[#6B6B6B]">Step {step} of 3</p>
         </div>
 
-        {/* Step progress */}
+        {/* Progress */}
         <div className="flex items-center justify-center gap-2 mb-6">
           {[1, 2, 3].map((s) => (
             <div key={s} className="flex items-center">
@@ -285,7 +359,7 @@ function RegisterForm() {
 
           <form onSubmit={step === 3 ? handleSubmit : (e) => { e.preventDefault(); handleNext(); }} className="space-y-4">
 
-            {/* ── Step 1: Role ── */}
+            {/* ── STEP 1: Role ── */}
             {step === 1 && (
               <div className="space-y-4">
                 <p className="text-sm font-semibold text-[#111111] text-center mb-2">How will you use CampusGo?</p>
@@ -312,7 +386,7 @@ function RegisterForm() {
               </div>
             )}
 
-            {/* ── Step 2: Basic info ── */}
+            {/* ── STEP 2: Basic info ── */}
             {step === 2 && (
               <div className="space-y-4">
                 <div>
@@ -373,11 +447,14 @@ function RegisterForm() {
               </div>
             )}
 
-            {/* ── Step 3: Role-specific ── */}
+            {/* ── STEP 3: Role-specific ── */}
             {step === 3 && (
               <div className="space-y-4">
-                {form.role === "buyer" ? (
+
+                {/* ─── BUYER fields ─── */}
+                {form.role === "buyer" && (
                   <>
+                    {/* School */}
                     <div>
                       <label className={labelClass}>School <span className="text-[#DC2626]">*</span></label>
                       <div className="relative">
@@ -390,6 +467,8 @@ function RegisterForm() {
                         </select>
                       </div>
                     </div>
+
+                    {/* How did you hear */}
                     <div>
                       <label className={labelClass}>How did you hear about us? <span className="text-[#DC2626]">*</span></label>
                       <div className="relative">
@@ -406,8 +485,27 @@ function RegisterForm() {
                         </select>
                       </div>
                     </div>
+
+                    {/* Passport upload for buyers */}
+                    <PassportUpload
+                      preview={passportPreview}
+                      uploading={passportUploading}
+                      uploaded={!!form.passport}
+                      onFileChange={handlePassportChange}
+                    />
+
+                    {/* No-return-policy notice */}
+                    <div className="flex items-start gap-3 p-3.5 bg-amber-50 border border-amber-200 rounded-xl">
+                      <i className="fa-solid fa-triangle-exclamation text-amber-500 mt-0.5 shrink-0 text-sm" />
+                      <p className="text-xs text-amber-700 leading-relaxed">
+                        <strong>No Return Policy:</strong> All purchases on CampusGo are final. Once an order is confirmed, returns or refunds are not accepted. Please review products carefully before purchasing.
+                      </p>
+                    </div>
                   </>
-                ) : (
+                )}
+
+                {/* ─── SELLER fields ─── */}
+                {form.role === "seller" && (
                   <>
                     {/* NIN + Category */}
                     <div className="grid grid-cols-2 gap-3">
@@ -440,57 +538,20 @@ function RegisterForm() {
                       </div>
                     </div>
 
-                    {/* Passport Upload */}
-                    <div>
-                      <label className={labelClass}>
-                        Passport Photograph <span className="text-[#DC2626]">*</span>
-                        <span className="font-normal text-[#9B9B9B] ml-1">(white background)</span>
-                      </label>
-                      <div
-                        onClick={() => passportRef.current?.click()}
-                        className={`relative border-2 border-dashed rounded-xl p-4 cursor-pointer transition-all flex items-center gap-4 ${
-                          passportPreview ? "border-[#A4860E] bg-[#fdf8e8]/50" : "border-[#E5E5E5] hover:border-[#A4860E]/50 hover:bg-[#fdf8e8]/30"
-                        }`}
-                      >
-                        {passportPreview ? (
-                          <>
-                            <div className="relative w-16 h-20 rounded-lg overflow-hidden border border-[#e8d48a] shrink-0">
-                              <Image src={passportPreview} alt="Passport preview" fill className="object-cover" />
-                            </div>
-                            <div>
-                              {passportUploading ? (
-                                <div className="flex items-center gap-2 text-[#A4860E] text-sm font-medium">
-                                  <i className="fa-solid fa-circle-notch animate-spin text-xs" />
-                                  Uploading passport…
-                                </div>
-                              ) : form.passport ? (
-                                <div className="flex items-center gap-2 text-[#A4860E] text-sm font-semibold">
-                                  <i className="fa-solid fa-circle-check text-xs" />
-                                  Passport uploaded
-                                </div>
-                              ) : null}
-                              <p className="text-xs text-[#9B9B9B] mt-1">Click to change</p>
-                            </div>
-                          </>
-                        ) : (
-                          <div className="flex items-center gap-4 w-full">
-                            <div className="w-12 h-12 rounded-xl bg-[#fdf8e8] flex items-center justify-center border border-[#e8d48a] shrink-0">
-                              <i className="fa-solid fa-user-large text-[#A4860E] text-lg" />
-                            </div>
-                            <div>
-                              <p className="text-sm font-medium text-[#111111]">Upload passport photo</p>
-                              <p className="text-xs text-[#9B9B9B] mt-0.5">JPG, PNG · White background · Max 5MB</p>
-                            </div>
-                          </div>
-                        )}
-                      </div>
-                      <input
-                        ref={passportRef}
-                        type="file"
-                        accept="image/*"
-                        className="hidden"
-                        onChange={(e) => { const f = e.target.files?.[0]; if (f) handlePassportChange(f); }}
-                      />
+                    {/* Passport upload for sellers */}
+                    <PassportUpload
+                      preview={passportPreview}
+                      uploading={passportUploading}
+                      uploaded={!!form.passport}
+                      onFileChange={handlePassportChange}
+                    />
+
+                    {/* Payout notice */}
+                    <div className="flex items-start gap-3 p-3.5 bg-[#fdf8e8] border border-[#e8d48a] rounded-xl">
+                      <i className="fa-solid fa-clock text-[#A4860E] mt-0.5 shrink-0 text-sm" />
+                      <p className="text-xs text-[#7a6310] leading-relaxed">
+                        <strong>Payout Policy:</strong> Earnings are released to your bank account <strong>24 hours after a completed &amp; confirmed order</strong>. Ensure your bank details are accurate to avoid delays.
+                      </p>
                     </div>
 
                     {/* Bank Details */}
@@ -502,10 +563,15 @@ function RegisterForm() {
                       </p>
                       <div className="space-y-3">
 
-                        {/* Bank name — autocomplete if banks loaded, plain text if not */}
+                        {/* Bank name */}
                         <div ref={bankRef} className="relative">
                           <label className={labelClass}>Bank Name <span className="text-[#DC2626]">*</span></label>
-                          {banksLoaded && banks.length > 0 ? (
+                          {!banksLoaded ? (
+                            <div className="w-full px-4 py-3 rounded-xl border border-[#E5E5E5] bg-gray-50 text-sm text-[#9B9B9B] flex items-center gap-2">
+                              <i className="fa-solid fa-circle-notch animate-spin text-xs" />
+                              Loading banks…
+                            </div>
+                          ) : banks.length > 0 ? (
                             /* Autocomplete mode */
                             <div className="relative">
                               <i className="fa-solid fa-landmark absolute left-3.5 top-1/2 -translate-y-1/2 text-[#9B9B9B] text-xs" />
@@ -522,8 +588,8 @@ function RegisterForm() {
                                 <i className="fa-solid fa-circle-check absolute right-3.5 top-1/2 -translate-y-1/2 text-[#A4860E] text-xs" />
                               )}
                             </div>
-                          ) : banksLoaded ? (
-                            /* Manual text mode — Paystack not configured */
+                          ) : (
+                            /* Manual mode — no Paystack key */
                             <div className="relative">
                               <i className="fa-solid fa-landmark absolute left-3.5 top-1/2 -translate-y-1/2 text-[#9B9B9B] text-xs" />
                               <input
@@ -534,13 +600,8 @@ function RegisterForm() {
                                 className={inputClass}
                               />
                             </div>
-                          ) : (
-                            /* Loading */
-                            <div className="w-full px-4 py-3 rounded-xl border border-[#E5E5E5] bg-gray-50 text-sm text-[#9B9B9B] flex items-center gap-2">
-                              <i className="fa-solid fa-circle-notch animate-spin text-xs" />
-                              Loading banks…
-                            </div>
                           )}
+                          {/* Dropdown */}
                           {showBankDropdown && bankSuggestions.length > 0 && (
                             <div className="absolute top-full left-0 right-0 mt-1 bg-white border border-[#E5E5E5] rounded-xl shadow-xl z-30 overflow-hidden max-h-52 overflow-y-auto">
                               {bankSuggestions.map((b) => (
@@ -579,7 +640,7 @@ function RegisterForm() {
                           )}
                         </div>
 
-                        {/* Account name — auto-filled or manual */}
+                        {/* Account name — auto or manual */}
                         <div>
                           <label className={labelClass}>
                             Account Name <span className="text-[#DC2626]">*</span>
@@ -593,13 +654,11 @@ function RegisterForm() {
                               Verifying account…
                             </div>
                           ) : accountVerified ? (
-                            /* Auto-verified display */
                             <div className="w-full px-4 py-3 rounded-xl border border-[#A4860E] bg-[#fdf8e8] text-sm text-[#A4860E] font-semibold flex items-center justify-between">
                               <span>{form.accountName}</span>
                               <i className="fa-solid fa-circle-check text-xs" />
                             </div>
                           ) : manualAccountEntry ? (
-                            /* Manual entry input */
                             <>
                               <div className="relative">
                                 <i className="fa-solid fa-user absolute left-3.5 top-1/2 -translate-y-1/2 text-[#9B9B9B] text-xs" />
@@ -613,11 +672,10 @@ function RegisterForm() {
                               </div>
                               <p className="text-xs text-amber-600 mt-1 flex items-center gap-1.5">
                                 <i className="fa-solid fa-triangle-exclamation text-[10px]" />
-                                Live verification unavailable. Enter your account name exactly as it appears on your bank statement.
+                                Live verification unavailable. Enter your account name exactly as on your bank statement.
                               </p>
                             </>
                           ) : (
-                            /* Idle placeholder */
                             <div className="w-full px-4 py-3 rounded-xl border border-[#E5E5E5] bg-gray-50 text-sm text-[#9B9B9B]">
                               Will auto-fill after verification
                             </div>
@@ -634,6 +692,63 @@ function RegisterForm() {
                     </div>
                   </>
                 )}
+
+                {/* ── Terms & Conditions ── */}
+                <div className="pt-3 border-t border-[#E5E5E5]">
+                  <div className="p-4 bg-gray-50 rounded-xl border border-[#E5E5E5] text-xs text-[#6B6B6B] leading-relaxed max-h-36 overflow-y-auto mb-3">
+                    <p className="font-semibold text-[#111111] mb-2">Terms &amp; Conditions Summary</p>
+                    <p className="mb-2">By creating a CampusGo account, you agree to the following:</p>
+                    <ul className="space-y-1.5 list-disc list-inside">
+                      <li>You must be a registered student or staff of an affiliated institution.</li>
+                      <li>All information provided must be accurate and truthful.</li>
+                      <li>CampusGo is not liable for disputes between buyers and sellers.</li>
+                      {form.role === "buyer" && (
+                        <li><strong className="text-[#111111]">No Return Policy:</strong> All purchases are final. No refunds or returns are accepted once an order is confirmed.</li>
+                      )}
+                      {form.role === "seller" && (
+                        <>
+                          <li><strong className="text-[#111111]">Payout Policy:</strong> Earnings are disbursed 24 hours after a completed and confirmed order.</li>
+                          <li>Sellers are responsible for the quality and accurate description of listed products.</li>
+                          <li>CampusGo reserves the right to suspend accounts engaged in fraudulent activity.</li>
+                        </>
+                      )}
+                      <li>Your data is handled in accordance with our Privacy Policy.</li>
+                    </ul>
+                    <div className="mt-3 pt-3 border-t border-[#E0E0E0] flex items-center gap-3">
+                      <Link href="/terms" target="_blank" className="text-[#A4860E] hover:underline font-semibold">Full Terms &amp; Conditions ↗</Link>
+                      <span className="text-[#D0D0D0]">·</span>
+                      <Link href="/privacy" target="_blank" className="text-[#A4860E] hover:underline font-semibold">Privacy Policy ↗</Link>
+                    </div>
+                  </div>
+
+                  <label className="flex items-start gap-3 cursor-pointer group">
+                    <div className="relative mt-0.5 shrink-0">
+                      <input
+                        type="checkbox"
+                        checked={agreedToTerms}
+                        onChange={(e) => setAgreedToTerms(e.target.checked)}
+                        className="sr-only"
+                      />
+                      <div className={`w-5 h-5 rounded-md border-2 flex items-center justify-center transition-all ${
+                        agreedToTerms
+                          ? "bg-[#A4860E] border-[#A4860E]"
+                          : "border-[#D0D0D0] group-hover:border-[#A4860E]"
+                      }`}>
+                        {agreedToTerms && <i className="fa-solid fa-check text-white text-[10px]" />}
+                      </div>
+                    </div>
+                    <span className="text-xs text-[#6B6B6B] leading-relaxed">
+                      I have read and agree to CampusGo&apos;s{" "}
+                      <Link href="/terms" target="_blank" className="text-[#A4860E] font-semibold hover:underline">Terms &amp; Conditions</Link>
+                      {" "}and{" "}
+                      <Link href="/privacy" target="_blank" className="text-[#A4860E] font-semibold hover:underline">Privacy Policy</Link>
+                      {form.role === "buyer" && <>, including the <strong className="text-[#111111]">no return policy</strong></>}
+                      {form.role === "seller" && <>, including the <strong className="text-[#111111]">24-hour payout policy</strong></>}
+                      .
+                    </span>
+                  </label>
+                </div>
+
               </div>
             )}
 
@@ -645,9 +760,17 @@ function RegisterForm() {
                   ← Back
                 </button>
               )}
-              <button type="submit" disabled={loading || (step === 3 && form.role === "seller" && passportUploading)}
-                className="py-3 bg-[#A4860E] hover:bg-[#8a6f0b] text-white font-bold rounded-xl transition-all text-sm flex-1 disabled:opacity-60 disabled:cursor-not-allowed shadow-lg shadow-[#A4860E]/20">
-                {step < 3 ? "Continue →" : loading ? "Creating account…" : "Create Account"}
+              <button
+                type="submit"
+                disabled={loading || (step === 3 && passportUploading)}
+                className="py-3 bg-[#A4860E] hover:bg-[#8a6f0b] text-white font-bold rounded-xl transition-all text-sm flex-1 disabled:opacity-60 disabled:cursor-not-allowed shadow-lg shadow-[#A4860E]/20"
+              >
+                {step < 3 ? "Continue →" : loading ? (
+                  <span className="flex items-center justify-center gap-2">
+                    <i className="fa-solid fa-circle-notch animate-spin text-xs" />
+                    Creating account…
+                  </span>
+                ) : "Create Account"}
               </button>
             </div>
           </form>

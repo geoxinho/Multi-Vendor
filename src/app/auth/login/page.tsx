@@ -145,6 +145,13 @@ function LoginForm() {
               ) : "Sign In"}
             </button>
           </form>
+          
+          <p className="text-center text-[11px] text-[#9B9B9B] mt-4 leading-relaxed">
+            By signing in, you agree to CampusGo&apos;s{" "}
+            <Link href="/terms" target="_blank" className="text-[#A4860E] hover:underline font-semibold">Terms &amp; Conditions</Link>
+            {" "}and{" "}
+            <Link href="/privacy" target="_blank" className="text-[#A4860E] hover:underline font-semibold">Privacy Policy</Link>.
+          </p>
         </div>
 
         <p className="text-center text-sm text-[#6B6B6B] mt-6">

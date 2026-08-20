@@ -13,8 +13,13 @@ const navItems = [
   },
   {
     href: "/dashboard/seller/orders",
-    label: "Orders",
+    label: "Sales Orders",
     icon: <i className="fa-solid fa-receipt text-lg" />,
+  },
+  {
+    href: "/dashboard/seller/purchases",
+    label: "My Purchases",
+    icon: <i className="fa-solid fa-bag-shopping text-lg" />,
   },
   {
     href: "/dashboard/seller/payouts",

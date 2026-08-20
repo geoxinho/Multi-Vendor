@@ -9,11 +9,11 @@ import { shippingSchema } from "@/utils/validators";
 import { randomUUID } from "crypto";
 import { sendOrderConfirmationEmails } from "@/utils/email";
 
-// POST /api/orders — buyer creates order after payment
+// POST /api/orders — creates order after payment
 export async function POST(req: NextRequest) {
   try {
     const session = await auth();
-    if (!session || session.user.role !== "buyer") {
+    if (!session) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
@@ -26,16 +26,19 @@ export async function POST(req: NextRequest) {
     }
 
     const isTestPlaceholder = !process.env.PAYSTACK_SECRET_KEY ||
-      process.env.PAYSTACK_SECRET_KEY.includes("xxx");
+      process.env.PAYSTACK_SECRET_KEY.includes("xxx") ||
+      process.env.PAYSTACK_SECRET_KEY.includes("REPLACE") ||
+      process.env.PAYSTACK_SECRET_KEY === "sk_test_";
 
     if (!isTestPlaceholder) {
       // Verify Paystack payment (only when a real secret key is configured)
       const verification = await verifyPayment(paymentRef);
       if (!verification.data || verification.data.status !== "success") {
+        console.error("[ORDERS] Paystack verification failed:", verification);
         return NextResponse.json({ error: "Payment verification failed" }, { status: 400 });
       }
     } else {
-      console.warn("[ORDERS] Skipping Paystack verification — PAYSTACK_SECRET_KEY is not configured.");
+      console.warn("[ORDERS] Skipping Paystack verification — PAYSTACK_SECRET_KEY is a placeholder/test key.");
     }
 
     await connectDB();
@@ -61,6 +64,9 @@ export async function POST(req: NextRequest) {
       const product = await Product.findById(item.productId).populate("seller", "_id");
       if (!product || product.status !== "active") {
         return NextResponse.json({ error: `Product ${item.productId} is unavailable` }, { status: 400 });
+      }
+      if (product.seller._id.toString() === session.user.id) {
+        return NextResponse.json({ error: "You cannot purchase your own product." }, { status: 400 });
       }
       if (product.stock < item.quantity) {
         return NextResponse.json({ error: `Insufficient stock for ${product.title}` }, { status: 400 });
@@ -146,16 +152,20 @@ export async function GET(req: NextRequest) {
     const page = parseInt(searchParams.get("page") ?? "1");
     const limit = parseInt(searchParams.get("limit") ?? "10");
     const skip = (page - 1) * limit;
+    const asBuyer = searchParams.get("asBuyer") === "true";
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     let query: any = {};
 
-    if (session.user.role === "buyer") {
+    if (asBuyer) {
+      // Any role can view their own purchases (orders where they are the buyer)
+      query = { buyer: session.user.id };
+    } else if (session.user.role === "buyer") {
       query = { buyer: session.user.id };
     } else if (session.user.role === "seller") {
       query = { "items.seller": session.user.id };
     }
-    // admin sees all
+    // admin with no asBuyer sees all
 
     const total = await Order.countDocuments(query);
     const orders = await Order.find(query)

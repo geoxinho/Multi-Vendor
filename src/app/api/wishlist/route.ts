@@ -3,13 +3,12 @@ import { auth } from "@/lib/auth";
 import { connectDB } from "@/lib/db";
 import { Wishlist } from "@/models/Wishlist";
 import { Product } from "@/models/Product";
-import { User } from "@/models/User";
 
-/** GET /api/wishlist — list all wishlisted product IDs for current buyer */
+/** GET /api/wishlist — list all wishlisted products for the current user */
 export async function GET() {
   try {
     const session = await auth();
-    if (!session || session.user.role !== "buyer") {
+    if (!session) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
     await connectDB();
@@ -17,7 +16,7 @@ export async function GET() {
       .populate("product", "title price images condition rating numReviews stock seller")
       .sort("-createdAt")
       .lean();
-    return NextResponse.json(items);
+    return NextResponse.json({ items });
   } catch (err) {
     console.error("[WISHLIST GET]", err);
     return NextResponse.json({ error: "Internal server error" }, { status: 500 });

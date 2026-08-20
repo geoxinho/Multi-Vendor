@@ -406,7 +406,7 @@ export default function Navbar() {
               You&apos;ll need to sign back in to access your dashboard and saved items.
             </p>
             <div className="flex flex-col gap-3">
-              <button onClick={() => signOut({ callbackUrl: window.location.origin })} className="w-full py-3.5 rounded-full bg-red-500 text-white font-bold text-base hover:bg-red-600 transition-colors shadow-lg shadow-red-500/30">
+              <button onClick={() => signOut({ callbackUrl: "/" })} className="w-full py-3.5 rounded-full bg-red-500 text-white font-bold text-base hover:bg-red-600 transition-colors shadow-lg shadow-red-500/30">
                 Yes, Sign Out
               </button>
               <button onClick={() => setConfirmLogout(false)} className="w-full py-3.5 rounded-full bg-gray-100 text-gray-700 font-bold text-base hover:bg-gray-200 transition-colors">

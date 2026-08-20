@@ -21,6 +21,20 @@ export async function GET(req: NextRequest) {
     const maxPrice = parseFloat(searchParams.get("maxPrice") ?? "999999999");
     const sort = searchParams.get("sort") ?? "-createdAt";
     const sellerId = searchParams.get("seller") ?? "";
+    const mine = searchParams.get("mine") === "true";
+
+    // If "mine=true", return the authenticated seller's own products (all statuses)
+    if (mine) {
+      const session = await auth();
+      if (!session || session.user.role !== "seller") {
+        return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+      }
+      const myProducts = await Product.find({ seller: session.user.id })
+        .populate("category", "name slug")
+        .sort("-createdAt")
+        .lean();
+      return NextResponse.json({ products: myProducts, total: myProducts.length });
+    }
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const query: any = { status: "active" };

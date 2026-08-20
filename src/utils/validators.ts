@@ -26,6 +26,9 @@ export const registerSchema = z.object({
     if (!data.hearAboutUs || data.hearAboutUs.trim() === "") {
       ctx.addIssue({ code: z.ZodIssueCode.custom, path: ["hearAboutUs"], message: "Please select how you heard about us" });
     }
+    if (!data.passport || data.passport.trim() === "") {
+      ctx.addIssue({ code: z.ZodIssueCode.custom, path: ["passport"], message: "Passport photograph is required" });
+    }
   }
   if (data.role === "seller") {
     if (!data.passport || data.passport.trim() === "") {

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import Script from "next/script";
@@ -45,15 +45,29 @@ export default function CheckoutPage() {
   const [paying, setPaying] = useState(false);
   const [scriptLoaded, setScriptLoaded] = useState(false);
   const [serverError, setServerError] = useState("");
+  // Tracks whether Paystack callback fired (payment completed) so onClose
+  // doesn't incorrectly show the "payment cancelled" message.
+  const callbackFired = useRef(false);
 
-  /* Redirect if not a buyer or cart is empty */
+  /* Redirect if not logged in, cart is empty, or trying to buy own product */
   useEffect(() => {
     if (status === "loading") return;
-    if (!session || session.user.role !== "buyer") {
+    if (!session) {
       router.replace("/auth/login?callbackUrl=/checkout");
       return;
     }
-    if (items.length === 0) router.replace("/products");
+    if (items.length === 0) {
+      router.replace("/products");
+      return;
+    }
+
+    // Redirect to dashboard if trying to purchase own product
+    const isOwnProduct = items.some((item) => item.sellerId === session.user.id);
+    if (isOwnProduct) {
+      const target = session.user.role === "admin" ? "/dashboard/admin" : "/dashboard/seller";
+      router.replace(target);
+      return;
+    }
   }, [session, status, items, router]);
 
   /* Pre-fill name from session */
@@ -109,6 +123,7 @@ export default function CheckoutPage() {
 
     const ref = `mkt_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
 
+    callbackFired.current = false;
     const handler = window.PaystackPop.setup({
       key: process.env.NEXT_PUBLIC_PAYSTACK_PUBLIC_KEY!,
       email: session!.user.email!,
@@ -116,10 +131,14 @@ export default function CheckoutPage() {
       ref,
       currency: "NGN",
       onClose: () => {
-        setPaying(false);
-        setServerError("Payment was cancelled. Your order has not been placed.");
+        // Only show cancelled message if payment was NOT completed
+        if (!callbackFired.current) {
+          setPaying(false);
+          setServerError("Payment was cancelled. Your order has not been placed.");
+        }
       },
       callback: (response) => {
+        callbackFired.current = true;
         createOrder(response.reference);
       },
     });

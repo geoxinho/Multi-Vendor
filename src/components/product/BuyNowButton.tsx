@@ -2,16 +2,25 @@
 
 import { useCartStore } from "@/store/cartStore";
 import { useState } from "react";
-import { ProductSummary } from "@/types";
 import { useRouter } from "next/navigation";
+import { useSession } from "next-auth/react";
+import { ProductSummary } from "@/types";
 
 export default function BuyNowButton({ product }: { product: ProductSummary }) {
+  const { data: session } = useSession();
   const addItem = useCartStore((s) => s.addItem);
   const clearCart = useCartStore((s) => s.clearCart);
   const [qty, setQty] = useState(1);
   const router = useRouter();
 
   const handleBuyNow = () => {
+    // Redirect to dashboard if trying to buy own product
+    if (session?.user?.id === product.seller._id) {
+      const target = session.user.role === "admin" ? "/dashboard/admin" : "/dashboard/seller";
+      router.push(target);
+      return;
+    }
+
     clearCart();
     addItem({
       productId: product._id,
