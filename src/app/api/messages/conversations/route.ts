@@ -21,8 +21,15 @@ export async function GET(req: Request) {
 
     let orders;
     if (role === "seller") {
-      orders = await Order.find({ "items.seller": userId })
+      // Find orders where current user is either the seller or the buyer
+      orders = await Order.find({
+        $or: [
+          { "items.seller": userId },
+          { buyer: userId }
+        ]
+      })
         .populate("buyer", "name avatar")
+        .populate("items.seller", "name avatar")
         .populate("items.product", "title images")
         .sort({ createdAt: -1 })
         .lean();
@@ -47,13 +54,18 @@ export async function GET(req: Request) {
           read: false,
         });
 
-        // Determine the other party
+        // Determine the other party and type
         let otherParty = null;
-        if (role === "seller") {
-          otherParty = order.buyer;
-        } else {
-          // If buyer, other party is the seller of the first item
+        let convType: "buy" | "sell" = "sell";
+
+        if (order.buyer?._id?.toString() === userId) {
+          // Current user is the buyer -> other party is the seller
           otherParty = order.items[0]?.seller;
+          convType = "buy";
+        } else {
+          // Current user is the seller -> other party is the buyer
+          otherParty = order.buyer;
+          convType = "sell";
         }
 
         return {
@@ -68,6 +80,7 @@ export async function GET(req: Request) {
           latestMessage: latestMessage ? latestMessage.text : null,
           latestMessageAt: latestMessage ? latestMessage.createdAt : order.createdAt,
           unreadCount,
+          type: convType,
         };
       })
     );

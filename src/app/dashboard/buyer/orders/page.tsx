@@ -20,6 +20,7 @@ interface Order {
   paymentStatus: string;
   deliveryStatus: string;
   createdAt: string;
+  deliveryPin?: string;
 }
 
 const STATUS_COLOR: Record<string, string> = {
@@ -125,9 +126,18 @@ export default function BuyerOrdersPage() {
                 </div>
               </div>
 
-              {order.paymentStatus === "paid" && order.deliveryStatus !== "delivered" && (
-                <div className="mt-3 mb-4">
-                  <ConfirmDeliveryForm orderId={order._id} onSuccess={fetchOrders} />
+              {order.paymentStatus === "paid" && order.deliveryStatus !== "delivered" && order.deliveryPin && (
+                <div className="mt-3 mb-4 p-3 bg-amber-50/80 border border-amber-200 rounded-xl text-xs text-amber-900 flex items-center justify-between gap-3">
+                  <div>
+                    <p className="font-bold flex items-center gap-1">
+                      <i className="fa-solid fa-key text-amber-600" />
+                      <span>Delivery OTP / PIN Code:</span>
+                    </p>
+                    <p className="text-[10px] text-amber-700 mt-0.5">Provide this code to the seller ONLY after physically receiving your package.</p>
+                  </div>
+                  <span className="font-mono text-sm font-black px-2.5 py-1 bg-amber-100 border border-amber-200 text-amber-900 rounded-lg tracking-wider select-all shrink-0">
+                    {order.deliveryPin}
+                  </span>
                 </div>
               )}
 

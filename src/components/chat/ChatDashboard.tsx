@@ -16,6 +16,7 @@ interface Conversation {
   latestMessage?: string;
   latestMessageAt: string;
   unreadCount: number;
+  type?: "buy" | "sell";
 }
 
 interface Message {
@@ -179,8 +180,13 @@ export default function ChatDashboard({ currentUserId, role }: ChatDashboardProp
                           {new Date(conv.latestMessageAt).toLocaleDateString([], { month: 'short', day: 'numeric' })}
                         </span>
                       </div>
-                      <p className="text-xs text-gray-500 truncate mb-1">
-                        Order: {conv.orderTitle}
+                      <p className="text-xs text-gray-500 truncate mb-1 flex items-center gap-1.5 flex-wrap">
+                        <span>Order: {conv.orderTitle}</span>
+                        {conv.type === "buy" ? (
+                          <span className="inline-flex items-center px-1.5 py-0.5 bg-blue-50 text-blue-700 text-[9px] font-bold rounded border border-blue-100 uppercase tracking-wide">Buy</span>
+                        ) : conv.type === "sell" ? (
+                          <span className="inline-flex items-center px-1.5 py-0.5 bg-[#fdf8e8] text-[#A4860E] text-[9px] font-bold rounded border border-[#e8d48a] uppercase tracking-wide">Sell</span>
+                        ) : null}
                       </p>
                       <div className="flex justify-between items-center">
                         <p className={`text-xs truncate ${conv.unreadCount > 0 ? "font-semibold text-gray-900" : "text-gray-400"}`}>

@@ -148,14 +148,16 @@ export default function ProductCard({ product, priority = false, wishlisted: ini
             </span>
             <button
               onClick={handleAddToCart}
-              disabled={product.stock === 0}
+              disabled={product.stock === 0 || session?.user?.id === product.seller?._id}
               className={`px-3.5 py-2 rounded-md text-xs font-bold transition-all duration-150 shadow-sm ${
-                added
+                session?.user?.id === product.seller?._id
+                  ? "bg-gray-100 border border-gray-200 text-gray-400 cursor-not-allowed shadow-none"
+                  : added
                   ? "bg-[#F0FDF4] text-[#A4860E] border border-[#A4860E]"
                   : "bg-[#A4860E] text-white hover:bg-[#8a6f0b]"
-              } disabled:opacity-40 disabled:cursor-not-allowed`}
+              } disabled:opacity-40`}
             >
-              {added ? "✓ Added" : "Add"}
+              {session?.user?.id === product.seller?._id ? "Mine" : added ? "✓ Added" : "Add"}
             </button>
           </div>
         </div>

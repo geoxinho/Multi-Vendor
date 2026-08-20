@@ -105,7 +105,7 @@ export default function SellerPurchasesPage() {
                     })}
                   </span>
                   <Link
-                    href={`/dashboard/buyer/orders/${order._id}`}
+                    href={`/dashboard/seller/purchases/${order._id}`}
                     className="text-xs font-semibold text-[#A4860E] hover:underline flex items-center gap-1"
                   >
                     View details
