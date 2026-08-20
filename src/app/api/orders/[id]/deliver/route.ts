@@ -29,7 +29,10 @@ export async function PATCH(req: NextRequest, { params }: Params) {
     // Seller can only mark if their products are in the order
     if (session.user.role === "seller") {
       const hasSellersItems = order.items.some(
-        (item: OrderItem) => item.seller?.toString() === session.user.id,
+        (item: any) => {
+          const sId = item.seller?._id ? item.seller._id.toString() : item.seller?.toString();
+          return sId === session.user.id;
+        }
       );
       if (!hasSellersItems) {
         return NextResponse.json({ error: "Forbidden" }, { status: 403 });
