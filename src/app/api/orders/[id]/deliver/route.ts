@@ -82,6 +82,9 @@ export async function PATCH(req: NextRequest, { params }: Params) {
     const productTitle = order.items[0]?.title || "your item";
     const buyer = order.buyer as any;
     const firstSeller = order.items[0]?.seller as any;
+    const firstProductId = order.items[0]?.product?._id
+      ? (order.items[0].product._id as { toString(): string }).toString()
+      : (order.items[0]?.product as { toString(): string })?.toString() ?? "";
 
     const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? "https://closevendors.vercel.app";
 
@@ -97,13 +100,13 @@ export async function PATCH(req: NextRequest, { params }: Params) {
               <div style="width:52px;height:52px;background:rgba(255,255,255,0.2);border-radius:14px;display:inline-flex;align-items:center;justify-content:center;margin-bottom:12px;">
                 <span style="color:#fff;font-size:24px;">🎉</span>
               </div>
-              <h1 style="color:#fff;font-size:22px;font-weight:800;margin:0 0 6px;">Delivery Confirmed!</h1>
-              <p style="color:rgba(255,255,255,0.85);font-size:13px;margin:0;">Your item has been successfully delivered</p>
+              <h1 style="color:#fff;font-size:22px;font-weight:800;margin:0 0 6px;">Thank You! Delivery Confirmed</h1>
+              <p style="color:rgba(255,255,255,0.85);font-size:13px;margin:0;">Your order has been successfully delivered</p>
             </div>
             <div style="padding:32px;">
               <p style="color:#111111;font-size:15px;font-weight:600;margin:0 0 8px;">Hi ${buyer?.name || "there"} 👋</p>
               <p style="color:#6B6B6B;font-size:14px;line-height:1.6;margin:0 0 24px;">
-                Thank you so much for your purchase on <strong>CampusGo</strong>! We're thrilled to let you know that your order has been successfully delivered. We hope everything arrived in perfect condition!
+                Thank you so much for your purchase on <strong>CampusGo</strong>! We're thrilled to confirm that your order for <strong>"${productTitle}"</strong> has been successfully delivered. We hope you love your new item!
               </p>
               <div style="background:#F5F8FF;border:1px solid #BFDBFE;border-radius:12px;padding:20px;margin-bottom:24px;">
                 <p style="font-size:11px;font-weight:700;color:#9B9B9B;text-transform:uppercase;letter-spacing:0.08em;margin:0 0 12px;">Order Summary</p>
@@ -114,16 +117,20 @@ export async function PATCH(req: NextRequest, { params }: Params) {
                   <tr><td style="font-size:13px;color:#6B6B6B;padding:4px 0;">Delivered</td><td style="font-size:13px;font-weight:700;color:#A4860E;text-align:right;">${deliveredAt.toLocaleDateString("en-NG", { weekday: "long", year: "numeric", month: "long", day: "numeric" })}</td></tr>
                 </table>
               </div>
+              <!-- Leave a Review CTA Box -->
               <div style="background:linear-gradient(135deg,#FFFBEB,#FFF7ED);border:1px solid #FFEDD5;border-radius:12px;padding:20px;margin-bottom:24px;text-align:center;">
-                <p style="font-size:20px;margin:0 0 6px;">⭐</p>
-                <p style="font-size:14px;font-weight:700;color:#9A3412;margin:0 0 6px;">How was your experience?</p>
-                <p style="font-size:13px;color:#9A3412;margin:0 0 14px;">Your feedback helps other students make better buying decisions. It only takes 30 seconds!</p>
-                <a href="${SITE_URL}/products/${order.items[0]?.product?.toString() ?? ""}" style="display:inline-block;background:#D97706;color:#fff;font-size:13px;font-weight:700;padding:10px 24px;border-radius:8px;text-decoration:none;">Leave a Review →</a>
+                <p style="font-size:24px;margin:0 0 6px;">⭐</p>
+                <p style="font-size:15px;font-weight:800;color:#9A3412;margin:0 0 6px;">How was your experience?</p>
+                <p style="font-size:13px;color:#9A3412;margin:0 0 16px;line-height:1.5;">Please take 30 seconds to drop a review for this product! Your honest feedback helps fellow campus buyers make great decisions.</p>
+                <a href="${SITE_URL}/products/${firstProductId}" style="display:inline-block;background:#D97706;color:#fff;font-size:14px;font-weight:700;padding:12px 28px;border-radius:10px;text-decoration:none;box-shadow:0 2px 8px rgba(217,119,6,0.25);">⭐ Leave a Product Review →</a>
               </div>
               <p style="color:#9B9B9B;font-size:12px;text-align:center;margin:0;">Thank you for shopping on CampusGo 💙<br>Nigeria's safest campus marketplace.</p>
             </div>
           </div>
         </div>
+      </body>
+      </html>
+    `;
       </body>
       </html>
     `;

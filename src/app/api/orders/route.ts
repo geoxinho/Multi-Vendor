@@ -3,6 +3,7 @@ import { connectDB } from "@/lib/db";
 import { Order } from "@/models/Order";
 import { Product } from "@/models/Product";
 import { User } from "@/models/User";
+import { Message } from "@/models/Message";
 import { auth } from "@/lib/auth";
 import { verifyPayment } from "@/lib/paystack";
 import { shippingSchema } from "@/utils/validators";
@@ -110,7 +111,7 @@ export async function POST(req: NextRequest) {
       shippingAddress: addressParsed.data,
     });
 
-    // Send emails
+    // Send emails & create thank-you chat messages
     try {
       const sellerIds = [...new Set(orderItems.map((item) => item.seller.toString()))];
       const sellers = await User.find({ _id: { $in: sellerIds } }).select("_id email").lean();
@@ -130,8 +131,20 @@ export async function POST(req: NextRequest) {
         throw new Error("Buyer email not found in session");
       }
       await sendOrderConfirmationEmails(order, buyerEmail, buyerName, sellerItemsMap);
+
+      // Automated chat thank-you message from each seller to buyer
+      for (const sellerId of sellerIds) {
+        const sellerItems = orderItems.filter((i) => i.seller.toString() === sellerId);
+        const itemTitles = sellerItems.map((i) => i.title).join(", ");
+        await Message.create({
+          order: order._id,
+          sender: sellerId,
+          receiver: session.user.id,
+          text: `🎉 Thank you for your order! I have received your order for "${itemTitles}". I am preparing your item(s) for delivery. Please keep your 6-digit Delivery PIN safe and share it with me ONLY after physically receiving your package!`,
+        }).catch((e) => console.error("[ORDERS AUTOMATED MESSAGE ERROR]", e));
+      }
     } catch (e) {
-      console.error("[ORDERS EMAIL ERROR]", e);
+      console.error("[ORDERS EMAIL/MESSAGE ERROR]", e);
     }
 
 
