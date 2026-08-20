@@ -217,7 +217,7 @@ export default function SellerDashboardLayout({ navItems, title, children }: Sel
                 className="flex-1 py-2.5 rounded-xl border border-gray-200 text-gray-700 font-semibold text-sm hover:bg-gray-50 transition-colors">
                 Cancel
               </button>
-              <button onClick={() => signOut({ callbackUrl: "/" })}
+              <button onClick={() => signOut({ callbackUrl: window.location.origin + "/" })}
                 className="flex-1 py-2.5 rounded-xl bg-red-600 text-white font-semibold text-sm hover:bg-red-700 transition-colors">
                 Yes, Sign Out
               </button>

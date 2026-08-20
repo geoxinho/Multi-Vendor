@@ -11,6 +11,8 @@ interface OrderItem {
   quantity: number;
   image: string;
   price: number;
+  selectedSize?: string;
+  selectedColor?: string;
 }
 
 interface Order {
@@ -135,6 +137,20 @@ export default function SellerPurchasesPage() {
                     </div>
                     <div className="flex-1 min-w-0">
                       <p className="text-sm font-semibold text-gray-900 truncate">{item.title}</p>
+                      {(item.selectedSize || item.selectedColor) && (
+                        <div className="flex items-center gap-1.5 my-0.5">
+                          {item.selectedSize && (
+                            <span className="px-1.5 py-0.2 rounded text-[10px] font-bold bg-amber-100 text-[#A4860E] border border-amber-200">
+                              Size: {item.selectedSize}
+                            </span>
+                          )}
+                          {item.selectedColor && (
+                            <span className="px-1.5 py-0.2 rounded text-[10px] font-semibold bg-gray-100 text-gray-700 border border-gray-200">
+                              Colour: {item.selectedColor}
+                            </span>
+                          )}
+                        </div>
+                      )}
                       <p className="text-xs text-gray-500 mt-0.5">Qty: {item.quantity}</p>
                     </div>
                     <p className="text-sm font-bold text-[#A4860E] shrink-0">

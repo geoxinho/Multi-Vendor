@@ -93,7 +93,7 @@ export default async function AdminDashboardPage() {
         {[
           { title: "Manage Users", desc: "View, ban, or change roles for all users.", href: "/dashboard/admin/users", color: "bg-teal-600" },
           { title: "Manage Products", desc: "Review and moderate all listed products.", href: "/dashboard/admin/products", color: "bg-yellow-500" },
-          { title: "Release Payouts", desc: "Approve seller payouts after 3-day hold.", href: "/dashboard/admin/payouts", color: "bg-blue-600" },
+          { title: "Release Payouts", desc: "Approve seller payouts after 24-hour hold.", href: "/dashboard/admin/payouts", color: "bg-blue-600" },
         ].map((card) => (
           <a key={card.href} href={card.href}
             className="block bg-white rounded-2xl border border-gray-100 p-6 hover:shadow-md transition-shadow group">

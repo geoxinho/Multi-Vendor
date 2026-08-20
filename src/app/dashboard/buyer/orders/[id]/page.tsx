@@ -85,6 +85,8 @@ export default async function BuyerOrderDetailsPage({ params }: Props) {
             image: string;
             price: number;
             quantity: number;
+            selectedSize?: string;
+            selectedColor?: string;
             product?: { _id: string; images: string[] };
           }) => {
             const img = item.image || item.product?.images?.[0] || "";
@@ -109,6 +111,20 @@ export default async function BuyerOrderDetailsPage({ params }: Props) {
                     </Link>
                   ) : (
                     <p className="text-sm font-semibold text-gray-900 line-clamp-2">{item.title}</p>
+                  )}
+                  {(item.selectedSize || item.selectedColor) && (
+                    <div className="flex items-center gap-1.5 mt-0.5">
+                      {item.selectedSize && (
+                        <span className="px-1.5 py-0.5 rounded text-[11px] font-bold bg-amber-100 text-[#A4860E] border border-amber-200">
+                          Size: {item.selectedSize}
+                        </span>
+                      )}
+                      {item.selectedColor && (
+                        <span className="px-1.5 py-0.5 rounded text-[11px] font-semibold bg-gray-100 text-gray-700 border border-gray-200">
+                          Colour: {item.selectedColor}
+                        </span>
+                      )}
+                    </div>
                   )}
                   <p className="text-xs text-gray-400 mt-0.5">Qty: {item.quantity} × ₦{item.price.toLocaleString()}</p>
                 </div>

@@ -8,6 +8,7 @@ interface User {
   name: string;
   email: string;
   role: string;
+  storeName?: string;
   isBanned: boolean;
   createdAt: string;
 }
@@ -74,7 +75,7 @@ export default function AdminUsersPage() {
           <table className="w-full text-sm">
             <thead className="bg-gray-50 border-b border-gray-100">
               <tr>
-                {["Name", "Email", "Role", "Status", "Joined", "Actions"].map((h) => (
+                {["Name", "Store / Brand", "Email", "Role", "Status", "Joined", "Actions"].map((h) => (
                   <th key={h} className="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">{h}</th>
                 ))}
               </tr>
@@ -83,6 +84,16 @@ export default function AdminUsersPage() {
               {users.map((user) => (
                 <tr key={user._id} className="hover:bg-gray-50 transition-colors">
                   <td className="px-4 py-3 font-medium text-gray-900">{user.name}</td>
+                  <td className="px-4 py-3 text-xs font-semibold text-[#A4860E]">
+                    {user.storeName ? (
+                      <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md bg-[#fdf8e8] border border-[#e8d48a]">
+                        <i className="fa-solid fa-store text-[10px]" />
+                        {user.storeName}
+                      </span>
+                    ) : (
+                      <span className="text-gray-300 font-normal">—</span>
+                    )}
+                  </td>
                   <td className="px-4 py-3 text-gray-500 text-xs">{user.email}</td>
                   <td className="px-4 py-3">
                     <select

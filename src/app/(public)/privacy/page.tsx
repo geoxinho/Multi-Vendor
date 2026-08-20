@@ -16,10 +16,10 @@ export default function PrivacyPage() {
             <img src="/main_logo.png" alt="CampusGo" className="h-8 w-auto object-contain" />
             <span className="font-bold text-lg text-[#111111]">Campus<span className="text-[#A4860E]">Go</span></span>
           </Link>
-          <Link href="/auth/register"
+          <Link href="/help"
             className="text-sm text-[#A4860E] font-semibold hover:underline flex items-center gap-1.5">
-            <i className="fa-solid fa-arrow-left text-xs" />
-            Back to Register
+            <i className="fa-solid fa-headset text-xs" />
+            Help Desk &amp; Support
           </Link>
         </div>
       </div>

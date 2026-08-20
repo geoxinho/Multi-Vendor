@@ -189,37 +189,7 @@ export default async function ProductDetailPage({ params }: Props) {
 
 
 
-          {/* Variants */}
-          {(product.variants?.sizes?.length > 0 || product.variants?.colors?.length > 0) && (
-            <div className="mb-6 space-y-3">
-              {product.variants?.sizes?.length > 0 && (
-                <div>
-                  <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">Sizes</p>
-                  <div className="flex flex-wrap gap-2">
-                    {product.variants.sizes.map((s: string) => (
-                      <span key={s} className="px-3 py-1 rounded-lg text-sm font-bold border text-white" style={{ background: "#A4860E", borderColor: "#8a6f0b" }}>
-                        {s}
-                      </span>
-                    ))}
-                  </div>
-                </div>
-              )}
-              {product.variants?.colors?.length > 0 && (
-                <div>
-                  <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">Colours</p>
-                  <div className="flex flex-wrap gap-2">
-                    {product.variants.colors.map((c: string) => (
-                      <span key={c} className="px-3 py-1 rounded-lg text-sm font-semibold border border-gray-200 bg-gray-50 text-gray-800">
-                        {c}
-                      </span>
-                    ))}
-                  </div>
-                </div>
-              )}
-            </div>
-          )}
-
-          {/* Buy Now */}
+          {/* Buy Now & Variant Selection */}
           <BuyNowButton product={product} />
 
 

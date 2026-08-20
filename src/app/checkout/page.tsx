@@ -98,7 +98,12 @@ export default function CheckoutPage() {
       body: JSON.stringify({
         shippingAddress: address,
         paymentRef,
-        items: items.map((i) => ({ productId: i.productId, quantity: i.quantity })),
+        items: items.map((i) => ({
+            productId: i.productId,
+            quantity: i.quantity,
+            selectedSize: i.selectedSize ?? "",
+            selectedColor: i.selectedColor ?? "",
+          })),
       }),
     });
     const data = await res.json();
@@ -270,12 +275,7 @@ export default function CheckoutPage() {
                 </div>
               </div>
 
-              {/* Test mode notice */}
-              <div className="bg-[#fdf8e8] rounded-md border border-[#BFDBFE] p-4">
-                <p className="text-sm font-semibold text-[#1E40AF] mb-1"><i className="fa-solid fa-flask text-[#A4860E]" /> Paystack Test Mode</p>
-                <p className="text-xs text-[#A4860E]">Test card: <span className="font-mono font-semibold">4084 0840 8408 4081</span></p>
-                <p className="text-xs text-[#A4860E]">CVV: <span className="font-mono font-semibold">408</span> &nbsp;|&nbsp; Expiry: <span className="font-mono font-semibold">12/25</span> &nbsp;|&nbsp; PIN: <span className="font-mono font-semibold">0000</span> &nbsp;|&nbsp; OTP: <span className="font-mono font-semibold">123456</span></p>
-              </div>
+
             </div>
 
             {/* ── Right: Order Summary ── */}

@@ -89,6 +89,8 @@ export async function POST(req: NextRequest) {
         seller: product.seller._id,
         platformFee: itemPlatformFee,
         netPayout: itemNetPayout,
+        selectedSize: item.selectedSize ?? "",
+        selectedColor: item.selectedColor ?? "",
       });
 
       // Decrement stock

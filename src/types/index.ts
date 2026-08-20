@@ -7,6 +7,8 @@ export interface CartItem {
   sellerId: string;
   quantity: number;
   stock: number;
+  selectedSize?: string;
+  selectedColor?: string;
 }
 
 export interface ProductSummary {
@@ -21,4 +23,9 @@ export interface ProductSummary {
   category: { _id: string; name: string; slug: string };
   stock: number;
   sold: number;
+  variants?: {
+    sizes: string[];
+    colors: string[];
+  };
 }
+

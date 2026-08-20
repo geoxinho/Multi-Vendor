@@ -9,6 +9,8 @@ interface OrderItem {
   seller: Types.ObjectId;
   platformFee: number;
   netPayout: number;
+  selectedSize?: string;
+  selectedColor?: string;
 }
 
 interface ShippingAddress {
@@ -46,6 +48,8 @@ const OrderItemSchema = new Schema<OrderItem>({
   seller: { type: Schema.Types.ObjectId, ref: "User" },
   platformFee: { type: Number, default: 0 },
   netPayout: { type: Number, default: 0 },
+  selectedSize: { type: String, default: "" },
+  selectedColor: { type: String, default: "" },
 });
 
 const ShippingAddressSchema = new Schema<ShippingAddress>({

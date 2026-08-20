@@ -318,7 +318,7 @@ export default function SellerSettingsPage() {
           <div className="mb-5 flex items-start gap-2.5 px-4 py-3 bg-[#fdf8e8] border border-[#BFDBFE] rounded-xl">
             <i className="fa-solid fa-circle-info text-[#A4860E] text-sm mt-0.5 shrink-0" />
             <p className="text-xs text-[#A4860E] leading-relaxed">
-              Your payout is released <strong>3 days</strong> after a buyer confirms delivery. 
+              Your payout is released <strong>24 hours</strong> after a buyer confirms delivery. 
               Make sure your account details are correct to avoid payment delays.
             </p>
           </div>

@@ -35,7 +35,7 @@ export default function SellerPayoutsPage() {
   return (
     <div>
       <h1 className="text-2xl font-bold text-gray-900 mb-2">Payout Schedule</h1>
-      <p className="text-gray-500 text-sm mb-8">Payouts are released 3 days after delivery confirmation.</p>
+      <p className="text-gray-500 text-sm mb-8">Payouts are released 24 hours after delivery confirmation.</p>
 
       {orders.length === 0 ? (
         <div className="bg-white rounded-2xl border border-gray-100 p-10 text-center text-gray-400">

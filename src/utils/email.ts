@@ -259,7 +259,7 @@ export async function sendOrderConfirmationEmails(
             <!-- Delivery PIN reminder -->
             <div style="background:#f0fdf4;border:1.5px solid #86efac;border-radius:10px;padding:16px;margin-bottom:20px;">
               <p style="font-size:13px;font-weight:700;color:#166534;margin:0 0 6px;">🔐 Delivery PIN Required</p>
-              <p style="font-size:13px;color:#8a6f0b;margin:0;">After delivering the order, ask the buyer for their 6-digit <strong>Delivery PIN</strong> and enter it in your seller dashboard to confirm delivery and start your payout countdown (<strong>3 days</strong> after confirmation).</p>
+              <p style="font-size:13px;color:#8a6f0b;margin:0;">After delivering the order, ask the buyer for their 6-digit <strong>Delivery PIN</strong> and enter it in your seller dashboard to confirm delivery and start your payout countdown (<strong>24 hours</strong> after confirmation).</p>
             </div>
 
             <p style="font-size:13px;color:#6b7280;text-align:center;">Head to your <a href="${process.env.NEXT_PUBLIC_SITE_URL ?? ""}/dashboard/seller/orders" style="color:#A4860E;font-weight:600;text-decoration:none;">Seller Dashboard</a> to view and manage this order.</p>

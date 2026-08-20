@@ -55,12 +55,14 @@ export async function PATCH(req: NextRequest, { params }: Params) {
 
     const deliveredAt = new Date();
     const sellerPayoutReleaseAt = new Date(deliveredAt);
-    sellerPayoutReleaseAt.setDate(sellerPayoutReleaseAt.getDate() + 3);
-    const payoutDateStr = sellerPayoutReleaseAt.toLocaleDateString("en-NG", {
+    sellerPayoutReleaseAt.setHours(sellerPayoutReleaseAt.getHours() + 24);
+    const payoutDateStr = sellerPayoutReleaseAt.toLocaleString("en-NG", {
       weekday: "long",
       year: "numeric",
       month: "long",
       day: "numeric",
+      hour: "2-digit",
+      minute: "2-digit",
     });
 
     order.deliveryStatus = "delivered";
@@ -162,11 +164,11 @@ export async function PATCH(req: NextRequest, { params }: Params) {
               <div style="background:linear-gradient(135deg,#fdf8e8,#DBEAFE);border:1px solid #BFDBFE;border-radius:12px;padding:20px;margin-bottom:24px;">
                 <p style="font-size:13px;font-weight:700;color:#1E40AF;margin:0 0 8px;">🏦 When Will You Get Paid?</p>
                 <p style="font-size:13px;color:#A4860E;line-height:1.6;margin:0 0 12px;">
-                  Your payout is held for a <strong>3-day buyer protection period</strong> after delivery confirmation. This helps ensure both buyers and sellers are protected.
+                  Your payout is automatically released <strong>24 hours after delivery confirmation</strong>. This gives buyers just enough time to flag any issues while ensuring sellers are paid quickly.
                 </p>
                 <div style="background:#fff;border-radius:8px;padding:12px 16px;border:1px solid #BFDBFE;">
-                  <p style="font-size:12px;color:#9B9B9B;margin:0 0 4px;text-transform:uppercase;letter-spacing:0.05em;">Expected Payout Date</p>
-                  <p style="font-size:15px;font-weight:800;color:#1E40AF;margin:0;">📅 ${payoutDateStr}</p>
+                  <p style="font-size:12px;color:#9B9B9B;margin:0 0 4px;text-transform:uppercase;letter-spacing:0.05em;">Auto-Release At</p>
+                  <p style="font-size:15px;font-weight:800;color:#1E40AF;margin:0;">⏰ ${payoutDateStr}</p>
                 </div>
                 <p style="font-size:12px;color:#6B6B6B;margin:12px 0 0;">Once released, the funds will be transferred to your registered bank account. Keep your bank details up to date in your seller settings.</p>
               </div>

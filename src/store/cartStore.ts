@@ -20,11 +20,18 @@ export const useCartStore = create<CartStore>()(
       items: [],
 
       addItem: (item) => {
-        const existing = get().items.find((i) => i.productId === item.productId);
+        const existing = get().items.find(
+          (i) =>
+            i.productId === item.productId &&
+            (i.selectedSize ?? "") === (item.selectedSize ?? "") &&
+            (i.selectedColor ?? "") === (item.selectedColor ?? "")
+        );
         if (existing) {
           set((state) => ({
             items: state.items.map((i) =>
-              i.productId === item.productId
+              i.productId === item.productId &&
+              (i.selectedSize ?? "") === (item.selectedSize ?? "") &&
+              (i.selectedColor ?? "") === (item.selectedColor ?? "")
                 ? { ...i, quantity: Math.min(i.quantity + item.quantity, i.stock) }
                 : i
             ),
