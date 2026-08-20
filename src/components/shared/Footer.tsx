@@ -63,11 +63,10 @@ export default function Footer() {
               <li>
                 <Link
                   href="/help"
-                  className="hover:text-[#A4860E] font-medium transition-colors flex items-center gap-1.5"
+                  className="hover:text-[#111111] font-medium transition-colors flex items-center gap-1.5"
                 >
-                  {" "}
-                  Help Desk
-                </Link>
+                  Help Desk{" "}
+                </Link>{" "}
               </li>
               <li>
                 <Link
