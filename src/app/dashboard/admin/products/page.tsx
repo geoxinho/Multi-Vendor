@@ -18,9 +18,10 @@ interface Product {
 export default function AdminProductsPage() {
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
+  const [search, setSearch] = useState("");
 
   const fetchProducts = () => {
-    fetch("/api/products?limit=50&sort=-createdAt")
+    fetch("/api/products?limit=100&sort=-createdAt")
       .then((r) => r.json())
       .then((d) => { setProducts(d.products ?? []); setLoading(false); });
   };
@@ -42,9 +43,24 @@ export default function AdminProductsPage() {
     fetchProducts();
   };
 
+  const filtered = products.filter(p =>
+    !search ||
+    p.title.toLowerCase().includes(search.toLowerCase()) ||
+    (p.seller?.storeName || p.seller?.name || "").toLowerCase().includes(search.toLowerCase())
+  );
+
   return (
     <div>
-      <h1 className="text-2xl font-bold text-gray-900 mb-8">All Products</h1>
+      <div className="flex flex-wrap items-center justify-between gap-4 mb-8">
+        <h1 className="text-2xl font-bold text-gray-900">All Products</h1>
+        <input
+          type="text"
+          placeholder="Search title or seller…"
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          className="px-3 py-1.5 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#A4860E]/30 focus:border-[#A4860E] w-56"
+        />
+      </div>
 
       {loading ? <LoadingSpinner className="py-32" size="lg" /> : (
         <div className="bg-white rounded-2xl border border-gray-100 overflow-x-auto">
@@ -57,11 +73,11 @@ export default function AdminProductsPage() {
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-50">
-              {products.map((p) => (
+              {filtered.map((p) => (
                 <tr key={p._id} className="hover:bg-gray-50 transition-colors">
                   <td className="px-4 py-3 font-medium text-gray-900 max-w-[180px] truncate">{p.title}</td>
                   <td className="px-4 py-3 text-gray-500 text-xs">{p.seller?.storeName || p.seller?.name}</td>
-                  <td className="px-4 py-3 text-green-700 font-semibold">₦{p.price.toLocaleString()}</td>
+                  <td className="px-4 py-3 text-[#A4860E] font-semibold">₦{p.price.toLocaleString()}</td>
                   <td className="px-4 py-3">
                     <span className={`badge ${p.condition === "new" ? "bg-green-100 text-green-700" : "bg-yellow-100 text-yellow-700"}`}>
                       {p.condition}
@@ -85,11 +101,11 @@ export default function AdminProductsPage() {
                   </td>
                 </tr>
               ))}
+              {filtered.length === 0 && (
+                <tr><td colSpan={8} className="py-12 text-center text-gray-400">No products found.</td></tr>
+              )}
             </tbody>
           </table>
-          {products.length === 0 && (
-            <div className="p-10 text-center text-gray-400">No products found.</div>
-          )}
         </div>
       )}
     </div>

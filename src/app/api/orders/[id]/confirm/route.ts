@@ -129,9 +129,6 @@ export async function PATCH(req: NextRequest, { params }: Params) {
       </body>
       </html>
     `;
-      </body>
-      </html>
-    `;
 
     // ── Email to SELLER ─────────────────────────────────────────────
     const sellerHtml = `

@@ -7,15 +7,14 @@ export default function Footer() {
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-8">
           {/* Brand */}
           <div className="lg:col-span-2">
-            <div className="flex items-center gap-2 mb-4">
-              <img
-                src="/logo.png"
-                alt="CampusGo"
-                className="h-7 w-auto object-contain"
-              />
-              <span className="font-bold text-lg text-[#111111]">
-                Campus<span className="text-[#A4860E]">Go</span>
-              </span>
+            <div className="flex items-center mb-4">
+              <Link href="/">
+                <img
+                  src="/main_logo.png"
+                  alt="Marketplace Logo"
+                  className="h-14 sm:h-16 w-auto object-contain hover:scale-105 transition-transform"
+                />
+              </Link>
             </div>
             <p className="text-sm text-[#6B6B6B] leading-relaxed max-w-sm">
               Nigeria&apos;s modern multi-vendor marketplace. Buy and sell new
@@ -65,8 +64,8 @@ export default function Footer() {
                   href="/help"
                   className="hover:text-[#111111] font-medium transition-colors"
                 >
-                  Help Desk{" "}
-                </Link>{" "}
+                  Help Desk
+                </Link>
               </li>
               <li>
                 <Link

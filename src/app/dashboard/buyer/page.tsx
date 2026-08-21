@@ -18,11 +18,16 @@ export default async function BuyerDashboardPage() {
     .reduce((sum, o) => sum + o.totalAmount, 0);
   const delivered = orders.filter((o) => o.deliveryStatus === "delivered").length;
 
+  const currentHour = new Date().getHours();
+  const greeting = currentHour < 12 ? "Good Morning" : currentHour < 17 ? "Good Afternoon" : "Good Evening";
+
   return (
     <div>
       <div className="mb-8">
-        <h1 className="text-2xl font-bold text-gray-900">Welcome, {session!.user.name}! <i className="fa-solid fa-hand-wave text-yellow-400" /></h1>
-        <p className="text-gray-500 mt-1">Here&apos;s an overview of your account.</p>
+        <h1 className="text-2xl sm:text-3xl font-extrabold text-gray-900 flex items-center gap-2">
+          <span>{greeting}, {session!.user.name}!</span> <i className="fa-solid fa-hand-wave text-yellow-400 text-xl" />
+        </h1>
+        <p className="text-gray-500 mt-1 text-sm">Here&apos;s an overview of your account and orders.</p>
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-8">

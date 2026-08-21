@@ -139,7 +139,7 @@ export default function Navbar() {
             {/* Left: Logo */}
             <div className="flex-1 flex justify-start">
               <Link href="/" className="flex items-center shrink-0 group">
-                <img src="/main_logo.png" alt="CampusGo" className="h-11 w-auto object-contain group-hover:scale-105 transition-transform duration-300" />
+                <img src="/main_logo.png" alt="Marketplace Logo" className="h-12 md:h-14 w-auto object-contain group-hover:scale-105 transition-transform duration-300" />
               </Link>
             </div>
 
@@ -298,7 +298,7 @@ export default function Navbar() {
           {/* Header */}
           <div className="flex items-center justify-between px-6 py-5 border-b border-gray-100 shrink-0">
             <Link href="/" onClick={() => setMobileMenuOpen(false)} className="flex items-center">
-              <img src="/main_logo.png" alt="CampusGo" className="h-9 w-auto object-contain" />
+              <img src="/main_logo.png" alt="Marketplace Logo" className="h-11 w-auto object-contain" />
             </Link>
             <button onClick={() => setMobileMenuOpen(false)} className="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center text-gray-900 hover:bg-gray-200 transition-colors">
               <i className="fa-solid fa-xmark" />

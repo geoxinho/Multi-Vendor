@@ -31,6 +31,11 @@ const navItems = [
     label: "Messages",
     icon: <i className="fa-solid fa-envelope text-lg" />,
   },
+  {
+    href: "/dashboard/seller/settings",
+    label: "Settings",
+    icon: <i className="fa-solid fa-gear text-lg" />,
+  },
 ];
 
 export default function SellerLayout({ children }: { children: React.ReactNode }) {

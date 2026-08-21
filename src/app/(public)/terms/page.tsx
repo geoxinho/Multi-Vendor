@@ -12,9 +12,8 @@ export default function TermsPage() {
       {/* Header */}
       <div className="border-b border-[#E5E5E5] bg-white/80 backdrop-blur-sm sticky top-0 z-10">
         <div className="max-w-4xl mx-auto px-4 py-4 flex items-center justify-between">
-          <Link href="/" className="inline-flex items-center gap-2">
-            <img src="/main_logo.png" alt="CampusGo" className="h-8 w-auto object-contain" />
-            <span className="font-bold text-lg text-[#111111]">Campus<span className="text-[#A4860E]">Go</span></span>
+          <Link href="/" className="inline-flex items-center">
+            <img src="/main_logo.png" alt="Marketplace Logo" className="h-12 w-auto object-contain hover:scale-105 transition-transform" />
           </Link>
           <Link href="/help"
             className="text-sm text-[#A4860E] font-semibold hover:underline flex items-center gap-1.5">

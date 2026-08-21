@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import { connectDB } from "@/lib/db";
 import { Product } from "@/models/Product";
 import { Order } from "@/models/Order";
+import { User } from "@/models/User";
 import StatCard from "@/components/dashboard/StatCard";
 import Link from "next/link";
 import type { Metadata } from "next";
@@ -20,13 +21,16 @@ export default async function SellerDashboardPage() {
   if (!session?.user) notFound();
   await connectDB();
 
-  const [products, orders] = await Promise.all([
+  const [products, orders, sellerUser] = await Promise.all([
     Product.find({ seller: session!.user.id }).lean(),
     Order.find({
       "items.seller": session!.user.id,
       paymentStatus: "paid",
     }).lean(),
+    User.findById(session!.user.id).select("name storeName").lean(),
   ]);
+
+  const brandName = sellerUser?.storeName || session.user.storeName || sellerUser?.name || session.user.name || "Seller";
 
   const revenue = orders.reduce((sum, o) => {
     const sellerItems = o.items.filter(
@@ -66,13 +70,18 @@ export default async function SellerDashboardPage() {
   const undeliveredCount = orders.filter((o) => o.deliveryStatus !== "delivered").length;
   const lowStockAlerts = products.filter((p) => p.status === "active" && p.stock <= 3);
 
+  const currentHour = new Date().getHours();
+  const greeting = currentHour < 12 ? "Good Morning" : currentHour < 17 ? "Good Afternoon" : "Good Evening";
+
   return (
     <div>
       <div className="flex items-center justify-between mb-8">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Seller Dashboard</h1>
-          <p className="text-gray-500 mt-1">
-            Manage your store and track performance.
+          <h1 className="text-2xl sm:text-3xl font-extrabold text-gray-900 flex items-center gap-2">
+            <span>{greeting}, {session.user.name || sellerUser?.name || "Seller"}!</span> <i className="fa-solid fa-hand-wave text-yellow-400 text-xl" />
+          </h1>
+          <p className="text-gray-500 mt-1 text-sm">
+            Seller Dashboard &bull; Manage your store and track performance.
           </p>
         </div>
         <Link

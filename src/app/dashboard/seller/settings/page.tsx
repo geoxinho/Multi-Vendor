@@ -6,10 +6,12 @@ import { toast } from "sonner";
 import BankAccountVerifier from "@/components/seller/BankAccountVerifier";
 
 interface SettingsData {
+  name: string;
   phone: string;
   storeName: string;
   storeDescription: string;
   lastBrandNameChangeAt: string | null;
+  lastNameChangeAt: string | null;
   bankDetails?: {
     bankName: string;
     bankCode: string;
@@ -26,19 +28,22 @@ interface VerifiedAccount {
 }
 
 export default function SellerSettingsPage() {
-  const { data: session } = useSession();
+  const { data: session, update } = useSession();
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [savingBank, setSavingBank] = useState(false);
 
   const [settings, setSettings] = useState<SettingsData>({
+    name: "",
     phone: "",
     storeName: "",
     storeDescription: "",
     lastBrandNameChangeAt: null,
+    lastNameChangeAt: null,
   });
 
   const [daysUntilBrandChange, setDaysUntilBrandChange] = useState(0);
+  const [daysUntilNameChange, setDaysUntilNameChange] = useState(0);
   const [verifiedAccount, setVerifiedAccount] = useState<VerifiedAccount | null>(null);
 
   useEffect(() => {
@@ -56,6 +61,16 @@ export default function SellerSettingsPage() {
               (now.getTime() - lastChange.getTime()) / (1000 * 3600 * 24);
             if (daysSinceChange < 365) {
               setDaysUntilBrandChange(Math.ceil(365 - daysSinceChange));
+            }
+          }
+
+          if (data.lastNameChangeAt) {
+            const lastChange = new Date(data.lastNameChangeAt);
+            const now = new Date();
+            const daysSinceChange =
+              (now.getTime() - lastChange.getTime()) / (1000 * 3600 * 24);
+            if (daysSinceChange < 365) {
+              setDaysUntilNameChange(Math.ceil(365 - daysSinceChange));
             }
           }
         } else {
@@ -92,7 +107,10 @@ export default function SellerSettingsPage() {
 
       if (res.ok) {
         toast.success(data.message || "Settings updated successfully!");
-        if (daysUntilBrandChange === 0) {
+        if (update) {
+          await update({ name: settings.name, storeName: settings.storeName });
+        }
+        if (daysUntilBrandChange === 0 && settings.storeName) {
           setSettings((prev) => ({
             ...prev,
             lastBrandNameChangeAt: new Date().toISOString(),
@@ -158,6 +176,7 @@ export default function SellerSettingsPage() {
   }, []);
 
   const isBrandNameLocked = daysUntilBrandChange > 0;
+  const isNameLocked = daysUntilNameChange > 0;
   const hasSavedBankDetails = !!settings.bankDetails?.accountNumber;
 
   if (loading) {
@@ -194,11 +213,13 @@ export default function SellerSettingsPage() {
             </label>
             <input
               type="text"
-              value={session?.user?.name || ""}
+              value={settings.name}
               disabled
               className="w-full px-4 py-2.5 rounded-xl border border-[#E5E5E5] bg-[#FAFAFA] text-[#9B9B9B] cursor-not-allowed text-sm"
             />
-            <p className="text-xs text-[#9B9B9B] mt-1">Your personal name cannot be changed.</p>
+            <p className="text-xs text-[#9B9B9B] mt-1">
+              Your personal name cannot be changed. Contact support if you need to update it.
+            </p>
           </div>
 
           <hr className="border-[#F5F5F5]" />
@@ -329,6 +350,7 @@ export default function SellerSettingsPage() {
             initialBankCode={settings.bankDetails?.bankCode}
             initialBankName={settings.bankDetails?.bankName}
             initialAccountNumber={settings.bankDetails?.accountNumber}
+            initialAccountName={settings.bankDetails?.accountName}
           />
 
           {/* Save Bank Details button */}

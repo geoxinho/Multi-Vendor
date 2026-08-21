@@ -8,20 +8,20 @@ interface Bank {
   slug: string;
 }
 
-interface VerifiedAccount {
+export interface VerifiedAccount {
   accountName: string;
   accountNumber: string;
   bankCode: string;
   bankName: string;
+  isManual?: boolean;
 }
 
 interface BankAccountVerifierProps {
-  /** Called once verification succeeds. Pass null to clear. */
   onVerified: (details: VerifiedAccount | null) => void;
-  /** Optional initial values (e.g. when editing) */
   initialBankCode?: string;
   initialBankName?: string;
   initialAccountNumber?: string;
+  initialAccountName?: string;
 }
 
 export default function BankAccountVerifier({
@@ -29,8 +29,8 @@ export default function BankAccountVerifier({
   initialBankCode = "",
   initialBankName = "",
   initialAccountNumber = "",
+  initialAccountName = "",
 }: BankAccountVerifierProps) {
-  // ── State ─────────────────────────────────────────────────────────
   const [banks, setBanks] = useState<Bank[]>([]);
   const [banksLoading, setBanksLoading] = useState(true);
   const [banksError, setBanksError] = useState("");
@@ -43,19 +43,31 @@ export default function BankAccountVerifier({
 
   const [verifying, setVerifying] = useState(false);
   const [verifyError, setVerifyError] = useState("");
-  const [verifiedAccount, setVerifiedAccount] = useState<VerifiedAccount | null>(null);
+  const [allowManual, setAllowManual] = useState(false);
+  const [manualAccountName, setManualAccountName] = useState(initialAccountName);
+  const [isManualMode, setIsManualMode] = useState(false);
+  const [verifiedAccount, setVerifiedAccount] = useState<VerifiedAccount | null>(
+    initialAccountName && initialAccountNumber && initialBankCode
+      ? {
+          accountName: initialAccountName,
+          accountNumber: initialAccountNumber,
+          bankCode: initialBankCode,
+          bankName: initialBankName,
+        }
+      : null
+  );
 
   const dropdownRef = useRef<HTMLDivElement>(null);
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  // ── Load bank list once ───────────────────────────────────────────
+  // Load bank list once
   useEffect(() => {
     const load = async () => {
       try {
         const res = await fetch("/api/banks");
         const json = await res.json();
         if (!res.ok) throw new Error(json.error || "Failed to load banks");
-        setBanks(json.banks);
+        setBanks(json.banks || []);
       } catch (e: unknown) {
         setBanksError(e instanceof Error ? e.message : "Failed to load banks");
       } finally {
@@ -65,7 +77,21 @@ export default function BankAccountVerifier({
     load();
   }, []);
 
-  // ── Close dropdown when clicking outside ─────────────────────────
+  // Sync initial verified status if provided
+  useEffect(() => {
+    if (initialAccountName && initialAccountNumber && initialBankCode && !verifiedAccount) {
+      const initial: VerifiedAccount = {
+        accountName: initialAccountName,
+        accountNumber: initialAccountNumber,
+        bankCode: initialBankCode,
+        bankName: initialBankName,
+      };
+      setVerifiedAccount(initial);
+      onVerified(initial);
+    }
+  }, [initialAccountName, initialAccountNumber, initialBankCode, initialBankName, onVerified, verifiedAccount]);
+
+  // Close dropdown when clicking outside
   useEffect(() => {
     const handler = (e: MouseEvent) => {
       if (dropdownRef.current && !dropdownRef.current.contains(e.target as Node)) {
@@ -76,20 +102,20 @@ export default function BankAccountVerifier({
     return () => document.removeEventListener("mousedown", handler);
   }, []);
 
-  // ── Filtered bank list ────────────────────────────────────────────
   const filteredBanks = banks.filter((b) =>
     b.name.toLowerCase().includes(search.toLowerCase())
   );
 
-  // ── Trigger verification when both fields are ready ───────────────
+  // Trigger Paystack verification
   const verify = useCallback(
     async (acctNum: string, bCode: string, bName: string) => {
       if (acctNum.length !== 10 || !bCode) return;
 
       setVerifying(true);
       setVerifyError("");
+      setAllowManual(false);
       setVerifiedAccount(null);
-      onVerified(null); // Clear parent state while re-verifying
+      onVerified(null);
 
       try {
         const res = await fetch("/api/verify-account", {
@@ -99,8 +125,15 @@ export default function BankAccountVerifier({
         });
         const json = await res.json();
 
+        if (json.manual) {
+          setIsManualMode(true);
+          setVerifyError(json.message || "Manual account name entry required.");
+          return;
+        }
+
         if (!res.ok) {
-          setVerifyError(json.error || "Verification failed. Please try again.");
+          setVerifyError(json.error || "Verification failed.");
+          setAllowManual(!!json.allowManual);
           return;
         }
 
@@ -113,7 +146,8 @@ export default function BankAccountVerifier({
         setVerifiedAccount(verified);
         onVerified(verified);
       } catch {
-        setVerifyError("Network error. Please check your connection and try again.");
+        setVerifyError("Network error. Click below to enter your account name manually.");
+        setAllowManual(true);
       } finally {
         setVerifying(false);
       }
@@ -121,26 +155,35 @@ export default function BankAccountVerifier({
     [onVerified]
   );
 
-  // ── Debounced auto-verify on input change ─────────────────────────
   const scheduleVerify = useCallback(
     (acctNum: string, bCode: string, bName: string) => {
       if (debounceRef.current) clearTimeout(debounceRef.current);
-      // Clear stale results immediately
       setVerifiedAccount(null);
       setVerifyError("");
       onVerified(null);
       if (acctNum.length === 10 && bCode) {
-        debounceRef.current = setTimeout(() => verify(acctNum, bCode, bName), 800);
+        debounceRef.current = setTimeout(() => verify(acctNum, bCode, bName), 600);
       }
     },
     [verify, onVerified]
   );
 
-  // ── Handlers ─────────────────────────────────────────────────────
   const handleAccountNumberChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const val = e.target.value.replace(/\D/g, "").slice(0, 10);
     setAccountNumber(val);
-    scheduleVerify(val, bankCode, bankName);
+    if (isManualMode && manualAccountName.trim().length >= 3 && val.length === 10 && bankCode) {
+      const verified: VerifiedAccount = {
+        accountName: manualAccountName.trim().toUpperCase(),
+        accountNumber: val,
+        bankCode,
+        bankName,
+        isManual: true,
+      };
+      setVerifiedAccount(verified);
+      onVerified(verified);
+    } else {
+      scheduleVerify(val, bankCode, bankName);
+    }
   };
 
   const handleBankSelect = (bank: Bank) => {
@@ -148,32 +191,61 @@ export default function BankAccountVerifier({
     setBankName(bank.name);
     setSearch(bank.name);
     setDropdownOpen(false);
-    scheduleVerify(accountNumber, bank.code, bank.name);
+    if (isManualMode && manualAccountName.trim().length >= 3 && accountNumber.length === 10) {
+      const verified: VerifiedAccount = {
+        accountName: manualAccountName.trim().toUpperCase(),
+        accountNumber,
+        bankCode: bank.code,
+        bankName: bank.name,
+        isManual: true,
+      };
+      setVerifiedAccount(verified);
+      onVerified(verified);
+    } else {
+      scheduleVerify(accountNumber, bank.code, bank.name);
+    }
   };
 
-  const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setSearch(e.target.value);
-    // If user is typing a new search, clear the selected bank
-    if (bankCode && e.target.value !== bankName) {
-      setBankCode("");
-      setBankName("");
+  const handleManualNameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const val = e.target.value;
+    setManualAccountName(val);
+    if (val.trim().length >= 3 && accountNumber.length === 10 && bankCode) {
+      const verified: VerifiedAccount = {
+        accountName: val.trim().toUpperCase(),
+        accountNumber,
+        bankCode,
+        bankName,
+        isManual: true,
+      };
+      setVerifiedAccount(verified);
+      onVerified(verified);
+    } else {
       setVerifiedAccount(null);
-      setVerifyError("");
       onVerified(null);
     }
-    setDropdownOpen(true);
   };
 
-  // ── Render ────────────────────────────────────────────────────────
+  const enableManualMode = () => {
+    setIsManualMode(true);
+    setVerifyError("");
+    if (manualAccountName.trim().length >= 3 && accountNumber.length === 10 && bankCode) {
+      const verified: VerifiedAccount = {
+        accountName: manualAccountName.trim().toUpperCase(),
+        accountNumber,
+        bankCode,
+        bankName,
+        isManual: true,
+      };
+      setVerifiedAccount(verified);
+      onVerified(verified);
+    }
+  };
+
   return (
     <div className="space-y-5">
-
       {/* ── Bank Selector ── */}
       <div>
-        <label
-          htmlFor="bank-search"
-          className="block text-sm font-semibold text-[#111111] mb-1.5"
-        >
+        <label htmlFor="bank-search" className="block text-sm font-semibold text-[#111111] mb-1.5">
           Bank Name <span className="text-red-500">*</span>
         </label>
 
@@ -184,14 +256,7 @@ export default function BankAccountVerifier({
           </div>
         ) : banksError ? (
           <div className="px-4 py-3 rounded-xl border border-red-200 bg-red-50 text-sm text-red-600">
-            {banksError} —{" "}
-            <button
-              type="button"
-              onClick={() => window.location.reload()}
-              className="underline font-medium"
-            >
-              Retry
-            </button>
+            {banksError}
           </div>
         ) : (
           <div className="relative" ref={dropdownRef}>
@@ -204,7 +269,17 @@ export default function BankAccountVerifier({
                 type="text"
                 autoComplete="off"
                 value={search}
-                onChange={handleSearchChange}
+                onChange={(e) => {
+                  setSearch(e.target.value);
+                  if (bankCode && e.target.value !== bankName) {
+                    setBankCode("");
+                    setBankName("");
+                    setVerifiedAccount(null);
+                    setVerifyError("");
+                    onVerified(null);
+                  }
+                  setDropdownOpen(true);
+                }}
                 onFocus={() => setDropdownOpen(true)}
                 placeholder="Search and select your bank…"
                 className="w-full pl-9 pr-4 py-2.5 rounded-xl border border-[#E5E5E5] focus:outline-none focus:ring-2 focus:ring-[#A4860E]/40 focus:border-[#A4860E] bg-white text-sm transition-colors"
@@ -216,7 +291,6 @@ export default function BankAccountVerifier({
               )}
             </div>
 
-            {/* Dropdown */}
             {dropdownOpen && (
               <div className="absolute z-50 left-0 right-0 mt-1 bg-white border border-[#E5E5E5] rounded-xl shadow-lg max-h-56 overflow-y-auto">
                 {filteredBanks.length === 0 ? (
@@ -228,9 +302,7 @@ export default function BankAccountVerifier({
                       type="button"
                       onClick={() => handleBankSelect(bank)}
                       className={`w-full text-left px-4 py-2.5 text-sm hover:bg-[#fdf8e8] transition-colors ${
-                        bank.code === bankCode
-                          ? "bg-[#fdf8e8] text-[#A4860E] font-semibold"
-                          : "text-[#111111]"
+                        bank.code === bankCode ? "bg-[#fdf8e8] text-[#A4860E] font-semibold" : "text-[#111111]"
                       }`}
                     >
                       {bank.name}
@@ -245,10 +317,7 @@ export default function BankAccountVerifier({
 
       {/* ── Account Number ── */}
       <div>
-        <label
-          htmlFor="account-number"
-          className="block text-sm font-semibold text-[#111111] mb-1.5"
-        >
+        <label htmlFor="account-number" className="block text-sm font-semibold text-[#111111] mb-1.5">
           Account Number <span className="text-red-500">*</span>
         </label>
         <input
@@ -270,7 +339,27 @@ export default function BankAccountVerifier({
         </div>
       </div>
 
-      {/* ── Verification Status ── */}
+      {/* ── Manual Account Name Entry Mode ── */}
+      {isManualMode && (
+        <div>
+          <label htmlFor="manual-name" className="block text-sm font-semibold text-[#111111] mb-1.5">
+            Account Holder Name <span className="text-red-500">*</span>
+          </label>
+          <input
+            id="manual-name"
+            type="text"
+            value={manualAccountName}
+            onChange={handleManualNameChange}
+            placeholder="e.g. JOHN OLAREWAJU"
+            className="w-full px-4 py-2.5 rounded-xl border border-[#E5E5E5] focus:outline-none focus:ring-2 focus:ring-[#A4860E]/40 focus:border-[#A4860E] bg-white text-sm font-medium uppercase tracking-wide transition-colors"
+          />
+          <p className="text-xs text-[#9B9B9B] mt-1">
+            Enter the exact full name registered on your bank account.
+          </p>
+        </div>
+      )}
+
+      {/* ── Verification Status Banner ── */}
       {(verifying || verifyError || verifiedAccount) && (
         <div
           className={`flex items-start gap-3 px-4 py-3.5 rounded-xl border text-sm ${
@@ -284,36 +373,42 @@ export default function BankAccountVerifier({
           {verifying ? (
             <>
               <i className="fa-solid fa-circle-notch animate-spin text-sm mt-0.5 shrink-0" />
-              <span className="font-medium">Verifying account…</span>
+              <span className="font-medium">Verifying account with Paystack…</span>
             </>
           ) : verifiedAccount ? (
             <>
               <i className="fa-solid fa-circle-check text-base mt-0.5 shrink-0" />
-              <div>
-                <p className="font-bold">Account Verified ✓</p>
-                <p className="font-semibold text-[#111111] mt-0.5 uppercase tracking-wide">
+              <div className="flex-1 min-w-0">
+                <p className="font-bold">
+                  {verifiedAccount.isManual ? "Account Details Set ✓" : "Account Verified ✓"}
+                </p>
+                <p className="font-semibold text-[#111111] mt-0.5 uppercase tracking-wide truncate">
                   {verifiedAccount.accountName}
+                </p>
+                <p className="text-xs text-[#6B6B6B] mt-0.5">
+                  {verifiedAccount.bankName} · {verifiedAccount.accountNumber}
                 </p>
               </div>
             </>
           ) : (
             <>
               <i className="fa-solid fa-circle-exclamation text-base mt-0.5 shrink-0" />
-              <div>
-                <p className="font-semibold">Verification Failed</p>
+              <div className="flex-1 min-w-0">
+                <p className="font-semibold">Verification Notice</p>
                 <p className="text-xs mt-0.5">{verifyError}</p>
+                {(!isManualMode || allowManual) && (
+                  <button
+                    type="button"
+                    onClick={enableManualMode}
+                    className="mt-2 text-xs font-bold underline hover:opacity-80 transition-opacity"
+                  >
+                    Click here to enter your account name manually →
+                  </button>
+                )}
               </div>
             </>
           )}
         </div>
-      )}
-
-      {/* ── Empty-state prompt ── */}
-      {!verifying && !verifyError && !verifiedAccount && accountNumber.length > 0 && accountNumber.length < 10 && (
-        <p className="text-xs text-[#9B9B9B] flex items-center gap-1.5">
-          <i className="fa-solid fa-circle-info text-xs shrink-0" />
-          Enter all 10 digits to auto-verify your account
-        </p>
       )}
     </div>
   );

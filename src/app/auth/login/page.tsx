@@ -69,15 +69,14 @@ function LoginForm() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-[#fdf8e8]/30 via-white to-white flex items-center justify-center px-4 py-12">
-      <div className="w-full max-w-md">
+      <div className="w-full max-w-xl md:max-w-2xl">
         {/* Logo */}
         <div className="text-center mb-8">
-          <Link href="/" className="inline-flex items-center gap-2">
-            <img src="/main_logo.png" alt="CampusGo" className="h-10 w-auto object-contain" />
-            <span className="font-bold text-2xl text-[#111111]">Campus<span className="text-[#A4860E]">Go</span></span>
+          <Link href="/" className="inline-flex items-center justify-center">
+            <img src="/main_logo.png" alt="Marketplace Logo" className="h-16 md:h-20 w-auto object-contain hover:scale-105 transition-transform" />
           </Link>
-          <h1 className="text-2xl font-bold text-[#111111] mt-6 mb-1">Sign in</h1>
-          <p className="text-sm text-[#6B6B6B]">Welcome back to CampusGo.</p>
+          <h1 className="text-2xl sm:text-3xl font-extrabold text-[#111111] mt-6 mb-1">Sign in</h1>
+          <p className="text-sm text-[#6B6B6B]">Welcome back to your account.</p>
         </div>
 
         <div className="border border-[#E5E5E5] rounded-2xl p-7 bg-white shadow-lg shadow-gray-100/50">

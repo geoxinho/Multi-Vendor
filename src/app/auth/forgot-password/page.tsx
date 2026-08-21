@@ -35,9 +35,8 @@ function ForgotPasswordForm() {
 
           {/* Logo */}
           <div className="text-center mb-8">
-            <Link href="/" className="inline-flex items-center gap-2 group">
-              <img src="/logo.png" alt="CampusGo" className="h-10 w-auto object-contain" />
-              <span className="font-bold text-2xl text-gray-900">Campus<span className="text-green-600">Go</span></span>
+            <Link href="/" className="inline-flex items-center justify-center">
+              <img src="/main_logo.png" alt="Marketplace Logo" className="h-16 w-auto object-contain hover:scale-105 transition-transform" />
             </Link>
           </div>
 

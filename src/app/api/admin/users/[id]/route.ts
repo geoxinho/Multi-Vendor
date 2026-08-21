@@ -15,7 +15,7 @@ export async function PATCH(req: NextRequest, { params }: Params) {
     await connectDB();
     const { id } = await params;
     const body = await req.json();
-    const { role, isBanned } = body;
+    const { role, isBanned, name, email, phone, storeName } = body;
 
     // Prevent self-demotion
     if (id === session.user.id && role && role !== "admin") {
@@ -26,6 +26,10 @@ export async function PATCH(req: NextRequest, { params }: Params) {
     const updates: any = {};
     if (role && ["buyer", "seller", "admin"].includes(role)) updates.role = role;
     if (typeof isBanned === "boolean") updates.isBanned = isBanned;
+    if (name && typeof name === "string" && name.trim()) updates.name = name.trim();
+    if (email && typeof email === "string" && email.trim()) updates.email = email.trim().toLowerCase();
+    if (typeof phone === "string") updates.phone = phone.trim();
+    if (typeof storeName === "string") updates.storeName = storeName.trim();
 
     const user = await User.findByIdAndUpdate(id, updates, { new: true }).select("-password");
     if (!user) return NextResponse.json({ error: "User not found" }, { status: 404 });

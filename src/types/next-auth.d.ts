@@ -5,6 +5,7 @@ declare module "next-auth" {
     id: string;
     role: string;
     roles: string[];
+    storeName?: string;
   }
   interface Session {
     user: {
@@ -14,6 +15,7 @@ declare module "next-auth" {
       image?: string | null;
       role: string;
       roles: string[];
+      storeName?: string;
     };
   }
 }
@@ -22,5 +24,6 @@ declare module "next-auth/jwt" {
   interface JWT {
     id: string;
     role: string;
+    storeName?: string;
   }
 }

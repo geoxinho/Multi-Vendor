@@ -37,3 +37,39 @@ export async function GET(_req: NextRequest, { params }: Params) {
     return NextResponse.json({ error: "Internal server error" }, { status: 500 });
   }
 }
+
+// Admin-only: update delivery/payment status
+export async function PATCH(req: NextRequest, { params }: Params) {
+  try {
+    const session = await auth();
+    if (!session || session.user.role !== "admin") {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
+    await connectDB();
+    const { id } = await params;
+    const body = await req.json();
+    const { deliveryStatus, paymentStatus } = body;
+
+    const VALID_DELIVERY = ["pending", "processing", "shipped", "delivered", "cancelled"];
+    const VALID_PAYMENT = ["pending", "paid", "failed", "refunded"];
+
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const updates: any = {};
+    if (deliveryStatus && VALID_DELIVERY.includes(deliveryStatus)) updates.deliveryStatus = deliveryStatus;
+    if (paymentStatus && VALID_PAYMENT.includes(paymentStatus)) updates.paymentStatus = paymentStatus;
+
+    if (Object.keys(updates).length === 0) {
+      return NextResponse.json({ error: "No valid fields to update" }, { status: 400 });
+    }
+
+    const order = await Order.findByIdAndUpdate(id, updates, { new: true });
+    if (!order) return NextResponse.json({ error: "Order not found" }, { status: 404 });
+
+    return NextResponse.json({ message: "Order updated", order });
+  } catch (err) {
+    console.error("[ORDER PATCH]", err);
+    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
+  }
+}
+

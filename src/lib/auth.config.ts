@@ -11,10 +11,12 @@ export const authConfig = {
         token.roles = (user as { roles?: string[] }).roles ?? [
           token.role as string,
         ];
+        token.storeName = (user as { storeName?: string }).storeName ?? "";
       }
       if (trigger === "update" && session) {
         if (session.role) token.role = session.role;
         if (session.roles) token.roles = session.roles;
+        if (session.storeName !== undefined) token.storeName = session.storeName;
       }
       return token;
     },
@@ -25,6 +27,7 @@ export const authConfig = {
         session.user.roles = (token.roles as string[]) ?? [
           token.role as string,
         ];
+        session.user.storeName = (token.storeName as string) ?? "";
       }
       return session;
     },

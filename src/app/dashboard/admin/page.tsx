@@ -28,11 +28,16 @@ export default async function AdminDashboardPage() {
     (o) => !o.sellerPaid && o.deliveredAt && o.sellerPayoutReleaseAt && o.sellerPayoutReleaseAt <= new Date()
   ).length;
 
+  const currentHour = new Date().getHours();
+  const greeting = currentHour < 12 ? "Good Morning" : currentHour < 17 ? "Good Afternoon" : "Good Evening";
+
   return (
     <div>
       <div className="mb-8">
-        <h1 className="text-2xl font-bold text-gray-900">Admin Overview</h1>
-        <p className="text-gray-500 mt-1">Platform-wide statistics and management.</p>
+        <h1 className="text-2xl sm:text-3xl font-extrabold text-gray-900 flex items-center gap-2">
+          <span>{greeting}, {session?.user?.name || "Admin"}!</span>
+        </h1>
+        <p className="text-gray-500 mt-1 text-sm">Platform-wide statistics and management.</p>
       </div>
 
       {/* Inventory Warnings for Admin */}

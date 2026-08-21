@@ -18,10 +18,12 @@ export async function GET(req: NextRequest) {
     }
 
     return NextResponse.json({
+      name: user.name || "",
       phone: user.phone || "",
       storeName: user.storeName || "",
       storeDescription: user.storeDescription || "",
       lastBrandNameChangeAt: user.lastBrandNameChangeAt || null,
+      lastNameChangeAt: user.lastNameChangeAt || null,
       bankDetails: user.bankDetails
         ? {
             bankName: user.bankDetails.bankName || "",
@@ -29,7 +31,7 @@ export async function GET(req: NextRequest) {
             accountNumber: user.bankDetails.accountNumber || "",
             accountName: user.bankDetails.accountName || "",
           }
-        : null,
+        : undefined,
     });
   } catch (error) {
     console.error("GET Seller Settings Error:", error);
@@ -45,7 +47,7 @@ export async function PUT(req: NextRequest) {
     }
 
     const body = await req.json();
-    const { phone, storeName, storeDescription, bankDetails } = body;
+    const { name, phone, storeName, storeDescription, bankDetails } = body;
 
     await connectDB();
     const user = await User.findById(session.user.id);
@@ -89,8 +91,7 @@ export async function PUT(req: NextRequest) {
       return NextResponse.json({ message: "Bank details saved successfully" });
     }
 
-    // ── Store info update ───────────────────────────────────────────
-    // Check if storeName is being changed
+    // ── Brand / Store name update (once per year) ───────────────────
     if (storeName && storeName !== user.storeName) {
       const now = new Date();
       if (user.lastBrandNameChangeAt) {
@@ -107,12 +108,12 @@ export async function PUT(req: NextRequest) {
           );
         }
       }
-
       user.storeName = storeName;
       user.lastBrandNameChangeAt = now;
     }
 
-    if (phone !== undefined) user.phone = phone;
+    // ── Phone & description (unrestricted) ─────────────────────────
+    if (phone !== undefined) user.phone = phone.trim();
     if (storeDescription !== undefined) user.storeDescription = storeDescription;
 
     await user.save();

@@ -5,7 +5,6 @@ import { Product } from "@/models/Product";
 import { User } from "@/models/User";
 import { Category } from "@/models/Category";
 import ProductGrid from "@/components/product/ProductGrid";
-import Onboarding from "@/components/shared/Onboarding";
 import type { Metadata } from "next";
 
 const HOME_DESCRIPTION =
@@ -208,7 +207,6 @@ export default async function HomePage() {
 
   return (
     <div className="bg-white min-h-screen">
-      <Onboarding />
       <script
         type="application/ld+json"
         suppressHydrationWarning
