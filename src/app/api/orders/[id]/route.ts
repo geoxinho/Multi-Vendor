@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { connectDB } from "@/lib/db";
 import { Order } from "@/models/Order";
+import { User } from "@/models/User";
+import { Product } from "@/models/Product";
 import { auth } from "@/lib/auth";
 
 type Params = { params: Promise<{ id: string }> };
@@ -20,10 +22,14 @@ export async function GET(_req: NextRequest, { params }: Params) {
 
     if (!order) return NextResponse.json({ error: "Order not found" }, { status: 404 });
 
-    const isBuyer = order.buyer._id.toString() === session.user.id;
+    const buyerId = order.buyer?._id ? order.buyer._id.toString() : order.buyer?.toString();
+    const isBuyer = buyerId === session.user.id;
     const isSeller = order.items.some(
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      (item: any) => item.seller?.toString() === session.user.id
+      (item: any) => {
+        const sId = item.seller?._id ? item.seller._id.toString() : item.seller?.toString();
+        return sId === session.user.id;
+      }
     );
     const isAdmin = session.user.role === "admin";
 

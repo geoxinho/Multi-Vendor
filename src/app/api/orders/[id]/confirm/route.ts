@@ -186,38 +186,54 @@ export async function PATCH(req: NextRequest, { params }: Params) {
       </html>
     `;
 
-    // Send emails (fire and forget — don't block the API response)
+    // Send emails (resolve emails reliably from DB if needed)
     const hasSMTP = process.env.SMTP_USER && process.env.SMTP_PASS;
     if (hasSMTP) {
-      const emailPromises: Promise<void>[] = [];
+      // 1. Resolve Buyer Email
+      let toBuyerEmail = (order.buyer as any)?.email;
+      if (!toBuyerEmail && order.buyer) {
+        const bId = (order.buyer as any)._id || order.buyer;
+        const bUser = await User.findById(bId).select("email").lean();
+        if (bUser) toBuyerEmail = bUser.email;
+      }
 
-      if (buyer?.email) {
-        emailPromises.push(
-          sendMail({
-            to: buyer.email,
+      if (toBuyerEmail) {
+        try {
+          await sendMail({
+            to: toBuyerEmail,
             subject: `🎉 Delivery Confirmed — Thank you for your purchase! | Order #${orderId}`,
             html: buyerHtml,
-          }).catch((e) => console.error("[EMAIL BUYER DELIVERY]", e))
-        );
+          });
+          console.log(`[EMAIL SUCCESS] Delivery confirmation sent to buyer: ${toBuyerEmail}`);
+        } catch (e) {
+          console.error("[EMAIL BUYER DELIVERY ERROR]", e);
+        }
+      } else {
+        console.error("[EMAIL BUYER DELIVERY ERROR] Could not determine buyer email.");
       }
 
-      // Notify each unique seller in the order
-      const sellersSeen = new Set<string>();
-      for (const item of order.items) {
-        const seller = item.seller as any;
-        if (seller?.email && !sellersSeen.has(seller.email)) {
-          sellersSeen.add(seller.email);
-          emailPromises.push(
-            sendMail({
-              to: seller.email,
-              subject: `💰 Sale Confirmed — Your product has been delivered! | Order #${orderId}`,
-              html: sellerHtml,
-            }).catch((e) => console.error("[EMAIL SELLER DELIVERY]", e))
-          );
+      // 2. Resolve Seller Emails
+      const sellerIds = [...new Set(order.items.map((item: any) => {
+        return item.seller?._id ? item.seller._id.toString() : item.seller?.toString();
+      }).filter(Boolean))];
+
+      if (sellerIds.length > 0) {
+        const sellerUsers = await User.find({ _id: { $in: sellerIds } }).select("email").lean();
+        for (const sUser of sellerUsers) {
+          if (sUser.email) {
+            try {
+              await sendMail({
+                to: sUser.email,
+                subject: `💰 Sale Confirmed — Your product has been delivered! | Order #${orderId}`,
+                html: sellerHtml,
+              });
+              console.log(`[EMAIL SUCCESS] Sale confirmation sent to seller: ${sUser.email}`);
+            } catch (e) {
+              console.error(`[EMAIL SELLER DELIVERY ERROR] ${sUser.email}:`, e);
+            }
+          }
         }
       }
-
-      await Promise.allSettled(emailPromises);
     }
 
     return NextResponse.json({ message: "Order delivery confirmed successfully", order });

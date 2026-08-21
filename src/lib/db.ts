@@ -2,6 +2,8 @@ import mongoose from "mongoose";
 import "@/models/User";
 import "@/models/Category";
 import "@/models/Product";
+import "@/models/Order";
+import "@/models/Message";
 
 interface MongooseCache {
   conn: typeof mongoose | null;
@@ -24,7 +26,7 @@ export async function connectDB() {
   if (!MONGODB_URI) {
     throw new Error(
       "MONGODB_URI environment variable is not defined. " +
-        "Add it to your Vercel project settings under Environment Variables.",
+        "Add it to your Vercel project settings under Environment Variables."
     );
   }
 

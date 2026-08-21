@@ -284,27 +284,38 @@ export async function sendOrderConfirmationEmails(
       });
 
       // Send to buyer
-      await transporter.sendMail({
-        from: smtpFrom,
-        to: buyerEmail,
-        subject: "Order Confirmation & Delivery PIN - CampusGo",
-        html: buyerHtml,
-      });
+      if (buyerEmail) {
+        try {
+          await transporter.sendMail({
+            from: smtpFrom,
+            to: buyerEmail,
+            subject: "Order Confirmation & Delivery PIN - CampusGo",
+            html: buyerHtml,
+          });
+          console.log(`[EMAIL SUCCESS] Order confirmation sent to buyer: ${buyerEmail}`);
+        } catch (buyerErr) {
+          console.error(`[EMAIL ERROR] Failed sending buyer confirmation to ${buyerEmail}:`, buyerErr);
+        }
+      }
 
       // Send personalised email to each seller
       for (const [email, items] of sellerItemsMap) {
         if (email) {
-          await transporter.sendMail({
-            from: smtpFrom,
-            to: email,
-            subject: "🎉 New Order Received - CampusGo",
-            html: buildSellerHtml(items),
-          });
+          try {
+            await transporter.sendMail({
+              from: smtpFrom,
+              to: email,
+              subject: "🎉 New Order Received - CampusGo",
+              html: buildSellerHtml(items),
+            });
+            console.log(`[EMAIL SUCCESS] New order alert sent to seller: ${email}`);
+          } catch (sellerErr) {
+            console.error(`[EMAIL ERROR] Failed sending seller order alert to ${email}:`, sellerErr);
+          }
         }
       }
-      console.log(`[EMAIL] Order emails sent for order ${order._id}`);
     } catch (err) {
-      console.error("[EMAIL ERROR] Failed to send order emails:", err);
+      console.error("[EMAIL ERROR] Transporter error sending order confirmation emails:", err);
     }
   } else {
     console.log(`[MOCK EMAIL] Order Confirmation to Buyer (${buyerEmail}). PIN: ${order.deliveryPin}`);

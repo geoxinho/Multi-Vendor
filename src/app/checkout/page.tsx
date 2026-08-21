@@ -92,34 +92,49 @@ export default function CheckoutPage() {
 
   const createOrder = async (paymentRef: string) => {
     setServerError("");
-    const res = await fetch("/api/orders", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        shippingAddress: address,
-        paymentRef,
-        items: items.map((i) => ({
+    setPaying(true);
+    try {
+      const res = await fetch("/api/orders", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          shippingAddress: address,
+          paymentRef,
+          items: items.map((i) => ({
             productId: i.productId,
             quantity: i.quantity,
             selectedSize: i.selectedSize ?? "",
             selectedColor: i.selectedColor ?? "",
           })),
-      }),
-    });
-    const data = await res.json();
-    setPaying(false);
-    if (!res.ok) {
-      setServerError(data.error ?? "Order creation failed. Please contact support.");
-      return;
+        }),
+      });
+      const data = await res.json();
+      setPaying(false);
+      if (!res.ok) {
+        setServerError(data.error ?? "Order creation failed. Please contact support.");
+        return;
+      }
+      clearCart();
+      try {
+        if (data && data._id) {
+          sessionStorage.setItem("last_order", JSON.stringify(data));
+        }
+      } catch {
+        // ignore storage error
+      }
+      // Force full window navigation to ensure fresh mount of success page & modal
+      window.location.href = `/checkout/success?orderId=${data._id}`;
+    } catch (err) {
+      console.error(err);
+      setPaying(false);
+      setServerError("Network error. Could not complete order.");
     }
-    clearCart();
-    router.push(`/checkout/success?orderId=${data._id}`);
   };
 
   const handlePay = () => {
     if (!validate()) return;
     if (!scriptLoaded || !window.PaystackPop) {
-      setServerError("Paystack is not loaded yet. Please wait and try again.");
+      setServerError("Paystack payment gateway is loading. Please wait a moment and try again.");
       return;
     }
 
@@ -136,10 +151,9 @@ export default function CheckoutPage() {
       ref,
       currency: "NGN",
       onClose: () => {
-        // Only show cancelled message if payment was NOT completed
         if (!callbackFired.current) {
           setPaying(false);
-          setServerError("Payment was cancelled. Your order has not been placed.");
+          setServerError("Payment window closed. Your order was not completed.");
         }
       },
       callback: (response) => {
@@ -335,16 +349,14 @@ export default function CheckoutPage() {
                 {/* Pay button */}
                 <button
                   onClick={handlePay}
-                  disabled={paying || !scriptLoaded}
-                  className="w-full py-3.5 bg-[#A4860E] text-white font-bold rounded-md hover:bg-[#8a6f0b] active:scale-[0.99] transition-all disabled:opacity-60 flex items-center justify-center gap-2 text-sm"
+                  disabled={paying}
+                  className="w-full py-3.5 bg-[#A4860E] text-white font-bold rounded-md hover:bg-[#8a6f0b] active:scale-[0.99] transition-all disabled:opacity-60 flex items-center justify-center gap-2 text-sm shadow-md shadow-[#A4860E]/20"
                 >
                   {paying ? (
                     <>
                       <i className="fa-solid fa-circle-notch animate-spin text-sm" />
-                      Processing…
+                      Processing Order…
                     </>
-                  ) : !scriptLoaded ? (
-                    "Loading payment…"
                   ) : (
                     <>
                       <i className="fa-solid fa-lock text-sm" />
@@ -353,9 +365,19 @@ export default function CheckoutPage() {
                   )}
                 </button>
 
+                {/* Direct Test Checkout Fallback Button */}
+                <button
+                  onClick={handleDirectDemoCheckout}
+                  disabled={paying}
+                  className="w-full mt-2.5 py-2.5 bg-gray-50 border border-gray-200 text-gray-700 font-semibold rounded-md hover:bg-gray-100 transition-all text-xs flex items-center justify-center gap-1.5"
+                >
+                  <i className="fa-solid fa-bolt text-[#A4860E]" />
+                  <span>Instant Direct Order (Demo / Test Mode)</span>
+                </button>
+
                 <p className="text-center text-xs text-gray-400 mt-3 flex items-center justify-center gap-1">
                   <i className="fa-solid fa-shield-halved text-[#A4860E] text-xs" />
-                  Secured by Paystack
+                  Secured & Escrow Protected by CampusGo
                 </p>
               </div>
             </div>

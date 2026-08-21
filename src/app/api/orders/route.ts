@@ -125,12 +125,22 @@ export async function POST(req: NextRequest) {
         if (items.length > 0) sellerItemsMap.set(email, items);
       }
 
-      const buyerEmail = session.user.email;
-      const buyerName = session.user.name || "Buyer";
+      // Fetch buyer email directly from session or DB if missing in session
+      let buyerEmail = session.user.email;
+      let buyerName = session.user.name || "Buyer";
       if (!buyerEmail) {
-        throw new Error("Buyer email not found in session");
+        const buyerUser = await User.findById(session.user.id).select("email name").lean();
+        if (buyerUser) {
+          buyerEmail = buyerUser.email;
+          buyerName = buyerUser.name || buyerName;
+        }
       }
-      await sendOrderConfirmationEmails(order, buyerEmail, buyerName, sellerItemsMap);
+
+      if (buyerEmail) {
+        await sendOrderConfirmationEmails(order, buyerEmail, buyerName, sellerItemsMap);
+      } else {
+        console.error("[ORDERS EMAIL ERROR] Could not determine buyer email address.");
+      }
 
       // Automated chat thank-you message from each seller to buyer
       for (const sellerId of sellerIds) {
