@@ -63,7 +63,7 @@ export default function Footer() {
               <li>
                 <Link
                   href="/help"
-                  className="hover:text-[#111111] font-medium transition-colors flex items-center"
+                  className="hover:text-[#111111] font-medium transition-colors"
                 >
                   Help Desk{" "}
                 </Link>{" "}
