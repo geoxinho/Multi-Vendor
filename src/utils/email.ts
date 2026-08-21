@@ -1,4 +1,4 @@
-import nodemailer from "nodemailer";
+import { getTransporter } from "@/lib/email";
 
 /**
  * Sends a verification email to the user.
@@ -6,35 +6,25 @@ import nodemailer from "nodemailer";
  * if SMTP variables are not configured in the environment.
  */
 export async function sendVerificationEmail(email: string, otp: string) {
-  const smtpHost = process.env.SMTP_HOST;
-  const smtpPort = process.env.SMTP_PORT ? parseInt(process.env.SMTP_PORT) : 587;
-  const smtpUser = process.env.SMTP_USER;
-  const smtpPass = process.env.SMTP_PASS;
-  const smtpFrom = process.env.SMTP_FROM || "CampusGo <no-reply@CampusGo.com>";
+  const { transporter, hasSMTP, user } = getTransporter();
+  let smtpFrom = process.env.SMTP_FROM
+    ? process.env.SMTP_FROM.trim().replace(/^["']|["']$/g, "")
+    : `CampusGo <${user || "no-reply@CampusGo.com"}>`;
+  if (!smtpFrom.includes("<") && user) {
+    smtpFrom = `"${smtpFrom}" <${user}>`;
+  }
 
-  const hasSMTP = smtpHost && smtpUser && smtpPass;
-
-  if (hasSMTP) {
+  if (hasSMTP && transporter) {
     try {
-      const transporter = nodemailer.createTransport({
-        host: smtpHost,
-        port: smtpPort,
-        secure: smtpPort === 465, // true for 465, false for other ports
-        auth: {
-          user: smtpUser,
-          pass: smtpPass,
-        },
-      });
-
       const mailOptions = {
         from: smtpFrom,
-        to: email,
+        to: email.trim(),
         subject: "Verify your CampusGo Account",
         text: `Welcome to CampusGo! Your verification code is: ${otp}`,
         html: `
           <div style="font-family: 'Inter', sans-serif; max-width: 600px; margin: 0 auto; padding: 30px; border: 1px solid #f0f0f0; border-radius: 16px; background-color: #ffffff;">
             <div style="text-align: center; margin-bottom: 25px;">
-              <span style="font-weight: 800; font-size: 24px; color: #111827;">Market<span style="color: #A4860E;">Hub</span></span>
+              <span style="font-weight: 800; font-size: 24px; color: #111827;">Campus<span style="color: #A4860E;">GO</span></span>
             </div>
             <h2 style="font-size: 20px; font-weight: 700; color: #1f2937; margin-bottom: 12px; text-align: center;">Verify Your Email Address</h2>
             <p style="font-size: 14px; color: #4b5563; line-height: 1.6; margin-bottom: 24px; text-align: center;">
@@ -50,11 +40,11 @@ export async function sendVerificationEmail(email: string, otp: string) {
         `,
       };
 
-      await transporter.sendMail(mailOptions);
-      console.log(`[EMAIL] Verification email sent successfully to ${email}`);
+      const info = await transporter.sendMail(mailOptions);
+      console.log(`[EMAIL] Verification email sent successfully to ${email}. ID: ${info.messageId}`);
       return true;
     } catch (err) {
-      console.error("[EMAIL ERROR] Failed to send actual email via SMTP, falling back to console log:", err);
+      console.error("[EMAIL ERROR] Failed to send email via SMTP:", err);
     }
   }
 
@@ -72,243 +62,219 @@ export async function sendVerificationEmail(email: string, otp: string) {
  * Sends a welcome email upon successful signup.
  */
 export async function sendWelcomeEmail(email: string, name: string) {
-  const smtpHost = process.env.SMTP_HOST;
-  const smtpPort = process.env.SMTP_PORT ? parseInt(process.env.SMTP_PORT) : 587;
-  const smtpUser = process.env.SMTP_USER;
-  const smtpPass = process.env.SMTP_PASS;
-  const smtpFrom = process.env.SMTP_FROM || "CampusGo <no-reply@CampusGo.com>";
+  const { transporter, hasSMTP, user } = getTransporter();
+  let smtpFrom = process.env.SMTP_FROM
+    ? process.env.SMTP_FROM.trim().replace(/^["']|["']$/g, "")
+    : `CampusGo <${user || "no-reply@CampusGo.com"}>`;
+  if (!smtpFrom.includes("<") && user) {
+    smtpFrom = `"${smtpFrom}" <${user}>`;
+  }
 
-  const hasSMTP = smtpHost && smtpUser && smtpPass;
-
-  if (hasSMTP) {
+  if (hasSMTP && transporter) {
     try {
-      const transporter = nodemailer.createTransport({
-        host: smtpHost,
-        port: smtpPort,
-        secure: smtpPort === 465,
-        auth: {
-          user: smtpUser,
-          pass: smtpPass,
-        },
-      });
-
       await transporter.sendMail({
         from: smtpFrom,
-        to: email,
+        to: email.trim(),
         subject: "Welcome to CampusGo!",
         html: `
           <div style="font-family: sans-serif; padding: 20px;">
-            <h2>Welcome to CampusGo, ${name}!</h2>
-            <p>Your account has been created successfully. You can now start buying and selling on our platform.</p>
+            <h2 style="color: #A4860E;">Welcome to CampusGo, ${name}!</h2>
+            <p>Your account is active. You can now buy and sell products securely.</p>
           </div>
         `,
       });
       console.log(`[EMAIL] Welcome email sent to ${email}`);
     } catch (err) {
-      console.error("[EMAIL ERROR] Failed to send welcome email:", err);
+      console.error("[EMAIL ERROR] Failed sending welcome email:", err);
     }
-  } else {
-    console.log(`[MOCK EMAIL] Welcome email to ${email}`);
   }
 }
 
 /**
- * Sends order confirmation emails to buyer and seller(s).
- * sellerItemsMap: Map of seller email → their specific order items
+ * Sends order confirmation emails to both the buyer and all sellers involved.
  */
 export async function sendOrderConfirmationEmails(
-  order: Record<string, any>,
+  order: any,
   buyerEmail: string,
   buyerName: string,
-  sellerItemsMap: Map<string, Array<{
-    title: string;
-    image: string;
-    price: number;
-    quantity: number;
-    platformFee: number;
-    netPayout: number;
-  }>>,
+  sellerItemsMap: Map<string, any[]>
 ) {
-  const smtpHost = process.env.SMTP_HOST;
-  const smtpPort = process.env.SMTP_PORT ? parseInt(process.env.SMTP_PORT) : 587;
-  const smtpUser = process.env.SMTP_USER;
-  const smtpPass = process.env.SMTP_PASS;
-  const smtpFrom = process.env.SMTP_FROM || "CampusGo <no-reply@CampusGo.com>";
+  const { transporter, hasSMTP, user } = getTransporter();
+  let smtpFrom = process.env.SMTP_FROM
+    ? process.env.SMTP_FROM.trim().replace(/^["']|["']$/g, "")
+    : `CampusGo <${user || "no-reply@CampusGo.com"}>`;
+  if (!smtpFrom.includes("<") && user) {
+    smtpFrom = `"${smtpFrom}" <${user}>`;
+  }
 
-  const hasSMTP = smtpHost && smtpUser && smtpPass;
+  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : "");
 
-  // ── Buyer Email ───────────────────────────────────────────────────
+  const itemRowsHtml = order.items
+    .map(
+      (item: any) => `
+      <tr>
+        <td style="padding:10px;border-bottom:1px solid #f3f4f6;">
+          <strong style="color:#111827;">${item.title}</strong>
+          ${item.selectedSize ? `<br/><span style="font-size:12px;color:#6b7280;">Size: ${item.selectedSize}</span>` : ""}
+          ${item.selectedColor ? `<span style="font-size:12px;color:#6b7280;"> | Color: ${item.selectedColor}</span>` : ""}
+        </td>
+        <td style="padding:10px;border-bottom:1px solid #f3f4f6;text-align:center;">${item.quantity}</td>
+        <td style="padding:10px;border-bottom:1px solid #f3f4f6;text-align:right;font-weight:600;">₦${(item.price * item.quantity).toLocaleString()}</td>
+      </tr>
+    `
+    )
+    .join("");
+
   const buyerHtml = `
-    <div style="font-family:'Inter',Arial,sans-serif;max-width:600px;margin:0 auto;background:#f8fafc;padding:32px 16px;">
-      <div style="background:#ffffff;border-radius:16px;overflow:hidden;box-shadow:0 4px 24px rgba(0,0,0,0.06);">
+    <div style="font-family:'Inter',Arial,sans-serif;max-width:600px;margin:0 auto;background:#ffffff;border:1px solid #e5e7eb;border-radius:16px;overflow:hidden;">
+      <div style="background:#A4860E;padding:28px 32px;text-align:center;">
+        <h1 style="color:#ffffff;font-size:22px;margin:0;font-weight:800;letter-spacing:-0.5px;">Order Confirmed! 🎉</h1>
+        <p style="color:#fdf8e8;margin:6px 0 0;font-size:14px;">Thank you for shopping on CampusGo</p>
+      </div>
 
-        <!-- Header -->
-        <div style="background:linear-gradient(135deg,#A4860E 0%,#7c3aed 100%);padding:28px 32px;text-align:center;">
-          <span style="font-size:26px;font-weight:900;color:#ffffff;letter-spacing:-0.5px;">Market<span style="color:#bfdbfe;">Hub</span></span>
-          <p style="color:#bfdbfe;font-size:13px;margin:6px 0 0;">Order Confirmation</p>
+      <div style="padding:32px;">
+        <p style="font-size:15px;color:#374151;margin:0 0 20px;">Hi <strong>${buyerName}</strong>,</p>
+        <p style="font-size:14px;color:#4b5563;margin:0 0 24px;line-height:1.6;">
+          We have received your payment and notified the seller(s). Your order reference is <strong>#${order._id.toString().slice(-8).toUpperCase()}</strong>.
+        </p>
+
+        <!-- Delivery PIN Box -->
+        <div style="background:#fdf8e8;border:2px border-solid #e8d48a;border-radius:12px;padding:20px;text-align:center;margin-bottom:28px;">
+          <p style="font-size:11px;font-weight:700;letter-spacing:1px;color:#8a6f0b;text-transform:uppercase;margin:0 0 6px;">Your Delivery Verification PIN</p>
+          <span style="font-family:monospace;font-size:36px;font-weight:900;letter-spacing:8px;color:#A4860E;">${order.deliveryPin}</span>
+          <p style="font-size:12px;color:#8a6f0b;margin:8px 0 0;line-height:1.5;">
+            <strong>Keep this PIN safe.</strong> Share it with the seller ONLY after physically receiving and inspecting your package.
+          </p>
         </div>
 
-        <div style="padding:28px 32px;">
-          <h2 style="font-size:20px;font-weight:700;color:#111827;margin:0 0 8px;">Thank you, ${buyerName}! 🎉</h2>
-          <p style="font-size:14px;color:#6b7280;margin:0 0 24px;">Your payment was successful and your order is now being processed.</p>
+        <!-- Order Breakdown Table -->
+        <h3 style="font-size:15px;font-weight:700;color:#111827;margin:0 0 12px;">Order Summary</h3>
+        <table style="width:100%;border-collapse:collapse;font-size:14px;margin-bottom:24px;">
+          <thead>
+            <tr style="background:#f9fafb;color:#6b7280;font-size:12px;text-transform:uppercase;">
+              <th style="padding:8px 10px;text-align:left;">Item</th>
+              <th style="padding:8px 10px;text-align:center;">Qty</th>
+              <th style="padding:8px 10px;text-align:right;">Subtotal</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${itemRowsHtml}
+          </tbody>
+        </table>
 
-          <!-- Delivery PIN Box -->
-          <div style="background:#fef3c7;border:1.5px solid #f59e0b;border-radius:12px;padding:20px;margin-bottom:24px;text-align:center;">
-            <p style="font-size:12px;font-weight:700;color:#92400e;text-transform:uppercase;letter-spacing:0.08em;margin:0 0 8px;">⚠️ Your Delivery PIN — Keep This Secret</p>
-            <p style="font-size:36px;font-weight:900;letter-spacing:8px;color:#1f2937;margin:0 0 8px;">${order.deliveryPin}</p>
-            <p style="font-size:12px;color:#b45309;margin:0;font-weight:500;">Only hand this PIN to the seller <strong>after</strong> they physically deliver your order. The seller needs it to confirm delivery and receive their payout.</p>
-          </div>
-
-          <!-- Order Summary -->
-          <div style="background:#f9fafb;border-radius:10px;padding:18px;margin-bottom:20px;">
-            <p style="font-size:12px;font-weight:700;color:#6b7280;text-transform:uppercase;letter-spacing:0.07em;margin:0 0 12px;">Order Summary</p>
-            ${(order.items as any[]).map((item: any) => `
-            <div style="display:flex;align-items:center;gap:12px;margin-bottom:12px;padding-bottom:12px;border-bottom:1px solid #e5e7eb;">
-              ${item.image ? `<img src="${item.image}" style="width:52px;height:52px;border-radius:8px;object-fit:cover;" alt="${item.title}" />` : ""}
-              <div style="flex:1;min-width:0;">
-                <p style="font-size:13px;font-weight:600;color:#111827;margin:0 0 2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${item.title}</p>
-                <p style="font-size:12px;color:#6b7280;margin:0;">Qty: ${item.quantity} × ₦${item.price.toLocaleString()}</p>
-              </div>
-              <p style="font-size:13px;font-weight:700;color:#111827;margin:0;white-space:nowrap;">₦${(item.price * item.quantity).toLocaleString()}</p>
-            </div>`).join("")}
-            <div style="display:flex;justify-content:space-between;align-items:center;margin-top:4px;">
-              <p style="font-size:14px;font-weight:700;color:#111827;margin:0;">Total</p>
-              <p style="font-size:16px;font-weight:900;color:#A4860E;margin:0;">₦${order.totalAmount.toLocaleString()}</p>
-            </div>
-          </div>
-
-          <p style="font-size:13px;color:#6b7280;text-align:center;">You'll receive updates when your order ships. Happy shopping!</p>
+        <div style="background:#f9fafb;border-radius:8px;padding:16px;margin-bottom:24px;display:flex;justify-content:space-between;align-items:center;">
+          <span style="font-weight:600;color:#374151;">Total Amount Paid:</span>
+          <span style="font-size:18px;font-weight:800;color:#A4860E;">₦${order.totalAmount.toLocaleString()}</span>
         </div>
 
-        <!-- Footer -->
-        <div style="background:#f9fafb;padding:16px 32px;text-align:center;border-top:1px solid #e5e7eb;">
-          <p style="font-size:11px;color:#9ca3af;margin:0;">© ${new Date().getFullYear()} CampusGo · This is an automated email, please do not reply.</p>
-        </div>
+        ${
+          siteUrl
+            ? `<div style="text-align:center;margin-top:28px;">
+                <a href="${siteUrl}/dashboard/buyer/orders" style="background:#A4860E;color:#ffffff;padding:12px 24px;border-radius:8px;font-weight:700;font-size:14px;text-decoration:none;display:inline-block;">View My Orders</a>
+               </div>`
+            : ""
+        }
+      </div>
+
+      <div style="background:#f9fafb;padding:16px 32px;text-align:center;border-top:1px solid #e5e7eb;">
+        <p style="font-size:11px;color:#9ca3af;margin:0;">© ${new Date().getFullYear()} CampusGo · Automated notification</p>
       </div>
     </div>
   `;
 
-  // ── Per-Seller Email Builder ───────────────────────────────────────
-  function buildSellerHtml(
-    sellerItems: Array<{ title: string; image: string; price: number; quantity: number; platformFee: number; netPayout: number }>,
-  ) {
-    const sellerTotal = sellerItems.reduce((s, i) => s + i.price * i.quantity, 0);
-    const sellerNet = sellerItems.reduce((s, i) => s + i.netPayout, 0);
-    const sellerFee = sellerItems.reduce((s, i) => s + i.platformFee, 0);
-
-    const shipping = order.shippingAddress ?? {};
+  function buildSellerHtml(items: any[]) {
+    const sellerItemRows = items
+      .map(
+        (i) => `
+        <tr>
+          <td style="padding:10px;border-bottom:1px solid #f3f4f6;">
+            <strong style="color:#111827;">${i.title}</strong>
+            ${i.selectedSize ? `<br/><span style="font-size:12px;color:#6b7280;">Size: ${i.selectedSize}</span>` : ""}
+            ${i.selectedColor ? `<span style="font-size:12px;color:#6b7280;"> | Color: ${i.selectedColor}</span>` : ""}
+          </td>
+          <td style="padding:10px;border-bottom:1px solid #f3f4f6;text-align:center;">${i.quantity}</td>
+          <td style="padding:10px;border-bottom:1px solid #f3f4f6;text-align:right;font-weight:600;">₦${(i.price * i.quantity).toLocaleString()}</td>
+        </tr>
+      `
+      )
+      .join("");
 
     return `
-      <div style="font-family:'Inter',Arial,sans-serif;max-width:600px;margin:0 auto;background:#f8fafc;padding:32px 16px;">
-        <div style="background:#ffffff;border-radius:16px;overflow:hidden;box-shadow:0 4px 24px rgba(0,0,0,0.06);">
+      <div style="font-family:'Inter',Arial,sans-serif;max-width:600px;margin:0 auto;background:#ffffff;border:1px solid #e5e7eb;border-radius:16px;overflow:hidden;">
+        <div style="background:#A4860E;padding:28px 32px;text-align:center;">
+          <h1 style="color:#ffffff;font-size:22px;margin:0;font-weight:800;">🎉 New Order Received!</h1>
+          <p style="color:#fdf8e8;margin:6px 0 0;font-size:14px;">You have a new buyer on CampusGo</p>
+        </div>
 
-          <!-- Header -->
-          <div style="background:linear-gradient(135deg,#A4860E 0%,#A4860E 100%);padding:28px 32px;text-align:center;">
-            <span style="font-size:26px;font-weight:900;color:#ffffff;letter-spacing:-0.5px;">Market<span style="color:#a7f3d0;">Hub</span></span>
-            <p style="color:#a7f3d0;font-size:13px;margin:6px 0 0;">New Order Received! 🎉</p>
-          </div>
+        <div style="padding:32px;">
+          <p style="font-size:15px;color:#374151;margin:0 0 16px;">Hello,</p>
+          <p style="font-size:14px;color:#4b5563;margin:0 0 24px;line-height:1.6;">
+            Great news! A buyer has placed an order for item(s) in your store. Order reference: <strong>#${order._id.toString().slice(-8).toUpperCase()}</strong>.
+          </p>
 
-          <div style="padding:28px 32px;">
-            <h2 style="font-size:20px;font-weight:700;color:#111827;margin:0 0 8px;">You have a new order!</h2>
-            <p style="font-size:14px;color:#6b7280;margin:0 0 24px;">
-              <strong>${buyerName}</strong> has just purchased ${sellerItems.length === 1 ? "an item" : "items"} from your store. Please prepare the order for delivery.
+          <h3 style="font-size:15px;font-weight:700;color:#111827;margin:0 0 12px;">Ordered Items</h3>
+          <table style="width:100%;border-collapse:collapse;font-size:14px;margin-bottom:24px;">
+            <thead>
+              <tr style="background:#f9fafb;color:#6b7280;font-size:12px;text-transform:uppercase;">
+                <th style="padding:8px 10px;text-align:left;">Item</th>
+                <th style="padding:8px 10px;text-align:center;">Qty</th>
+                <th style="padding:8px 10px;text-align:right;">Subtotal</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${sellerItemRows}
+            </tbody>
+          </table>
+
+          <div style="background:#f0fdf4;border:1.5px solid #86efac;border-radius:10px;padding:16px;margin-bottom:20px;">
+            <p style="font-size:13px;font-weight:700;color:#166534;margin:0 0 6px;">🔐 Delivery PIN Required</p>
+            <p style="font-size:13px;color:#8a6f0b;margin:0;">
+              After delivering the order, ask the buyer for their 6-digit <strong>Delivery PIN</strong> and enter it in your seller dashboard to confirm delivery and trigger your payout.
             </p>
-
-            <!-- Items Ordered -->
-            <div style="background:#f9fafb;border-radius:10px;padding:18px;margin-bottom:20px;">
-              <p style="font-size:12px;font-weight:700;color:#6b7280;text-transform:uppercase;letter-spacing:0.07em;margin:0 0 12px;">Items Ordered</p>
-              ${sellerItems.map((item) => `
-              <div style="display:flex;align-items:center;gap:12px;margin-bottom:12px;padding-bottom:12px;border-bottom:1px solid #e5e7eb;">
-                ${item.image ? `<img src="${item.image}" style="width:56px;height:56px;border-radius:8px;object-fit:cover;" alt="${item.title}" />` : ""}
-                <div style="flex:1;min-width:0;">
-                  <p style="font-size:14px;font-weight:700;color:#111827;margin:0 0 3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${item.title}</p>
-                  <p style="font-size:12px;color:#6b7280;margin:0;">Qty: <strong>${item.quantity}</strong> &nbsp;·&nbsp; Unit price: <strong>₦${item.price.toLocaleString()}</strong></p>
-                </div>
-                <div style="text-align:right;white-space:nowrap;">
-                  <p style="font-size:14px;font-weight:800;color:#111827;margin:0;">₦${(item.price * item.quantity).toLocaleString()}</p>
-                  <p style="font-size:11px;color:#6b7280;margin:2px 0 0;">subtotal</p>
-                </div>
-              </div>`).join("")}
-
-              <!-- Totals -->
-              <div style="margin-top:8px;border-top:2px solid #e5e7eb;padding-top:12px;">
-                <div style="display:flex;justify-content:space-between;margin-bottom:5px;">
-                  <p style="font-size:13px;color:#6b7280;margin:0;">Gross Sale</p>
-                  <p style="font-size:13px;font-weight:600;color:#374151;margin:0;">₦${sellerTotal.toLocaleString()}</p>
-                </div>
-                <div style="display:flex;justify-content:space-between;margin-bottom:5px;">
-                  <p style="font-size:13px;color:#dc2626;margin:0;">Platform Fee (5%)</p>
-                  <p style="font-size:13px;font-weight:600;color:#dc2626;margin:0;">− ₦${sellerFee.toLocaleString()}</p>
-                </div>
-                <div style="display:flex;justify-content:space-between;margin-top:8px;padding-top:8px;border-top:1px solid #e5e7eb;">
-                  <p style="font-size:15px;font-weight:700;color:#111827;margin:0;">Your Net Payout</p>
-                  <p style="font-size:17px;font-weight:900;color:#A4860E;margin:0;">₦${sellerNet.toLocaleString()}</p>
-                </div>
-              </div>
-            </div>
-
-            <!-- Shipping Address -->
-            <div style="background:#fdf8e8;border:1.5px solid #bfdbfe;border-radius:10px;padding:18px;margin-bottom:20px;">
-              <p style="font-size:12px;font-weight:700;color:#8a6f0b;text-transform:uppercase;letter-spacing:0.07em;margin:0 0 10px;">📦 Delivery Address</p>
-              <p style="font-size:14px;font-weight:700;color:#111827;margin:0 0 4px;">${shipping.fullName ?? buyerName}</p>
-              <p style="font-size:13px;color:#374151;margin:0 0 2px;">${shipping.address ?? ""}</p>
-              <p style="font-size:13px;color:#374151;margin:0 0 2px;">${[shipping.city, shipping.state, shipping.postalCode].filter(Boolean).join(", ")}</p>
-              ${shipping.phone ? `<p style="font-size:13px;color:#374151;margin:6px 0 0;">📞 ${shipping.phone}</p>` : ""}
-            </div>
-
-            <!-- Delivery PIN reminder -->
-            <div style="background:#f0fdf4;border:1.5px solid #86efac;border-radius:10px;padding:16px;margin-bottom:20px;">
-              <p style="font-size:13px;font-weight:700;color:#166534;margin:0 0 6px;">🔐 Delivery PIN Required</p>
-              <p style="font-size:13px;color:#8a6f0b;margin:0;">After delivering the order, ask the buyer for their 6-digit <strong>Delivery PIN</strong> and enter it in your seller dashboard to confirm delivery and start your payout countdown (<strong>24 hours</strong> after confirmation).</p>
-            </div>
-
-            <p style="font-size:13px;color:#6b7280;text-align:center;">Head to your <a href="${process.env.NEXT_PUBLIC_SITE_URL ?? ""}/dashboard/seller/orders" style="color:#A4860E;font-weight:600;text-decoration:none;">Seller Dashboard</a> to view and manage this order.</p>
           </div>
 
-          <!-- Footer -->
-          <div style="background:#f9fafb;padding:16px 32px;text-align:center;border-top:1px solid #e5e7eb;">
-            <p style="font-size:11px;color:#9ca3af;margin:0;">© ${new Date().getFullYear()} CampusGo · This is an automated email, please do not reply.</p>
-          </div>
+          ${
+            siteUrl
+              ? `<p style="font-size:13px;color:#6b7280;text-align:center;">Head to your <a href="${siteUrl}/dashboard/seller/orders" style="color:#A4860E;font-weight:600;text-decoration:none;">Seller Dashboard</a> to manage this order.</p>`
+              : ""
+          }
+        </div>
+
+        <div style="background:#f9fafb;padding:16px 32px;text-align:center;border-top:1px solid #e5e7eb;">
+          <p style="font-size:11px;color:#9ca3af;margin:0;">© ${new Date().getFullYear()} CampusGo · Automated notification</p>
         </div>
       </div>
     `;
   }
 
-  if (hasSMTP) {
+  if (hasSMTP && transporter) {
     try {
-      const transporter = nodemailer.createTransport({
-        host: smtpHost,
-        port: smtpPort,
-        secure: smtpPort === 465,
-        auth: { user: smtpUser, pass: smtpPass },
-      });
-
       // Send to buyer
       if (buyerEmail) {
         try {
-          await transporter.sendMail({
+          const info = await transporter.sendMail({
             from: smtpFrom,
-            to: buyerEmail,
+            to: buyerEmail.trim(),
             subject: "Order Confirmation & Delivery PIN - CampusGo",
             html: buyerHtml,
           });
-          console.log(`[EMAIL SUCCESS] Order confirmation sent to buyer: ${buyerEmail}`);
+          console.log(`[EMAIL SUCCESS] Order confirmation sent to buyer (${buyerEmail}). MessageID: ${info.messageId}`);
         } catch (buyerErr) {
           console.error(`[EMAIL ERROR] Failed sending buyer confirmation to ${buyerEmail}:`, buyerErr);
         }
       }
 
-      // Send personalised email to each seller
+      // Send personalized email to each seller
       for (const [email, items] of sellerItemsMap) {
         if (email) {
           try {
-            await transporter.sendMail({
+            const info = await transporter.sendMail({
               from: smtpFrom,
-              to: email,
+              to: email.trim(),
               subject: "🎉 New Order Received - CampusGo",
               html: buildSellerHtml(items),
             });
-            console.log(`[EMAIL SUCCESS] New order alert sent to seller: ${email}`);
+            console.log(`[EMAIL SUCCESS] New order alert sent to seller (${email}). MessageID: ${info.messageId}`);
           } catch (sellerErr) {
             console.error(`[EMAIL ERROR] Failed sending seller order alert to ${email}:`, sellerErr);
           }
@@ -324,4 +290,3 @@ export async function sendOrderConfirmationEmails(
     }
   }
 }
-
