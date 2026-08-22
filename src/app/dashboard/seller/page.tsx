@@ -5,6 +5,7 @@ import { Product } from "@/models/Product";
 import { Order } from "@/models/Order";
 import { User } from "@/models/User";
 import StatCard from "@/components/dashboard/StatCard";
+import PayoutCountdownCard from "@/components/seller/PayoutCountdownCard";
 import Link from "next/link";
 import type { Metadata } from "next";
 
@@ -14,6 +15,7 @@ type OrderItem = {
   seller?: { toString(): string };
   price: number;
   quantity: number;
+  netPayout?: number;
 };
 
 export default async function SellerDashboardPage() {
@@ -30,55 +32,171 @@ export default async function SellerDashboardPage() {
     User.findById(session!.user.id).select("name storeName").lean(),
   ]);
 
-  const brandName = sellerUser?.storeName || session.user.storeName || sellerUser?.name || session.user.name || "Seller";
+  const sellerId = session!.user.id;
 
-  const revenue = orders.reduce((sum, o) => {
+  // ── Metrics ─────────────────────────────────────────────────────────────────
+
+  /**
+   * Total Net Revenue: sum of netPayout (95%) across all paid orders.
+   * Falls back to price × quantity × 0.95 for legacy orders that lack netPayout.
+   */
+  const totalNetRevenue = orders.reduce((sum, o) => {
     const sellerItems = o.items.filter(
-      (i: OrderItem) => i.seller?.toString() === session!.user.id,
+      (i: OrderItem) => i.seller?.toString() === sellerId,
     );
     return (
       sum +
       sellerItems.reduce(
-        (s: number, i: OrderItem) => s + i.price * i.quantity,
+        (s: number, i: OrderItem) =>
+          s + (i.netPayout ?? i.price * i.quantity * 0.95),
         0,
       )
     );
   }, 0);
 
-  const pendingPayout = orders
-    .filter(
-      (o) =>
-        !o.sellerPaid &&
-        o.deliveryStatus === "delivered" &&
-        o.sellerPayoutReleaseAt &&
-        o.sellerPayoutReleaseAt <= new Date(),
-    )
+  /**
+   * Amount Made = total net revenue from fully paid-out orders (sellerPaid: true)
+   */
+  const amountMade = orders
+    .filter((o) => o.sellerPaid)
     .reduce((sum, o) => {
       const sellerItems = o.items.filter(
-        (i: OrderItem) => i.seller?.toString() === session!.user.id,
+        (i: OrderItem) => i.seller?.toString() === sellerId,
       );
       return (
         sum +
         sellerItems.reduce(
-          (s: number, i: OrderItem) => s + i.price * i.quantity,
+          (s: number, i: OrderItem) =>
+            s + (i.netPayout ?? i.price * i.quantity * 0.95),
           0,
         )
       );
     }, 0);
 
+  /**
+   * Pending Payout = net payout for delivered-but-not-yet-paid orders
+   * (includes held ones — seller should see the total owed to them)
+   */
+  const pendingPayout = orders
+    .filter((o) => !o.sellerPaid && o.deliveryStatus === "delivered")
+    .reduce((sum, o) => {
+      const sellerItems = o.items.filter(
+        (i: OrderItem) => i.seller?.toString() === sellerId,
+      );
+      return (
+        sum +
+        sellerItems.reduce(
+          (s: number, i: OrderItem) =>
+            s + (i.netPayout ?? i.price * i.quantity * 0.95),
+          0,
+        )
+      );
+    }, 0);
+
+  /** Total Sales = number of unique paid orders containing seller's items */
+  const totalSales = orders.length;
+
+  // ── Countdown orders ─────────────────────────────────────────────────────────
+  // Orders that are delivered, not yet paid, and have a future or past release date
+  // (show them until sellerPaid = true)
+  const countdownOrders = orders
+    .filter(
+      (o) =>
+        !o.sellerPaid &&
+        o.deliveryStatus === "delivered" &&
+        o.sellerPayoutReleaseAt,
+    )
+    .map((o) => ({
+      _id: o._id.toString(),
+      sellerPayoutReleaseAt: o.sellerPayoutReleaseAt!.toISOString(),
+      deliveredAt: (o.deliveredAt ?? o.updatedAt ?? new Date()).toISOString(),
+      payoutHeld: o.payoutHeld ?? false,
+      payoutHoldReason: o.payoutHoldReason ?? "",
+      totalAmount: o.totalAmount,
+      items: o.items.map((i: OrderItem & { title?: string; seller?: unknown }) => ({
+        title: (i as { title?: string }).title ?? "",
+        price: i.price,
+        quantity: i.quantity,
+        netPayout: i.netPayout ?? i.price * i.quantity * 0.95,
+        seller: (i.seller as { toString(): string } | undefined)?.toString() ?? "",
+      })),
+    }));
+
+  // ── Last 10 Successful Deliveries ─────────────────────────────────────────
+  type SuccessfulDeliveryItem = {
+    id: string;
+    orderId: string;
+    productTitle: string;
+    price: number;
+    quantity: number;
+    netPayout: number;
+    deliveredAt: Date;
+    selectedSize?: string;
+    selectedColor?: string;
+  };
+
+  const successfulDeliveries: SuccessfulDeliveryItem[] = [];
+
+  const deliveredOrders = orders
+    .filter((o) => o.deliveryStatus === "delivered" && (o.deliveredAt || o.updatedAt))
+    .sort((a, b) => {
+      const dateA = new Date(a.deliveredAt || a.updatedAt).getTime();
+      const dateB = new Date(b.deliveredAt || b.updatedAt).getTime();
+      return dateB - dateA;
+    });
+
+  for (const order of deliveredOrders) {
+    const deliveryDate = new Date(order.deliveredAt || order.updatedAt);
+    const sellerItems = order.items.filter(
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      (i: any) => i.seller?.toString() === sellerId
+    );
+
+    for (const item of sellerItems) {
+      if (successfulDeliveries.length >= 10) break;
+      successfulDeliveries.push({
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        id: `${order._id.toString()}-${(item as any).product?.toString() || Math.random()}`,
+        orderId: order._id.toString(),
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        productTitle: (item as any).title || "Product",
+        price: item.price,
+        quantity: item.quantity,
+        netPayout: item.netPayout ?? item.price * item.quantity * 0.95,
+        deliveredAt: deliveryDate,
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        selectedSize: (item as any).selectedSize,
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        selectedColor: (item as any).selectedColor,
+      });
+    }
+
+    if (successfulDeliveries.length >= 10) break;
+  }
+
+  // ── Notification counts ──────────────────────────────────────────────────────
   const newOrdersCount = orders.filter((o) => o.deliveryStatus === "processing").length;
   const undeliveredCount = orders.filter((o) => o.deliveryStatus !== "delivered").length;
   const lowStockAlerts = products.filter((p) => p.status === "active" && p.stock <= 3);
 
   const currentHour = new Date().getHours();
-  const greeting = currentHour < 12 ? "Good Morning" : currentHour < 17 ? "Good Afternoon" : "Good Evening";
+  const greeting =
+    currentHour < 12
+      ? "Good Morning"
+      : currentHour < 17
+        ? "Good Afternoon"
+        : "Good Evening";
 
   return (
     <div>
+      {/* ── Header ── */}
       <div className="flex items-center justify-between mb-8">
         <div>
           <h1 className="text-2xl sm:text-3xl font-extrabold text-gray-900 flex items-center gap-2">
-            <span>{greeting}, {session.user.name || sellerUser?.name || "Seller"}!</span> <i className="fa-solid fa-hand-wave text-yellow-400 text-xl" />
+            <span>
+              {greeting}, {session.user.name || sellerUser?.name || "Seller"}!
+            </span>{" "}
+            <i className="fa-solid fa-hand-wave text-yellow-400 text-xl" />
           </h1>
           <p className="text-gray-500 mt-1 text-sm">
             Seller Dashboard &bull; Manage your store and track performance.
@@ -92,7 +210,7 @@ export default async function SellerDashboardPage() {
         </Link>
       </div>
 
-      {/* Seller Notifications */}
+      {/* ── Seller Notifications ── */}
       {(newOrdersCount > 0 || undeliveredCount > 0 || lowStockAlerts.length > 0) && (
         <div className="mb-8 space-y-3">
           {newOrdersCount > 0 && (
@@ -103,10 +221,15 @@ export default async function SellerDashboardPage() {
                 </div>
                 <div>
                   <h4 className="text-sm font-bold text-[#1E40AF]">New Orders Received</h4>
-                  <p className="text-xs text-[#A4860E] mt-0.5">You have {newOrdersCount} new order{newOrdersCount > 1 ? "s" : ""} awaiting processing.</p>
+                  <p className="text-xs text-[#A4860E] mt-0.5">
+                    You have {newOrdersCount} new order{newOrdersCount > 1 ? "s" : ""} awaiting processing.
+                  </p>
                 </div>
               </div>
-              <Link href="/dashboard/seller/orders" className="text-xs font-bold text-[#A4860E] bg-white border border-[#BFDBFE] hover:bg-[#fdf8e8] px-3.5 py-2 rounded-md transition-colors shadow-sm">
+              <Link
+                href="/dashboard/seller/orders"
+                className="text-xs font-bold text-[#A4860E] bg-white border border-[#BFDBFE] hover:bg-[#fdf8e8] px-3.5 py-2 rounded-md transition-colors shadow-sm"
+              >
                 Process Orders
               </Link>
             </div>
@@ -115,15 +238,21 @@ export default async function SellerDashboardPage() {
           {undeliveredCount > 0 && (
             <div className="bg-[#FFF7ED] border border-[#FFEDD5]/60 rounded-xl p-4 flex items-center justify-between shadow-[0_2px_8px_rgba(217,119,6,0.03)]">
               <div className="flex items-center gap-3">
-                <div className="w-9 h-9 rounded-lg bg-[#FFE4E6]/10 bg-[#FFEDD5] flex items-center justify-center text-[#D97706] border border-[#FEF3C7]/40">
+                <div className="w-9 h-9 rounded-lg bg-[#FFEDD5] flex items-center justify-center text-[#D97706] border border-[#FEF3C7]/40">
                   <i className="fa-solid fa-truck-fast text-sm" />
                 </div>
                 <div>
                   <h4 className="text-sm font-bold text-[#9A3412]">Undelivered Orders</h4>
-                  <p className="text-xs text-[#9A3412] mt-0.5">You have {undeliveredCount} order{undeliveredCount > 1 ? "s" : ""} that {undeliveredCount === 1 ? "has" : "have"} not been delivered to buyers yet.</p>
+                  <p className="text-xs text-[#9A3412] mt-0.5">
+                    You have {undeliveredCount} order{undeliveredCount > 1 ? "s" : ""} that{" "}
+                    {undeliveredCount === 1 ? "has" : "have"} not been delivered to buyers yet.
+                  </p>
                 </div>
               </div>
-              <Link href="/dashboard/seller/orders" className="text-xs font-bold text-[#D97706] bg-white border border-[#FFEDD5] hover:bg-[#FFFBEB] px-3.5 py-2 rounded-md transition-colors shadow-sm">
+              <Link
+                href="/dashboard/seller/orders"
+                className="text-xs font-bold text-[#D97706] bg-white border border-[#FFEDD5] hover:bg-[#FFFBEB] px-3.5 py-2 rounded-md transition-colors shadow-sm"
+              >
                 View Deliveries
               </Link>
             </div>
@@ -131,25 +260,32 @@ export default async function SellerDashboardPage() {
 
           {lowStockAlerts.length > 0 && (
             <div className="bg-[#FFF5F5] border border-[#FED7D7]/60 rounded-xl p-4 shadow-[0_2px_8px_rgba(220,38,38,0.03)]">
-              <div className="flex items-center gap-3">
-                <div className="w-9 h-9 rounded-lg bg-[#FEE2E2] flex items-center justify-center text-[#DC2626] border border-[#FCA5A5]/40">
-                  <i className="fa-solid fa-triangle-exclamation text-sm" />
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <div className="w-9 h-9 rounded-lg bg-[#FEE2E2] flex items-center justify-center text-[#DC2626] border border-[#FCA5A5]/40">
+                    <i className="fa-solid fa-triangle-exclamation text-sm" />
+                  </div>
+                  <div>
+                    <h4 className="text-sm font-bold text-[#9B2C2C]">Inventory Alert</h4>
+                    <p className="text-xs text-[#9B2C2C] mt-0.5">
+                      {lowStockAlerts.length} of your active product
+                      {lowStockAlerts.length > 1 ? "s are" : " is"} out of stock or running low.
+                    </p>
+                  </div>
                 </div>
-                <div>
-                  <h4 className="text-sm font-bold text-[#9B2C2C]">Inventory Alert</h4>
-                  <p className="text-xs text-[#9B2C2C] mt-0.5">
-                    {lowStockAlerts.length} of your active product{lowStockAlerts.length > 1 ? "s are" : " is"} out of stock or running low (3 or less remaining).
-                  </p>
-                </div>
+                <Link
+                  href="/dashboard/seller/products"
+                  className="text-xs font-bold text-[#DC2626] bg-white border border-[#FED7D7] hover:bg-[#FFF5F5] px-3.5 py-2 rounded-md transition-colors shadow-sm shrink-0"
+                >
+                  Update Stock
+                </Link>
               </div>
-              <Link href="/dashboard/seller/products" className="text-xs font-bold text-[#DC2626] bg-white border border-[#FED7D7] hover:bg-[#FFF5F5] px-3.5 py-2 rounded-md transition-colors shadow-sm ml-auto shrink-0 block sm:inline-block text-center mt-3 sm:mt-0">
-                Update Stock
-              </Link>
             </div>
           )}
         </div>
       )}
 
+      {/* ── Stat Cards ── */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
         <StatCard
           label="Total Products"
@@ -158,32 +294,170 @@ export default async function SellerDashboardPage() {
           icon={<i className="fa-solid fa-box text-lg" />}
         />
         <StatCard
-          label="Total Revenue"
-          value={`₦${revenue.toLocaleString()}`}
-          color="gold"
-          icon={<i className="fa-solid fa-money-bill-wave text-lg" />}
-        />
-        <StatCard
-          label="Total Orders"
-          value={orders.length}
+          label="Total Sales"
+          value={totalSales}
           color="blue"
           icon={<i className="fa-solid fa-cart-shopping text-lg" />}
+        />
+        <StatCard
+          label="Amount Made"
+          value={`₦${amountMade.toLocaleString()}`}
+          color="gold"
+          icon={<i className="fa-solid fa-money-bill-wave text-lg" />}
+          subtitle="After 5% platform fee"
         />
         <StatCard
           label="Pending Payout"
           value={`₦${pendingPayout.toLocaleString()}`}
           color="red"
           icon={<i className="fa-solid fa-wallet text-lg" />}
+          subtitle="Net — awaiting release"
         />
       </div>
 
-      {/* Recent products */}
+      {/* ── Payout Countdowns ── */}
+      {countdownOrders.length > 0 && (
+        <div className="mb-8">
+          <div className="flex items-center justify-between mb-4">
+            <div>
+              <h2 className="text-lg font-bold text-gray-900 flex items-center gap-2">
+                <i className="fa-solid fa-hourglass-half text-[#A4860E]" />
+                Payout Countdown
+              </h2>
+              <p className="text-xs text-gray-500 mt-0.5">
+                Payouts release automatically 24 hours after delivery confirmation.
+              </p>
+            </div>
+            <Link
+              href="/dashboard/seller/payouts"
+              className="text-sm text-[#A4860E] hover:underline font-medium"
+            >
+              Full schedule →
+            </Link>
+          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            {countdownOrders.map((order) => (
+              <PayoutCountdownCard
+                key={order._id}
+                order={order}
+                sellerId={sellerId}
+              />
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* ── Recent Successful Deliveries (Max 10) ── */}
+      <div className="mb-8">
+        <div className="flex items-center justify-between mb-4">
+          <div>
+            <h2 className="text-lg font-bold text-gray-900 flex items-center gap-2">
+              <i className="fa-solid fa-circle-check text-[#A4860E]" />
+              Recent Successful Deliveries
+            </h2>
+            <p className="text-xs text-gray-500 mt-0.5">
+              Exact date and time for up to the last 10 completed product deliveries.
+            </p>
+          </div>
+          <Link
+            href="/dashboard/seller/orders"
+            className="text-sm text-[#A4860E] hover:underline font-medium"
+          >
+            View all orders →
+          </Link>
+        </div>
+
+        <div className="bg-white rounded-2xl border border-gray-100 overflow-hidden shadow-sm">
+          {successfulDeliveries.length === 0 ? (
+            <div className="p-8 text-center text-gray-400 text-sm">
+              <i className="fa-solid fa-box-open text-2xl mb-2 text-gray-300 block" />
+              No successful deliveries completed yet.
+            </div>
+          ) : (
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm text-left">
+                <thead className="bg-gray-50 border-b border-gray-100">
+                  <tr>
+                    <th className="px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wider">
+                      Product Name
+                    </th>
+                    <th className="px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wider">
+                      Delivery Date &amp; Time
+                    </th>
+                    <th className="px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wider">
+                      Qty
+                    </th>
+                    <th className="px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wider">
+                      Net Earned
+                    </th>
+                    <th className="px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wider">
+                      Status
+                    </th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-gray-50">
+                  {successfulDeliveries.map((item) => (
+                    <tr key={item.id} className="hover:bg-gray-50/80 transition-colors">
+                      <td className="px-4 py-3">
+                        <div className="font-semibold text-gray-900 truncate max-w-xs">
+                          {item.productTitle}
+                        </div>
+                        {(item.selectedSize || item.selectedColor) && (
+                          <div className="text-[11px] text-gray-400">
+                            {item.selectedSize && `Size: ${item.selectedSize} `}
+                            {item.selectedColor && `Color: ${item.selectedColor}`}
+                          </div>
+                        )}
+                        <div className="text-[10px] font-mono text-gray-400 mt-0.5">
+                          Order #{item.orderId.slice(-8).toUpperCase()}
+                        </div>
+                      </td>
+                      <td className="px-4 py-3 whitespace-nowrap">
+                        <div className="flex items-center gap-1.5 text-gray-800 font-medium text-xs">
+                          <i className="fa-regular fa-calendar-check text-[#A4860E]" />
+                          {item.deliveredAt.toLocaleDateString("en-NG", {
+                            day: "numeric",
+                            month: "short",
+                            year: "numeric",
+                          })}
+                        </div>
+                        <div className="text-[11px] text-gray-500 flex items-center gap-1 mt-0.5">
+                          <i className="fa-regular fa-clock text-gray-400" />
+                          {item.deliveredAt.toLocaleTimeString("en-NG", {
+                            hour: "2-digit",
+                            minute: "2-digit",
+                            hour12: true,
+                          })}
+                        </div>
+                      </td>
+                      <td className="px-4 py-3 text-gray-600 font-medium whitespace-nowrap">
+                        {item.quantity}
+                      </td>
+                      <td className="px-4 py-3 whitespace-nowrap">
+                        <span className="text-[#A4860E] font-bold">
+                          ₦{Math.round(item.netPayout).toLocaleString()}
+                        </span>
+                        <span className="text-[10px] text-gray-400 block">(95% net)</span>
+                      </td>
+                      <td className="px-4 py-3 whitespace-nowrap">
+                        <span className="badge bg-emerald-100 text-emerald-700 text-xs font-semibold px-2.5 py-1 rounded-full inline-flex items-center gap-1">
+                          <i className="fa-solid fa-circle-check text-emerald-600 text-[10px]" />
+                          Delivered
+                        </span>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* ── Recent products ── */}
       <div className="flex items-center justify-between mb-4">
         <h2 className="text-lg font-bold text-gray-900">My Products</h2>
-        <Link
-          href="/dashboard/seller/products"
-          className="text-sm text-[#A4860E] hover:underline"
-        >
+        <Link href="/dashboard/seller/products" className="text-sm text-[#A4860E] hover:underline">
           View all
         </Link>
       </div>
@@ -202,7 +476,7 @@ export default async function SellerDashboardPage() {
           <table className="w-full text-sm">
             <thead className="bg-gray-50 border-b border-gray-100">
               <tr>
-                {["Product", "Price", "Stock", "Sold", "Status"].map((h) => (
+                {["Product", "Price", "Net Earn", "Stock", "Status"].map((h) => (
                   <th
                     key={h}
                     className="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider"
@@ -214,18 +488,15 @@ export default async function SellerDashboardPage() {
             </thead>
             <tbody className="divide-y divide-gray-50">
               {products.slice(0, 5).map((p) => (
-                <tr
-                  key={p._id.toString()}
-                  className="hover:bg-gray-50 transition-colors"
-                >
+                <tr key={p._id.toString()} className="hover:bg-gray-50 transition-colors">
                   <td className="px-4 py-3 font-medium text-gray-900 truncate max-w-xs">
                     {p.title}
                   </td>
+                  <td className="px-4 py-3 text-gray-600">₦{p.price.toLocaleString()}</td>
                   <td className="px-4 py-3 text-[#A4860E] font-semibold">
-                    ₦{p.price.toLocaleString()}
+                    ₦{Math.round(p.price * 0.95).toLocaleString()}
                   </td>
                   <td className="px-4 py-3 text-gray-600">{p.stock}</td>
-                  <td className="px-4 py-3 text-gray-600">{p.sold}</td>
                   <td className="px-4 py-3">
                     <span
                       className={`badge ${p.status === "active" ? "bg-green-100 text-green-700" : "bg-gray-100 text-gray-500"}`}

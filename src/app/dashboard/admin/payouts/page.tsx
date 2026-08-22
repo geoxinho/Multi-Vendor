@@ -6,108 +6,267 @@ import LoadingSpinner from "@/components/ui/LoadingSpinner";
 interface PayoutOrder {
   _id: string;
   totalAmount: number;
+  netPayout: number;
   deliveredAt: string;
   sellerPayoutReleaseAt: string;
   sellerPaid: boolean;
+  payoutHeld: boolean;
+  payoutHoldReason?: string;
   buyer: { name: string };
-  items: { seller: { name: string; storeName?: string }; price: number; quantity: number }[];
+  items: {
+    seller: { name: string; storeName?: string };
+    price: number;
+    quantity: number;
+    netPayout?: number;
+  }[];
 }
+
+type FilterType = "pending" | "held" | "paid" | "all";
 
 export default function AdminPayoutsPage() {
   const [orders, setOrders] = useState<PayoutOrder[]>([]);
   const [loading, setLoading] = useState(true);
-  const [filter, setFilter] = useState<"eligible" | "paid" | "all">("eligible");
-  const [releasing, setReleasing] = useState<string | null>(null);
+  const [filter, setFilter] = useState<FilterType>("pending");
+  const [actioning, setActioning] = useState<string | null>(null);
+  // Hold dialog state
+  const [holdTarget, setHoldTarget] = useState<string | null>(null);
+  const [holdReason, setHoldReason] = useState("");
 
   const fetchPayouts = () => {
     setLoading(true);
     fetch(`/api/admin/payouts?filter=${filter}`)
       .then((r) => r.json())
-      .then((d) => { setOrders(Array.isArray(d) ? d : []); setLoading(false); });
+      .then((d) => {
+        setOrders(Array.isArray(d) ? d : []);
+        setLoading(false);
+      });
   };
 
-  useEffect(() => { fetchPayouts(); }, [filter]);
+  useEffect(() => {
+    fetchPayouts();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [filter]);
 
-  const handleRelease = async (orderId: string) => {
-    if (!confirm("Release payout for this order?")) return;
-    setReleasing(orderId);
+  const handleHold = async () => {
+    if (!holdTarget) return;
+    setActioning(holdTarget);
     await fetch("/api/admin/payouts", {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ orderId }),
+      body: JSON.stringify({ orderId: holdTarget, action: "hold", reason: holdReason }),
     });
-    setReleasing(null);
+    setActioning(null);
+    setHoldTarget(null);
+    setHoldReason("");
     fetchPayouts();
+  };
+
+  const handleReleaseHold = async (orderId: string) => {
+    if (!confirm("Release the hold on this payout? The cron job will process it automatically.")) return;
+    setActioning(orderId);
+    await fetch("/api/admin/payouts", {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ orderId, action: "release_hold" }),
+    });
+    setActioning(null);
+    fetchPayouts();
+  };
+
+  const filters: FilterType[] = ["pending", "held", "paid", "all"];
+  const filterLabels: Record<FilterType, string> = {
+    pending: "Pending",
+    held: "Held",
+    paid: "Paid Out",
+    all: "All",
   };
 
   return (
     <div>
+      {/* ── Hold Reason Dialog ── */}
+      {holdTarget && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
+          <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full p-6">
+            <h3 className="text-lg font-bold text-gray-900 mb-1">
+              <i className="fa-solid fa-lock text-amber-500 mr-2" />
+              Hold Payout
+            </h3>
+            <p className="text-sm text-gray-500 mb-4">
+              Provide a reason for holding this payout. The seller will be notified by email.
+            </p>
+            <textarea
+              value={holdReason}
+              onChange={(e) => setHoldReason(e.target.value)}
+              placeholder="e.g. Transaction under review due to buyer dispute..."
+              className="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-amber-400 resize-none h-24 mb-4"
+            />
+            <div className="flex gap-3 justify-end">
+              <button
+                onClick={() => { setHoldTarget(null); setHoldReason(""); }}
+                className="px-4 py-2 text-sm font-medium text-gray-600 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleHold}
+                disabled={actioning === holdTarget}
+                className="px-5 py-2 text-sm font-bold text-white bg-amber-500 hover:bg-amber-600 rounded-lg transition-colors disabled:opacity-60"
+              >
+                {actioning === holdTarget ? "Holding..." : "Hold Payout & Notify Seller"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ── Page Header ── */}
       <div className="flex items-center justify-between mb-8">
         <div>
           <h1 className="text-2xl font-bold text-gray-900">Seller Payouts</h1>
-          <p className="text-gray-500 text-sm mt-1">Release held payments to sellers after 24-hour delivery period.</p>
+          <p className="text-gray-500 text-sm mt-1">
+            Payouts release automatically 24 hrs after delivery. You can hold a payout before it releases.
+          </p>
         </div>
         <div className="flex gap-2">
-          {(["eligible", "paid", "all"] as const).map((f) => (
-            <button key={f}
+          {filters.map((f) => (
+            <button
+              key={f}
               onClick={() => setFilter(f)}
-              className={`px-3 py-1.5 rounded-lg text-sm font-medium capitalize transition-colors ${filter === f ? "bg-teal-600 text-white" : "bg-white border border-gray-200 text-gray-600 hover:border-teal-300"}`}>
-              {f}
+              className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors capitalize ${
+                filter === f
+                  ? f === "held"
+                    ? "bg-amber-500 text-white"
+                    : "bg-[#A4860E] text-white"
+                  : "bg-white border border-gray-200 text-gray-600 hover:border-[#A4860E]/50"
+              }`}
+            >
+              {filterLabels[f]}
             </button>
           ))}
         </div>
       </div>
 
-      {loading ? <LoadingSpinner className="py-32" size="lg" /> : (
-        orders.length === 0 ? (
-          <div className="bg-white rounded-2xl border border-gray-100 p-16 text-center text-gray-400">
-            {filter === "eligible" ? "No payouts eligible for release yet." : "No orders found."}
-          </div>
-        ) : (
-          <div className="space-y-4">
-            {orders.map((order) => (
-              <div key={order._id} className="bg-white rounded-2xl border border-gray-100 p-5">
+      {/* ── Order List ── */}
+      {loading ? (
+        <LoadingSpinner className="py-32" size="lg" />
+      ) : orders.length === 0 ? (
+        <div className="bg-white rounded-2xl border border-gray-100 p-16 text-center text-gray-400">
+          {filter === "pending"
+            ? "No payouts pending automatic release."
+            : filter === "held"
+              ? "No payouts currently on hold."
+              : "No orders found."}
+        </div>
+      ) : (
+        <div className="space-y-4">
+          {orders.map((order) => {
+            // Calculate net payout for display
+            const net = order.items.reduce(
+              (s, i) => s + (i.netPayout ?? i.price * i.quantity * 0.95),
+              0,
+            );
+
+            return (
+              <div
+                key={order._id}
+                className={`bg-white rounded-2xl border p-5 shadow-sm ${
+                  order.payoutHeld ? "border-amber-300" : "border-gray-100"
+                }`}
+              >
+                {order.payoutHeld && order.payoutHoldReason && (
+                  <div className="mb-3 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2 flex items-start gap-2">
+                    <i className="fa-solid fa-circle-info text-amber-500 mt-0.5 text-sm" />
+                    <p className="text-xs text-amber-800">
+                      <span className="font-semibold">Hold reason:</span> {order.payoutHoldReason}
+                    </p>
+                  </div>
+                )}
+
                 <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4">
                   <div>
-                    <p className="text-xs font-mono text-gray-400 mb-1">#{order._id.slice(-12).toUpperCase()}</p>
+                    <p className="text-xs font-mono text-gray-400 mb-1">
+                      #{order._id.slice(-12).toUpperCase()}
+                    </p>
                     <p className="text-sm text-gray-600">
-                      Buyer: <span className="font-medium text-gray-900">{order.buyer?.name}</span>
+                      Buyer:{" "}
+                      <span className="font-medium text-gray-900">{order.buyer?.name}</span>
                     </p>
                     <p className="text-sm text-gray-500 mt-0.5">
-                      Delivered: {order.deliveredAt ? new Date(order.deliveredAt).toLocaleDateString() : "—"}
+                      Delivered:{" "}
+                      {order.deliveredAt
+                        ? new Date(order.deliveredAt).toLocaleDateString("en-NG", {
+                            day: "numeric",
+                            month: "short",
+                            year: "numeric",
+                          })
+                        : "—"}
                     </p>
                     <p className="text-sm text-gray-500">
-                      Release date: <span className="font-medium text-gray-800">
-                        {order.sellerPayoutReleaseAt ? new Date(order.sellerPayoutReleaseAt).toLocaleDateString() : "—"}
+                      Auto-release:{" "}
+                      <span className="font-medium text-gray-800">
+                        {order.sellerPayoutReleaseAt
+                          ? new Date(order.sellerPayoutReleaseAt).toLocaleString("en-NG", {
+                              day: "numeric",
+                              month: "short",
+                              hour: "2-digit",
+                              minute: "2-digit",
+                            })
+                          : "—"}
                       </span>
                     </p>
-                    <div className="mt-2 space-y-1">
+                    <div className="mt-2 space-y-0.5">
                       {order.items?.map((item, i) => (
                         <p key={i} className="text-xs text-gray-500">
-                          Seller: <span className="font-medium">{item.seller?.storeName || item.seller?.name}</span>
-                          {" — "}₦{(item.price * item.quantity).toLocaleString()}
+                          Seller:{" "}
+                          <span className="font-medium">
+                            {item.seller?.storeName || item.seller?.name}
+                          </span>
+                          {" — "}
+                          <span className="text-[#A4860E] font-semibold">
+                            ₦{(item.netPayout ?? item.price * item.quantity * 0.95).toLocaleString()}
+                          </span>
+                          <span className="text-gray-400"> net</span>
                         </p>
                       ))}
                     </div>
                   </div>
-                  <div className="text-right shrink-0">
-                    <p className="text-2xl font-bold text-teal-700 mb-3">₦{order.totalAmount.toLocaleString()}</p>
+
+                  <div className="text-right shrink-0 space-y-2">
+                    <p className="text-2xl font-bold text-[#A4860E]">
+                      ₦{Math.round(net).toLocaleString()}
+                    </p>
+                    <p className="text-xs text-gray-400">net payout (95%)</p>
+
                     {order.sellerPaid ? (
-                      <span className="badge bg-teal-100 text-teal-700"><i className="fa-solid fa-check" /> Released</span>
+                      <span className="badge bg-emerald-100 text-emerald-700">
+                        <i className="fa-solid fa-check mr-1" />
+                        Paid Out
+                      </span>
+                    ) : order.payoutHeld ? (
+                      <button
+                        onClick={() => handleReleaseHold(order._id)}
+                        disabled={actioning === order._id}
+                        className="px-4 py-2 bg-amber-500 text-white font-semibold rounded-xl hover:bg-amber-600 transition-colors disabled:opacity-60 text-sm flex items-center gap-2"
+                      >
+                        <i className="fa-solid fa-lock-open" />
+                        {actioning === order._id ? "Releasing..." : "Release Hold"}
+                      </button>
                     ) : (
                       <button
-                        onClick={() => handleRelease(order._id)}
-                        disabled={releasing === order._id}
-                        className="px-5 py-2 bg-teal-600 text-white font-semibold rounded-xl hover:bg-teal-700 transition-colors disabled:opacity-60 text-sm">
-                        {releasing === order._id ? "Releasing..." : "Release Payout"}
+                        onClick={() => setHoldTarget(order._id)}
+                        disabled={actioning === order._id}
+                        className="px-4 py-2 bg-amber-50 border border-amber-300 text-amber-700 font-semibold rounded-xl hover:bg-amber-100 transition-colors disabled:opacity-60 text-sm flex items-center gap-2"
+                      >
+                        <i className="fa-solid fa-lock" />
+                        Hold Payment
                       </button>
                     )}
                   </div>
                 </div>
               </div>
-            ))}
-          </div>
-        )
+            );
+          })}
+        </div>
       )}
     </div>
   );

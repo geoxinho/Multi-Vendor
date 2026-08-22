@@ -19,8 +19,6 @@ const cached: MongooseCache = global.mongoose ?? { conn: null, promise: null };
 global.mongoose = cached;
 
 export async function connectDB() {
-  // Check inside the function (not at module level) so a missing env var
-  // throws a proper error inside the route handler, not at cold-start import time.
   const MONGODB_URI = process.env.MONGODB_URI;
 
   if (!MONGODB_URI) {
@@ -30,11 +28,23 @@ export async function connectDB() {
     );
   }
 
-  if (cached.conn) return cached.conn;
+  // If connection exists and is connected (readyState === 1), return cached connection
+  if (cached.conn && mongoose.connection.readyState === 1) {
+    return cached.conn;
+  }
+
+  // If connection dropped or disconnected, clear promise so we re-connect
+  if (mongoose.connection.readyState === 0) {
+    cached.promise = null;
+    cached.conn = null;
+  }
 
   if (!cached.promise) {
     cached.promise = mongoose.connect(MONGODB_URI, {
       bufferCommands: false,
+      serverSelectionTimeoutMS: 10000, // Fail fast after 10s instead of hanging for 30s-60s
+      socketTimeoutMS: 45000,
+      maxPoolSize: 10,
     });
   }
 
@@ -42,6 +52,7 @@ export async function connectDB() {
     cached.conn = await cached.promise;
   } catch (err) {
     cached.promise = null; // allow retry on next request
+    cached.conn = null;
     throw err;
   }
   return cached.conn;

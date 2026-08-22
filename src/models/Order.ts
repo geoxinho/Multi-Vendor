@@ -34,6 +34,8 @@ export interface IOrder extends Document {
   deliveredAt?: Date;
   sellerPayoutReleaseAt?: Date;
   sellerPaid: boolean;
+  payoutHeld: boolean;
+  payoutHoldReason?: string;
   shippingAddress: ShippingAddress;
   deliveryPin: string;
   createdAt: Date;
@@ -74,6 +76,8 @@ const OrderSchema = new Schema<IOrder>(
     deliveredAt: { type: Date },
     sellerPayoutReleaseAt: { type: Date },
     sellerPaid: { type: Boolean, default: false },
+    payoutHeld: { type: Boolean, default: false },
+    payoutHoldReason: { type: String, default: "" },
     shippingAddress: ShippingAddressSchema,
     deliveryPin: {
       type: String,
