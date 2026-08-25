@@ -29,6 +29,11 @@ export default function AdminDashboardLayout({ navItems, children }: AdminDashbo
     return pathname === href || pathname.startsWith(href + "/");
   };
 
+  // Filter out Categories and Orders from mobile bottom tab bar
+  const mobileBottomNavItems = navItems.filter(
+    (item) => item.label !== "Categories" && item.label !== "Orders"
+  );
+
   return (
     <div className="flex h-screen bg-gray-50 overflow-hidden">
 
@@ -114,6 +119,7 @@ export default function AdminDashboardLayout({ navItems, children }: AdminDashbo
           <button
             onClick={() => setMobileOpen(true)}
             className="md:hidden p-2 rounded-xl hover:bg-gray-100 transition-colors text-gray-600 flex items-center justify-center"
+            aria-label="Open menu"
           >
             <i className="fa-solid fa-bars text-lg" />
           </button>
@@ -147,39 +153,57 @@ export default function AdminDashboardLayout({ navItems, children }: AdminDashbo
       {/* Mobile drawer */}
       {mobileOpen && (
         <>
-          <div className="fixed inset-0 z-40 bg-black/50 md:hidden" onClick={() => setMobileOpen(false)} />
-          <div className="fixed inset-y-0 left-0 z-50 w-72 bg-[#FAFAFA] text-gray-900 border-r border-[#E5E5E5] flex flex-col md:hidden">
+          <div
+            className="fixed inset-0 z-[60] bg-black/50 md:hidden backdrop-blur-xs transition-opacity animate-fade-in"
+            onClick={() => setMobileOpen(false)}
+          />
+          <div className="fixed inset-y-0 left-0 z-[70] w-72 bg-[#FAFAFA] text-gray-900 border-r border-[#E5E5E5] flex flex-col md:hidden shadow-2xl">
             <div className="px-5 py-5 border-b border-[#E5E5E5] flex items-center justify-between">
               <Link href="/" onClick={() => setMobileOpen(false)}>
                 <img src="/main_logo.png" alt="Admin Panel Logo" className="h-9 w-auto object-contain" />
               </Link>
-              <button onClick={() => setMobileOpen(false)} className="p-1.5 rounded-xl hover:bg-gray-100 text-gray-600 flex items-center justify-center">
+              <button
+                onClick={() => setMobileOpen(false)}
+                className="p-1.5 rounded-xl hover:bg-gray-100 text-gray-600 flex items-center justify-center"
+                aria-label="Close menu"
+              >
                 <i className="fa-solid fa-xmark text-lg" />
               </button>
             </div>
-            <nav className="flex-1 px-3 py-4 space-y-1">
+            <nav className="flex-1 px-3 py-4 space-y-1 overflow-y-auto">
+              <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest px-3 mb-2">Management</p>
               {navItems.map((item) => {
                 const active = isActive(item.href);
                 return (
-                  <Link key={item.href} href={item.href} onClick={() => setMobileOpen(false)}
+                  <Link
+                    key={item.href}
+                    href={item.href}
+                    onClick={() => setMobileOpen(false)}
                     className={`flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all ${
-                      active ? "bg-[#A4860E] text-white" : "text-gray-600 hover:bg-gray-100 hover:text-gray-900"
-                    }`}>
+                      active ? "bg-[#A4860E] text-white shadow-sm" : "text-gray-600 hover:bg-gray-100 hover:text-gray-900"
+                    }`}
+                  >
                     <span>{item.icon}</span>
                     {item.label}
                   </Link>
                 );
               })}
             </nav>
-            <div className="px-3 py-4 border-t border-[#E5E5E5] space-y-1">
-              <Link href="/" target="_blank" onClick={() => setMobileOpen(false)}
-                className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm text-gray-600 hover:bg-gray-100 hover:text-gray-900 transition-all">
-                <i className="fa-solid fa-arrow-up-right-from-square w-5 text-center" />
+            <div className="px-3 py-4 border-t border-[#E5E5E5] space-y-1 bg-[#FAFAFA]">
+              <Link
+                href="/"
+                target="_blank"
+                onClick={() => setMobileOpen(false)}
+                className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-gray-600 hover:bg-gray-100 hover:text-gray-900 transition-all"
+              >
+                <i className="fa-solid fa-arrow-up-right-from-square w-5 text-center text-[#A4860E]" />
                 Visit Website
               </Link>
-              <button onClick={() => { setMobileOpen(false); setConfirmLogout(true); }}
-                className="flex items-center gap-3 w-full px-3 py-2.5 rounded-xl text-sm text-gray-600 hover:bg-red-50 hover:text-red-600 transition-all">
-                <i className="fa-solid fa-right-from-bracket w-5 text-center" />
+              <button
+                onClick={() => { setMobileOpen(false); setConfirmLogout(true); }}
+                className="flex items-center gap-3 w-full px-3 py-2.5 rounded-xl text-sm font-medium text-gray-600 hover:bg-red-50 hover:text-red-600 transition-all"
+              >
+                <i className="fa-solid fa-right-from-bracket w-5 text-center text-red-500" />
                 Sign Out
               </button>
             </div>
@@ -194,22 +218,31 @@ export default function AdminDashboardLayout({ navItems, children }: AdminDashbo
             <h2 className="text-lg font-bold text-gray-900 text-center mb-1">Sign out?</h2>
             <p className="text-sm text-gray-500 text-center mb-6">You&apos;ll be redirected to the admin login.</p>
             <div className="flex gap-3">
-              <button onClick={() => setConfirmLogout(false)}
-                className="flex-1 py-2.5 rounded-xl border border-gray-200 text-gray-700 font-semibold text-sm hover:bg-gray-50 transition-colors">
+              <button
+                onClick={() => setConfirmLogout(false)}
+                className="flex-1 py-2.5 rounded-xl border border-gray-200 text-gray-700 font-semibold text-sm hover:bg-gray-50 transition-colors"
+              >
                 Cancel
               </button>
-              <button onClick={() => signOut({ callbackUrl: window.location.origin + "/" })}
-                className="flex-1 py-2.5 rounded-xl bg-red-600 text-white font-semibold text-sm hover:bg-red-700 transition-colors">
+              <button
+                onClick={() => signOut({ callbackUrl: window.location.origin + "/" })}
+                className="flex-1 py-2.5 rounded-xl bg-red-600 text-white font-semibold text-sm hover:bg-red-700 transition-colors"
+              >
                 Yes, Sign Out
               </button>
             </div>
           </div>
         </div>
       )}
-      {/* ── Mobile Tab Bar ── */}
-      <div className="md:hidden fixed bottom-0 left-0 right-0 z-50 bg-white border-t border-gray-100 shadow-lg">
+
+      {/* ── Mobile Tab Bar (Categories and Orders removed) ── */}
+      <div
+        className={`md:hidden fixed bottom-0 left-0 right-0 z-30 bg-white border-t border-gray-100 shadow-lg ${
+          mobileOpen ? "hidden" : ""
+        }`}
+      >
         <nav className="flex items-center justify-around px-2 py-2">
-          {navItems.map((item) => {
+          {mobileBottomNavItems.map((item) => {
             const active = isActive(item.href);
             return (
               <Link
@@ -222,8 +255,8 @@ export default function AdminDashboardLayout({ navItems, children }: AdminDashbo
                 <span className={`${active ? "text-[#A4860E]" : "text-gray-400"}`}>
                   {item.icon}
                 </span>
-                <span className={`text-[10px] font-medium truncate max-w-[50px] ${active ? "text-[#A4860E]" : "text-gray-500"}`}>
-                  {item.label.split(" ")[0]} {/* Show single word labels for admin on mobile */}
+                <span className={`text-[10px] font-medium truncate max-w-[55px] ${active ? "text-[#A4860E] font-bold" : "text-gray-500"}`}>
+                  {item.label.split(" ")[0]}
                 </span>
                 {active && (
                   <span className="w-1 h-1 rounded-full bg-[#A4860E]" />
