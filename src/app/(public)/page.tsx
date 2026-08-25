@@ -8,26 +8,30 @@ import ProductGrid from "@/components/product/ProductGrid";
 import type { Metadata } from "next";
 
 const HOME_DESCRIPTION =
-  "The safest campus marketplace for college students to buy and sell textbooks, electronics, clothing, and hostel items. Trade new or used products easily.";
+  "Nigeria's dedicated campus marketplace for Adeleke University students. Buy and sell textbooks, electronics, fashion, food, dorm & hostel essentials with instant 24-hr escrow protection.";
 
 const SITE_URL =
-  process.env.NEXT_PUBLIC_SITE_URL ?? "https://closevendors.vercel.app";
+  process.env.NEXT_PUBLIC_SITE_URL ?? "https://campusgo.vercel.app";
 
 export const metadata: Metadata = {
-  title: "CampusGo — Campus Marketplace for Students",
+  title: "CampusGo — Adeleke University Campus Marketplace",
   description: HOME_DESCRIPTION,
+  alternates: {
+    canonical: "/",
+  },
   openGraph: {
-    title: "CampusGo — Campus Marketplace for Students",
+    title: "CampusGo — Adeleke University Campus Marketplace",
     description: HOME_DESCRIPTION,
     type: "website",
     siteName: "CampusGo",
     url: SITE_URL,
-    images: [{ url: "/favicon.ico", alt: "CampusGo homepage" }],
+    images: [{ url: "/main_logo.png", width: 1200, height: 630, alt: "CampusGo homepage" }],
   },
   twitter: {
     card: "summary_large_image",
-    title: "CampusGo — Campus Marketplace for Students",
+    title: "CampusGo — Adeleke University Campus Marketplace",
     description: HOME_DESCRIPTION,
+    images: ["/main_logo.png"],
   },
 };
 

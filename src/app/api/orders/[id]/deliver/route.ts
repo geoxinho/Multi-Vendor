@@ -86,7 +86,7 @@ export async function PATCH(req: NextRequest, { params }: Params) {
       ? (order.items[0].product._id as { toString(): string }).toString()
       : (order.items[0]?.product as { toString(): string })?.toString() ?? "";
 
-    const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? "https://closevendors.vercel.app";
+    const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? "https://campusgo.vercel.app";
 
     // ── Email to BUYER ──────────────────────────────────────────────
     const buyerHtml = `

@@ -41,30 +41,51 @@ async function getProduct(id: string) {
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { id } = await params;
   const p = await getProduct(id);
-  if (!p) return { title: "Product Not Found" };
+  if (!p) return { title: "Product Not Found | CampusGo" };
 
-  const description = (p.description || "").slice(0, 155);
-  const productUrl = `${process.env.NEXT_PUBLIC_SITE_URL ?? "https://closevendors.vercel.app"}/products/${p._id}`;
+  const baseUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "https://campusgo.vercel.app";
+  const description = (p.description || `${p.title} available on CampusGo Adeleke University Marketplace`).slice(0, 160);
+  const productUrl = `${baseUrl}/products/${p._id}`;
+  const priceFormatted = `₦${(p.price || 0).toLocaleString()}`;
+  const title = `${p.title} (${priceFormatted}) — Adeleke University`;
+
+  const ogImages = p.images?.length
+    ? p.images.map((img: string) => ({
+        url: img,
+        width: 800,
+        height: 800,
+        alt: p.title || "Product image",
+      }))
+    : [{ url: `${baseUrl}/main_logo.png`, width: 800, height: 800, alt: p.title || "CampusGo product" }];
 
   return {
-    title: p.title || "Product Details",
+    title,
     description,
+    category: p.category?.name || "Campus Products",
+    keywords: [
+      p.title,
+      p.category?.name || "marketplace",
+      "Adeleke University",
+      "buy on campus",
+      "student seller",
+      p.condition === "new" ? "brand new" : "used items",
+    ].filter(Boolean),
+    alternates: {
+      canonical: `/products/${p._id}`,
+    },
     openGraph: {
-      title: p.title || "Product Details",
+      title,
       description,
       type: "website",
       url: productUrl,
-      images: p.images?.length
-        ? p.images.map((image: string) => ({
-            url: image,
-            alt: p.title || "Product",
-          }))
-        : [{ url: "/favicon.ico", alt: p.title || "Product" }],
+      siteName: "CampusGo",
+      images: ogImages,
     },
     twitter: {
       card: "summary_large_image",
-      title: p.title || "Product Details",
+      title,
       description,
+      images: p.images?.length ? [p.images[0]] : [`${baseUrl}/main_logo.png`],
     },
   };
 }
@@ -74,23 +95,26 @@ export default async function ProductDetailPage({ params }: Props) {
   const product = await getProduct(id);
   if (!product) notFound();
 
-  const pageUrl = `${process.env.NEXT_PUBLIC_SITE_URL ?? "https://closevendors.vercel.app"}/products/${product._id}`;
+  const baseUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "https://campusgo.vercel.app";
+  const pageUrl = `${baseUrl}/products/${product._id}`;
   const productSchema: Record<string, unknown> = {
     "@context": "https://schema.org",
     "@type": "Product",
     name: product.title || "Product",
-    image: product.images?.length ? product.images : ["/favicon.ico"],
-    description: product.description || "",
+    image: product.images?.length ? product.images : [`${baseUrl}/main_logo.png`],
+    description: product.description || product.title || "",
     sku: String(product._id),
+    category: product.category?.name || "Marketplace",
     brand: {
       "@type": "Brand",
-      name: product.category?.name || "CampusGo",
+      name: product.seller?.storeName || product.seller?.name || "CampusGo",
     },
     offers: {
       "@type": "Offer",
       url: pageUrl,
       priceCurrency: "NGN",
       price: String(product.price ?? 0),
+      priceValidUntil: new Date(Date.now() + 90 * 24 * 60 * 60 * 1000).toISOString().split("T")[0],
       itemCondition:
         product.condition === "new"
           ? "https://schema.org/NewCondition"
@@ -99,6 +123,10 @@ export default async function ProductDetailPage({ params }: Props) {
         (product.stock ?? 0) > 0
           ? "https://schema.org/InStock"
           : "https://schema.org/OutOfStock",
+      seller: {
+        "@type": "Person",
+        name: product.seller?.storeName || product.seller?.name || "Verified Student Seller",
+      },
     },
   };
   if (product.numReviews > 0) {
