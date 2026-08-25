@@ -6,6 +6,8 @@ import { Order } from "@/models/Order";
 import { User } from "@/models/User";
 import StatCard from "@/components/dashboard/StatCard";
 import PayoutCountdownCard from "@/components/seller/PayoutCountdownCard";
+import SellerWalletCard from "@/components/seller/SellerWalletCard";
+import { getSellerWalletData } from "@/lib/sellerWallet";
 import Link from "next/link";
 import type { Metadata } from "next";
 
@@ -23,82 +25,22 @@ export default async function SellerDashboardPage() {
   if (!session?.user) notFound();
   await connectDB();
 
-  const [products, orders, sellerUser] = await Promise.all([
-    Product.find({ seller: session!.user.id }).lean(),
-    Order.find({
-      "items.seller": session!.user.id,
-      paymentStatus: "paid",
-    }).lean(),
-    User.findById(session!.user.id).select("name storeName").lean(),
-  ]);
-
   const sellerId = session!.user.id;
 
+  const [products, orders, sellerUser, walletData] = await Promise.all([
+    Product.find({ seller: sellerId }).lean(),
+    Order.find({
+      "items.seller": sellerId,
+      paymentStatus: "paid",
+    }).lean(),
+    User.findById(sellerId).select("name storeName").lean(),
+    getSellerWalletData(sellerId),
+  ]);
+
   // ── Metrics ─────────────────────────────────────────────────────────────────
-
-  /**
-   * Total Net Revenue: sum of netPayout (95%) across all paid orders.
-   * Falls back to price × quantity × 0.95 for legacy orders that lack netPayout.
-   */
-  const totalNetRevenue = orders.reduce((sum, o) => {
-    const sellerItems = o.items.filter(
-      (i: OrderItem) => i.seller?.toString() === sellerId,
-    );
-    return (
-      sum +
-      sellerItems.reduce(
-        (s: number, i: OrderItem) =>
-          s + (i.netPayout ?? i.price * i.quantity * 0.95),
-        0,
-      )
-    );
-  }, 0);
-
-  /**
-   * Amount Made = total net revenue from fully paid-out orders (sellerPaid: true)
-   */
-  const amountMade = orders
-    .filter((o) => o.sellerPaid)
-    .reduce((sum, o) => {
-      const sellerItems = o.items.filter(
-        (i: OrderItem) => i.seller?.toString() === sellerId,
-      );
-      return (
-        sum +
-        sellerItems.reduce(
-          (s: number, i: OrderItem) =>
-            s + (i.netPayout ?? i.price * i.quantity * 0.95),
-          0,
-        )
-      );
-    }, 0);
-
-  /**
-   * Pending Payout = net payout for delivered-but-not-yet-paid orders
-   * (includes held ones — seller should see the total owed to them)
-   */
-  const pendingPayout = orders
-    .filter((o) => !o.sellerPaid && o.deliveryStatus === "delivered")
-    .reduce((sum, o) => {
-      const sellerItems = o.items.filter(
-        (i: OrderItem) => i.seller?.toString() === sellerId,
-      );
-      return (
-        sum +
-        sellerItems.reduce(
-          (s: number, i: OrderItem) =>
-            s + (i.netPayout ?? i.price * i.quantity * 0.95),
-          0,
-        )
-      );
-    }, 0);
-
-  /** Total Sales = number of unique paid orders containing seller's items */
   const totalSales = orders.length;
 
   // ── Countdown orders ─────────────────────────────────────────────────────────
-  // Orders that are delivered, not yet paid, and have a future or past release date
-  // (show them until sellerPaid = true)
   const countdownOrders = orders
     .filter(
       (o) =>
@@ -285,6 +227,17 @@ export default async function SellerDashboardPage() {
         </div>
       )}
 
+      {/* ── 💳 SELLER WALLET CARD ── */}
+      <SellerWalletCard
+        availableBalance={walletData.availableBalance}
+        pendingBalance={walletData.pendingBalance}
+        heldBalance={walletData.heldBalance ?? 0}
+        totalEarned={walletData.totalEarned}
+        hasBankDetails={walletData.hasBankDetails}
+        bankDetails={walletData.bankDetails}
+        hasHeldOrders={walletData.hasHeldOrders ?? false}
+      />
+
       {/* ── Stat Cards ── */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
         <StatCard
@@ -300,18 +253,28 @@ export default async function SellerDashboardPage() {
           icon={<i className="fa-solid fa-cart-shopping text-lg" />}
         />
         <StatCard
-          label="Amount Made"
-          value={`₦${amountMade.toLocaleString()}`}
+          label="Available Balance"
+          value={`₦${walletData.availableBalance.toLocaleString()}`}
           color="gold"
-          icon={<i className="fa-solid fa-money-bill-wave text-lg" />}
-          subtitle="After 5% platform fee"
+          icon={<i className="fa-solid fa-wallet text-lg" />}
+          subtitle="Ready to withdraw"
         />
         <StatCard
-          label="Pending Payout"
-          value={`₦${pendingPayout.toLocaleString()}`}
-          color="red"
-          icon={<i className="fa-solid fa-wallet text-lg" />}
-          subtitle="Net — awaiting release"
+          label={walletData.hasHeldOrders ? "Held by Admin" : "Pending (24h Lock)"}
+          value={`₦${((walletData.heldBalance || 0) + (walletData.pendingBalance || 0)).toLocaleString()}`}
+          color={walletData.hasHeldOrders ? "gold" : "red"}
+          icon={
+            walletData.hasHeldOrders ? (
+              <i className="fa-solid fa-lock text-lg" />
+            ) : (
+              <i className="fa-solid fa-hourglass-half text-lg" />
+            )
+          }
+          subtitle={
+            walletData.hasHeldOrders
+              ? "Funds under admin review"
+              : "Unlocks 24h post-delivery"
+          }
         />
       </div>
 
@@ -322,17 +285,17 @@ export default async function SellerDashboardPage() {
             <div>
               <h2 className="text-lg font-bold text-gray-900 flex items-center gap-2">
                 <i className="fa-solid fa-hourglass-half text-[#A4860E]" />
-                Payout Countdown
+                Payout Unlock Countdowns
               </h2>
               <p className="text-xs text-gray-500 mt-0.5">
-                Payouts release automatically 24 hours after delivery confirmation.
+                95% net payouts unlock to your Available Balance 24 hours after delivery confirmation.
               </p>
             </div>
             <Link
               href="/dashboard/seller/payouts"
               className="text-sm text-[#A4860E] hover:underline font-medium"
             >
-              Full schedule →
+              Full schedule &amp; withdrawals →
             </Link>
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">

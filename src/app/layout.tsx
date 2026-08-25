@@ -1,31 +1,24 @@
 import type { Metadata } from "next";
-import { Inter } from "next/font/google";
 import "./globals.css";
 import { Providers } from "@/components/shared/Providers";
 
-const inter = Inter({
-  subsets: ["latin"],
-  variable: "--font-inter",
-  display: "swap",
-});
-
 export const metadataBase = process.env.NEXT_PUBLIC_SITE_URL
   ? new URL(process.env.NEXT_PUBLIC_SITE_URL)
-  : new URL("https://closevendors.vercel.app");
+  : new URL("https://campusgo.vercel.app");
 
 const ROOT_DESCRIPTION =
-  "Buy and sell new & used products from verified sellers. Nigeria's modern multi-vendor marketplace.";
+  "Buy and sell new & used products from verified sellers at Adeleke University. CampusGo marketplace.";
 
 export const metadata: Metadata = {
   title: {
-    default: "CampusGo — Multi-Vendor Marketplace",
+    default: "CampusGo — Adeleke University Marketplace",
     template: "%s | CampusGo",
   },
   description: ROOT_DESCRIPTION,
-  keywords: ["marketplace", "buy", "sell", "ecommerce", "Nigeria"],
+  keywords: ["marketplace", "buy", "sell", "Adeleke University", "campus", "Nigeria"],
   authors: [{ name: "CampusGo" }],
   openGraph: {
-    title: "CampusGo — Multi-Vendor Marketplace",
+    title: "CampusGo — Adeleke University Marketplace",
     description: ROOT_DESCRIPTION,
     type: "website",
     siteName: "CampusGo",
@@ -38,7 +31,7 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: "summary_large_image",
-    title: "CampusGo — Multi-Vendor Marketplace",
+    title: "CampusGo — Adeleke University Marketplace",
     description: ROOT_DESCRIPTION,
     creator: "@CampusGo",
   },
@@ -76,7 +69,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en" className={`${inter.variable} overflow-x-hidden`} suppressHydrationWarning>
+    <html lang="en" className="overflow-x-hidden font-sans" suppressHydrationWarning>
       <body className="min-h-screen bg-background text-foreground antialiased overflow-x-hidden" suppressHydrationWarning>
         <script
           type="application/ld+json"

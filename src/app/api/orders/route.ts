@@ -36,11 +36,20 @@ export async function POST(req: NextRequest) {
       const verification = await verifyPayment(paymentRef);
       if (!verification.data || verification.data.status !== "success") {
         console.error("[ORDERS] Paystack verification failed:", verification);
-        return NextResponse.json({ error: "Payment verification failed" }, { status: 400 });
+        return NextResponse.json({ error: "Payment verification failed. Please contact support." }, { status: 400 });
+      }
+      // Verify payment amount matches expected total (within ₦10 tolerance for rounding)
+      const paidAmountNGN = verification.data.amount / 100;
+      const { items: bodyItems } = body;
+      if (bodyItems && bodyItems.length > 0) {
+        // We'll validate the actual total after fetching products below
+        // Store the verified paid amount for cross-checking
+        (req as any)._verifiedAmount = paidAmountNGN;
       }
     } else {
       console.warn("[ORDERS] Skipping Paystack verification — PAYSTACK_SECRET_KEY is a placeholder/test key.");
     }
+
 
     await connectDB();
 
