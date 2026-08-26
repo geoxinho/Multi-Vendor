@@ -420,12 +420,12 @@ export default async function HomePage() {
           ].map((f) => (
             <div
               key={f.title}
-              className="bg-white rounded-2xl border border-[#E5E5E5]/70 p-4 sm:p-5 flex items-center gap-3 sm:gap-4 shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all duration-300"
+              className="bg-white rounded-2xl border border-[#E5E5E5]/70 p-4 sm:p-5 flex flex-col sm:flex-row items-start sm:items-center gap-3 sm:gap-4 shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all duration-300"
             >
               <span
-                className={`w-10 h-10 sm:w-11 sm:h-11 rounded-xl flex items-center justify-center border shrink-0 ${f.iconBg}`}
+                className={`w-10 h-10 rounded-xl flex items-center justify-center border shrink-0 ${f.iconBg}`}
               >
-                <i className={`fa-solid ${f.icon} ${f.iconColor} text-base sm:text-lg`} />
+                <i className={`fa-solid ${f.icon} ${f.iconColor} text-base`} />
               </span>
               <div className="min-w-0">
                 <p className="text-xs sm:text-sm font-bold text-[#111111] leading-tight">{f.title}</p>
