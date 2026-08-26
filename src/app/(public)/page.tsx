@@ -387,47 +387,49 @@ export default async function HomePage() {
 
       {/* ─── 3. TRUST/FEATURE STRIP (White Background) ───────── */}
       <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-14">
-        <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-5">
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
           {[
             {
               icon: "fa-shield-halved",
               title: "Buyer Protection",
-              desc: "Escrow system until handshake",
-              color: "text-[#A4860E] border-[#BBF7D0]/60",
+              desc: "Escrow system until delivery",
+              iconColor: "text-[#A4860E]",
+              iconBg: "bg-[#fdf8e8] border-[#e8d48a]/60",
             },
             {
               icon: "fa-handshake",
               title: "Campus Handover",
               desc: "Inspect items before paying",
-              color: "text-[#D97706] border-[#FEF3C7]/60",
+              iconColor: "text-[#D97706]",
+              iconBg: "bg-[#FFFBEB] border-[#FEF3C7]/60",
             },
             {
-              icon: "fa-graduation-cap",
-              title: "Student Verified",
-              desc: "Profiles linked to school email",
-              color: "text-[#A4860E]  border-[#BFDBFE]/60",
+              icon: "fa-truck-fast",
+              title: "Fast Delivery",
+              desc: "Quick on-campus order fulfilment",
+              iconColor: "text-[#0369A1]",
+              iconBg: "bg-[#EFF6FF] border-[#BFDBFE]/60",
             },
             {
-              icon: "fa-rotate-left",
-              title: "Easy Returns",
-              desc: "Trade backed by our policy",
-              color: "text-[#DB2777]  border-[#FBCFE8]/60",
+              icon: "fa-lock",
+              title: "Secure Payment",
+              desc: "Paystack-powered safe checkout",
+              iconColor: "text-[#059669]",
+              iconBg: "bg-[#ECFDF5] border-[#A7F3D0]/60",
             },
           ].map((f) => (
             <div
               key={f.title}
-              className="bg-white rounded-xl border border-[#E5E5E5]/60 p-5 lg:flex items-center justify-center gap-4 shadow-[0_2px_8px_rgba(0,0,0,0.03)] hover:shadow-[0_12px_24px_rgba(0,0,0,0.06)] hover:-translate-y-1 transition-all duration-300"
+              className="bg-white rounded-2xl border border-[#E5E5E5]/70 p-4 sm:p-5 flex items-center gap-3 sm:gap-4 shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all duration-300"
             >
               <span
-                className={`w-10 h-10 rounded-lg items-center justify-center ${f.color} text-lg shrink-0`}
+                className={`w-10 h-10 sm:w-11 sm:h-11 rounded-xl flex items-center justify-center border shrink-0 ${f.iconBg}`}
               >
-                <i
-                  className={`fa-solid ${f.icon} justify-center items-center mx-auto`}
-                />
+                <i className={`fa-solid ${f.icon} ${f.iconColor} text-base sm:text-lg`} />
               </span>
-              <div>
-                <p className="text-sm font-bold text-[#111111]">{f.title}</p>
-                <p className="text-xs text-[#6B6B6B] mt-0.5">{f.desc}</p>
+              <div className="min-w-0">
+                <p className="text-xs sm:text-sm font-bold text-[#111111] leading-tight">{f.title}</p>
+                <p className="text-[10px] sm:text-xs text-[#6B6B6B] mt-0.5 leading-snug">{f.desc}</p>
               </div>
             </div>
           ))}
