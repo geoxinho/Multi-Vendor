@@ -7,6 +7,8 @@ import { Category } from "@/models/Category";
 import ProductGrid from "@/components/product/ProductGrid";
 import type { Metadata } from "next";
 
+export const dynamic = "force-dynamic";
+
 const HOME_DESCRIPTION =
   "Nigeria's dedicated campus marketplace for Adeleke University students. Buy and sell textbooks, electronics, fashion, food, dorm & hostel essentials with instant 24-hr escrow protection.";
 
@@ -35,7 +37,75 @@ export const metadata: Metadata = {
   },
 };
 
+/**
+ * Fetch up to 4 random featured products
+ */
 async function getFeaturedProducts() {
+  try {
+    await connectDB();
+    const randomProducts = await Product.aggregate([
+      { $match: { status: "active", stock: { $gt: 0 } } },
+      { $sample: { size: 4 } },
+      {
+        $lookup: {
+          from: "users",
+          localField: "seller",
+          foreignField: "_id",
+          as: "seller",
+        },
+      },
+      { $unwind: { path: "$seller", preserveNullAndEmptyArrays: true } },
+      {
+        $lookup: {
+          from: "categories",
+          localField: "category",
+          foreignField: "_id",
+          as: "category",
+        },
+      },
+      { $unwind: { path: "$category", preserveNullAndEmptyArrays: true } },
+      {
+        $project: {
+          _id: 1,
+          title: 1,
+          price: 1,
+          images: 1,
+          condition: 1,
+          rating: 1,
+          numReviews: 1,
+          stock: 1,
+          createdAt: 1,
+          "seller._id": 1,
+          "seller.name": 1,
+          "seller.storeName": 1,
+          "category._id": 1,
+          "category.name": 1,
+          "category.slug": 1,
+        },
+      },
+    ]);
+
+    if (randomProducts && randomProducts.length > 0) {
+      return JSON.parse(JSON.stringify(randomProducts));
+    }
+
+    // Fallback if aggregate pipeline returned empty
+    const fallback = await Product.find({ status: "active", stock: { $gt: 0 } })
+      .populate("seller", "name storeName avatar storeDescription")
+      .populate("category", "name slug")
+      .limit(4)
+      .lean();
+    return JSON.parse(JSON.stringify(fallback));
+  } catch (err) {
+    console.error("[GET_FEATURED_PRODUCTS_ERROR]", err);
+    return [];
+  }
+}
+
+/**
+ * Fetch latest 8 campus products sorted by -createdAt
+ */
+async function getLatestProducts() {
   try {
     await connectDB();
     const products = await Product.find({ status: "active", stock: { $gt: 0 } })
@@ -45,7 +115,8 @@ async function getFeaturedProducts() {
       .limit(8)
       .lean();
     return JSON.parse(JSON.stringify(products));
-  } catch {
+  } catch (err) {
+    console.error("[GET_LATEST_PRODUCTS_ERROR]", err);
     return [];
   }
 }
@@ -196,8 +267,9 @@ function getCategoryStyle(name: string, index: number) {
 }
 
 export default async function HomePage() {
-  const [products, categories] = await Promise.all([
+  const [featuredProducts, latestProducts, categories] = await Promise.all([
     getFeaturedProducts(),
+    getLatestProducts(),
     getCategories(),
   ]);
 
@@ -293,8 +365,38 @@ export default async function HomePage() {
         </div>
       </section>
 
-      {/* ─── 2. TRUST/FEATURE STRIP (White Background) ───────── */}
-      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
+      {/* ─── 2. FEATURED PRODUCTS (Random 4 Products Below Hero) ── */}
+      {featuredProducts.length > 0 && (
+        <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 border-b border-gray-100">
+          <div className="flex items-center justify-between mb-8">
+            <div>
+              <div className="flex items-center gap-2 mb-1">
+                <span className="w-2 h-2 rounded-full bg-[#A4860E] inline-block animate-pulse" />
+                <span className="text-[11px] font-extrabold text-[#A4860E] tracking-wider uppercase">
+                  Featured Highlights
+                </span>
+              </div>
+              <h2 className="text-xl md:text-2xl font-extrabold text-[#111111] tracking-tight">
+                Featured Products
+              </h2>
+              <p className="text-[#6B6B6B] text-xs mt-1">
+                Random student picks and top campus deals
+              </p>
+            </div>
+            <Link
+              href="/products"
+              className="text-[#A4860E] hover:underline text-sm font-bold flex items-center gap-1.5 shrink-0"
+            >
+              See all
+              <i className="fa-solid fa-arrow-right text-xs" />
+            </Link>
+          </div>
+          <ProductGrid products={featuredProducts} />
+        </section>
+      )}
+
+      {/* ─── 3. TRUST/FEATURE STRIP (White Background) ───────── */}
+      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-14">
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
           {[
             {
@@ -340,7 +442,7 @@ export default async function HomePage() {
         </div>
       </section>
 
-      {/* ─── 3. SHOP BY CATEGORY (Tinted Background) ─────────── */}
+      {/* ─── 4. SHOP BY CATEGORY (Tinted Background) ─────────── */}
       {categories.length > 0 && (
         <section className="py-16 bg-[#FAFAFA] border-y border-[#E5E5E5]/60">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -411,7 +513,7 @@ export default async function HomePage() {
         </section>
       )}
 
-      {/* ─── 4. LATEST PRODUCTS (White Background) ───────────── */}
+      {/* ─── 5. LATEST PRODUCTS (Max 8 Products) ─────────────── */}
       <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20 bg-white">
         <div className="flex items-center justify-between mb-8">
           <div>
@@ -430,8 +532,8 @@ export default async function HomePage() {
             <i className="fa-solid fa-chevron-right text-xs" />
           </Link>
         </div>
-        {products.length > 0 ? (
-          <ProductGrid products={products} />
+        {latestProducts.length > 0 ? (
+          <ProductGrid products={latestProducts} />
         ) : (
           <div className="text-center py-16 bg-[#FAFAFA] border border-[#E5E5E5]/60 rounded-xl shadow-sm">
             <p className="text-base font-semibold text-[#111111] mb-1">
@@ -450,7 +552,7 @@ export default async function HomePage() {
         )}
       </section>
 
-      {/* ─── 5. FOR SELLERS CTA (Student Focus) ────────────────── */}
+      {/* ─── 6. FOR SELLERS CTA (Student Focus) ────────────────── */}
       <section className="bg-[#FAFAFA] border-t border-[#E5E5E5]/60 py-20">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="bg-gradient-to-br from-[#1E293B] via-[#0F172A] to-[#111111] text-white rounded-2xl p-8 lg:p-12 shadow-xl relative overflow-hidden">
