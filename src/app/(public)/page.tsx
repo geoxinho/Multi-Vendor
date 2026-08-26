@@ -327,7 +327,7 @@ export default async function HomePage() {
                 directly with peers on campus.
               </p>
 
-              <div className="flex flex-col sm:flex-row gap-4 mb-8">
+              <div className="flex flex-col sm:flex-row gap-4 mb-2">
                 <Link
                   href="/products"
                   className="group inline-flex items-center justify-center gap-2 px-6 py-3 bg-[#A4860E] text-white font-bold rounded-md hover:bg-[#8a6f0b] hover:shadow-lg hover:shadow-[#A4860E]/10 hover:-translate-y-0.5 transition-all duration-300 text-sm"
@@ -393,35 +393,37 @@ export default async function HomePage() {
               icon: "fa-shield-halved",
               title: "Buyer Protection",
               desc: "Escrow system until handshake",
-              color: "text-[#A4860E] bg-[#F0FDF4] border-[#BBF7D0]/60",
+              color: "text-[#A4860E] border-[#BBF7D0]/60",
             },
             {
               icon: "fa-handshake",
               title: "Campus Handover",
               desc: "Inspect items before paying",
-              color: "text-[#D97706] bg-[#FFFBEB] border-[#FEF3C7]/60",
+              color: "text-[#D97706] border-[#FEF3C7]/60",
             },
             {
               icon: "fa-graduation-cap",
               title: "Student Verified",
               desc: "Profiles linked to school email",
-              color: "text-[#A4860E] bg-[#fdf8e8] border-[#BFDBFE]/60",
+              color: "text-[#A4860E]  border-[#BFDBFE]/60",
             },
             {
               icon: "fa-rotate-left",
               title: "Easy Returns",
               desc: "Trade backed by our policy",
-              color: "text-[#DB2777] bg-[#FDF2F8] border-[#FBCFE8]/60",
+              color: "text-[#DB2777]  border-[#FBCFE8]/60",
             },
           ].map((f) => (
             <div
               key={f.title}
-              className="bg-white rounded-xl border border-[#E5E5E5]/60 p-5 flex items-center gap-4 shadow-[0_2px_8px_rgba(0,0,0,0.03)] hover:shadow-[0_12px_24px_rgba(0,0,0,0.06)] hover:-translate-y-1 transition-all duration-300"
+              className="bg-white rounded-xl border border-[#E5E5E5]/60 p-5 lg:flex items-center justify-center gap-4 shadow-[0_2px_8px_rgba(0,0,0,0.03)] hover:shadow-[0_12px_24px_rgba(0,0,0,0.06)] hover:-translate-y-1 transition-all duration-300"
             >
               <span
-                className={`w-10 h-10 rounded-lg flex items-center justify-center border ${f.color} text-lg shrink-0`}
+                className={`w-10 h-10 rounded-lg items-center justify-center ${f.color} text-lg shrink-0`}
               >
-                <i className={`fa-solid ${f.icon}`} />
+                <i
+                  className={`fa-solid ${f.icon} justify-center items-center mx-auto`}
+                />
               </span>
               <div>
                 <p className="text-sm font-bold text-[#111111]">{f.title}</p>
