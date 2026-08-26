@@ -2,7 +2,7 @@
   "crons": [
     {
       "path": "/api/cron/payouts?token=campusgo_cron_2025_secure_token",
-      "schedule": "0 * * * *"
+      "schedule": "0 0 * * *"
     }
   ]
 }
