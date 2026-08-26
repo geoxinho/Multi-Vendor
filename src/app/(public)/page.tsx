@@ -27,7 +27,14 @@ export const metadata: Metadata = {
     type: "website",
     siteName: "CampusGo",
     url: SITE_URL,
-    images: [{ url: "/main_logo.png", width: 1200, height: 630, alt: "CampusGo homepage" }],
+    images: [
+      {
+        url: "/main_logo.png",
+        width: 1200,
+        height: 630,
+        alt: "CampusGo homepage",
+      },
+    ],
   },
   twitter: {
     card: "summary_large_image",
@@ -329,23 +336,6 @@ export default async function HomePage() {
                   <i className="fa-solid fa-arrow-right text-xs group-hover:translate-x-1 transition-transform" />
                 </Link>
               </div>
-
-              {/* Trust badges */}
-              <div className="flex flex-wrap gap-5">
-                {[
-                  { icon: "fa-graduation-cap", label: "Student Verified" },
-                  { icon: "fa-shield-halved", label: "Secure Payments" },
-                  { icon: "fa-handshake", label: "On-Campus Handover" },
-                ].map((b) => (
-                  <div
-                    key={b.label}
-                    className="flex items-center gap-2 text-sm text-[#6B6B6B]"
-                  >
-                    <i className={`fa-solid ${b.icon} text-[#A4860E]`} />
-                    <span>{b.label}</span>
-                  </div>
-                ))}
-              </div>
             </div>
 
             {/* Right — image illustration of students trading on campus */}
@@ -397,7 +387,7 @@ export default async function HomePage() {
 
       {/* ─── 3. TRUST/FEATURE STRIP (White Background) ───────── */}
       <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-14">
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
+        <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-5">
           {[
             {
               icon: "fa-shield-halved",
