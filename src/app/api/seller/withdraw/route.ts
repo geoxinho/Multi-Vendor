@@ -10,8 +10,8 @@ import { sendMail } from "@/lib/email";
 export async function POST(req: NextRequest) {
   try {
     const session = await auth();
-    if (!session || (session.user.role !== "seller" && session.user.role !== "admin")) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    if (!session || session.user.role !== "seller") {
+      return NextResponse.json({ error: "Unauthorized. Only sellers can withdraw from their wallet." }, { status: 401 });
     }
 
     const { amount } = await req.json();
@@ -87,12 +87,23 @@ export async function POST(req: NextRequest) {
     // Paystack Transfer if secret key configured
     const paystackSecret = process.env.PAYSTACK_SECRET_KEY;
     let paystackRef = "";
+    let transferSucceeded = false;
 
     if (paystackSecret && !paystackSecret.includes("xxx") && paystackSecret.trim() !== "") {
-      try {
-        const bankCode = seller.bankDetails.bankCode || seller.bankDetails.bankName;
+      // Require a valid numeric bank code — bankName is NOT a valid Paystack bank_code
+      const bankCode = seller.bankDetails.bankCode?.trim();
+      if (!bankCode) {
+        return NextResponse.json(
+          {
+            error:
+              "Bank code is missing from your saved bank details. Please update your bank details in Seller Settings (re-select your bank from the dropdown) and try again.",
+          },
+          { status: 400 }
+        );
+      }
 
-        // 1. Create recipient
+      try {
+        // 1. Create / resolve a transfer recipient for the seller's bank account
         const recipientRes = await fetch("https://api.paystack.co/transferrecipient", {
           method: "POST",
           headers: {
@@ -108,34 +119,64 @@ export async function POST(req: NextRequest) {
           }),
         });
         const recipientData = await recipientRes.json();
+        console.log("[WITHDRAW] Recipient response:", JSON.stringify(recipientData));
 
-        if (recipientData.status) {
-          const recipientCode = recipientData.data.recipient_code;
-          // 2. Transfer
-          const transferRes = await fetch("https://api.paystack.co/transfer", {
-            method: "POST",
-            headers: {
-              Authorization: `Bearer ${paystackSecret}`,
-              "Content-Type": "application/json",
+        if (!recipientData.status) {
+          const msg = recipientData.message || "Failed to create transfer recipient on Paystack.";
+          console.error("[WITHDRAW] Recipient creation failed:", msg);
+          return NextResponse.json(
+            {
+              error: `Could not set up bank transfer: ${msg}. Please verify your bank details in Seller Settings.`,
             },
-            body: JSON.stringify({
-              source: "balance",
-              amount: Math.round(withdrawAmount * 100),
-              recipient: recipientCode,
-              reason: `CampusGo Seller Withdrawal for ${seller.name}`,
-            }),
-          });
-          const transferData = await transferRes.json();
-          if (transferData.status) {
-            paystackRef = transferData.data.reference || transferData.data.transfer_code || "";
-          }
+            { status: 502 }
+          );
+        }
+
+        const recipientCode = recipientData.data.recipient_code;
+
+        // 2. Initiate the transfer from Paystack balance → seller's bank account
+        const transferRes = await fetch("https://api.paystack.co/transfer", {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${paystackSecret}`,
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            source: "balance",
+            amount: Math.round(withdrawAmount * 100), // kobo
+            recipient: recipientCode,
+            reason: `CampusGo Seller Withdrawal for ${seller.name}`,
+          }),
+        });
+        const transferData = await transferRes.json();
+        console.log("[WITHDRAW] Transfer response:", JSON.stringify(transferData));
+
+        if (transferData.status) {
+          paystackRef = transferData.data.reference || transferData.data.transfer_code || "";
+          transferSucceeded = true;
+        } else {
+          const msg = transferData.message || "Paystack transfer initiation failed.";
+          console.error("[WITHDRAW] Transfer failed:", msg);
+          return NextResponse.json(
+            {
+              error: `Transfer failed: ${msg}. Please try again or contact support.`,
+            },
+            { status: 502 }
+          );
         }
       } catch (paystackErr) {
         console.error("[WITHDRAW PAYSTACK ERROR]", paystackErr);
+        return NextResponse.json(
+          { error: "Could not reach Paystack. Please try again in a moment." },
+          { status: 503 }
+        );
       }
+    } else {
+      // No live Paystack key — queue for manual processing
+      transferSucceeded = false;
     }
 
-    // Record Withdrawal in DB
+    // Record Withdrawal — only "completed" when Paystack confirmed the transfer
     const withdrawal = await Withdrawal.create({
       seller: sellerId,
       amount: withdrawAmount,
@@ -145,12 +186,12 @@ export async function POST(req: NextRequest) {
         accountNumber: seller.bankDetails.accountNumber,
         accountName: seller.bankDetails.accountName,
       },
-      status: "completed",
+      status: transferSucceeded ? "completed" : "pending",
       reference: paystackRef,
-      processedAt: new Date(),
+      processedAt: transferSucceeded ? new Date() : undefined,
     });
 
-    // Mark corresponding orders as paid out
+    // Mark orders as paid out only after a confirmed Paystack transfer
     for (const order of ordersToMarkPaid) {
       order.sellerPaid = true;
       await order.save();

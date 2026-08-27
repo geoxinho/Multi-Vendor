@@ -8,6 +8,7 @@ export const dynamic = "force-dynamic";
 export const dynamicParams = true;
 import { connectDB } from "@/lib/db";
 import { Product } from "@/models/Product";
+import { auth } from "@/lib/auth";
 import RatingStars from "@/components/shared/RatingStars";
 import Badge from "@/components/ui/Badge";
 import BuyNowButton from "@/components/product/BuyNowButton";
@@ -29,7 +30,17 @@ async function getProduct(id: string) {
       .populate("seller", "name storeName avatar storeDescription")
       .populate("category", "name slug")
       .lean();
-    return p ? JSON.parse(JSON.stringify(p)) : null;
+
+    if (!p) return null;
+
+    if (p.status !== "active") {
+      const session = await auth();
+      const isOwner = session && (p.seller as any)?._id?.toString() === session.user.id;
+      const isAdmin = session && session.user.role === "admin";
+      if (!isOwner && !isAdmin) return null;
+    }
+
+    return JSON.parse(JSON.stringify(p));
   } catch (error) {
     // Log the full error so it appears in Vercel's Function Logs
     console.error("[PRODUCT_PAGE_ERROR] id=%s error=%s", id, String(error));

@@ -75,9 +75,15 @@ export async function GET(req: NextRequest) {
               continue;
             }
 
-            try {
-              const bankCode = seller.bankDetails.bankCode || seller.bankDetails.bankName;
+            // Require a valid numeric bank code — bankName is NOT a valid Paystack bank_code
+            const bankCode = seller.bankDetails.bankCode?.trim();
+            if (!bankCode) {
+              console.error(`[PAYOUT CRON] Seller ${sellerId} is missing bankCode — skipping. They must re-save bank details.`);
+              allSucceeded = false;
+              continue;
+            }
 
+            try {
               // 1. Create Transfer Recipient
               const recipientRes = await fetch("https://api.paystack.co/transferrecipient", {
                 method: "POST",

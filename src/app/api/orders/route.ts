@@ -203,7 +203,9 @@ export async function GET(req: NextRequest) {
 
     const total = await Order.countDocuments(query);
     const orders = await Order.find(query)
-      .populate("buyer", "name email")
+      .populate("buyer", "name email phone")
+      .populate("items.seller", "name storeName email phone")
+      .populate("items.product", "title images")
       .sort("-createdAt")
       .skip(skip)
       .limit(limit)

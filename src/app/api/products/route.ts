@@ -95,6 +95,7 @@ export async function POST(req: NextRequest) {
     const product = await Product.create({
       ...parsed.data,
       seller: session.user.id,
+      status: "pending_approval", // always starts pending — admin must approve
     });
 
     return NextResponse.json(product, { status: 201 });

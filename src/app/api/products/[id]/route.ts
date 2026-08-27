@@ -13,13 +13,23 @@ export async function GET(_req: NextRequest, { params }: Params) {
     await connectDB();
     const { id } = await params;
     const product = await Product.findById(id)
-      .populate("seller", "name storeName avatar storeDescription")
+      .populate("seller", "name storeName email phone avatar storeDescription school nin bankDetails")
       .populate("category", "name slug")
       .lean();
 
     if (!product) {
       return NextResponse.json({ error: "Product not found" }, { status: 404 });
     }
+
+    if (product.status !== "active") {
+      const session = await auth();
+      const isOwner = session && (product.seller as any)?._id?.toString() === session.user.id;
+      const isAdmin = session && session.user.role === "admin";
+      if (!isOwner && !isAdmin) {
+        return NextResponse.json({ error: "Product not available" }, { status: 404 });
+      }
+    }
+
     return NextResponse.json(product);
   } catch (err) {
     console.error("[PRODUCT GET]", err);
@@ -58,7 +68,30 @@ export async function PUT(req: NextRequest, { params }: Params) {
       );
     }
 
-    const updated = await Product.findByIdAndUpdate(id, parsed.data, {
+    const updateData: any = { ...parsed.data };
+
+    if (!isAdmin) {
+      // If client sent status
+      if (body.status !== undefined) {
+        // Seller can only toggle between active and inactive IF product is currently active or inactive
+        if (["active", "inactive"].includes(product.status) && ["active", "inactive"].includes(body.status)) {
+          updateData.status = body.status;
+        } else {
+          delete updateData.status;
+        }
+      }
+
+      // If seller edits a rejected product (changing title, price, etc.), re-submit for review
+      if (product.status === "rejected") {
+        updateData.status = "pending_approval";
+        updateData.rejectionReason = "";
+      }
+    } else {
+      if (body.status) updateData.status = body.status;
+      if (body.rejectionReason !== undefined) updateData.rejectionReason = body.rejectionReason;
+    }
+
+    const updated = await Product.findByIdAndUpdate(id, updateData, {
       new: true,
     });
     return NextResponse.json(updated);

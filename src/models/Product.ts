@@ -12,7 +12,8 @@ export interface IProduct extends Document {
   sold: number;
   rating: number;
   numReviews: number;
-  status: "active" | "inactive";
+  status: "active" | "inactive" | "pending_approval" | "rejected";
+  rejectionReason?: string;
   isFeatured: boolean;
   tags: string[];
   variants: {
@@ -35,7 +36,12 @@ const ProductSchema = new Schema<IProduct>(
     sold: { type: Number, default: 0 },
     rating: { type: Number, default: 0 },
     numReviews: { type: Number, default: 0 },
-    status: { type: String, enum: ["active", "inactive"], default: "active" },
+    status: {
+      type: String,
+      enum: ["active", "inactive", "pending_approval", "rejected"],
+      default: "pending_approval",
+    },
+    rejectionReason: { type: String, default: "" },
     isFeatured: { type: Boolean, default: false },
     tags: [{ type: String, trim: true }],
     variants: {
@@ -47,5 +53,11 @@ const ProductSchema = new Schema<IProduct>(
 );
 
 ProductSchema.index({ title: "text", description: "text", tags: "text" });
+
+if (models.Product) {
+  try {
+    delete (models as any).Product;
+  } catch {}
+}
 
 export const Product = models.Product || model<IProduct>("Product", ProductSchema);
