@@ -20,6 +20,7 @@ export interface IProduct extends Document {
     sizes: string[];
     colors: string[];
   };
+  school?: string;
   createdAt: Date;
 }
 
@@ -32,6 +33,7 @@ const ProductSchema = new Schema<IProduct>(
     images: [{ type: String }],
     category: { type: Schema.Types.ObjectId, ref: "Category", required: true },
     seller: { type: Schema.Types.ObjectId, ref: "User", required: true },
+    school: { type: String, default: "", index: true },
     stock: { type: Number, required: true, min: 0, default: 1 },
     sold: { type: Number, default: 0 },
     rating: { type: Number, default: 0 },
@@ -53,6 +55,7 @@ const ProductSchema = new Schema<IProduct>(
 );
 
 ProductSchema.index({ title: "text", description: "text", tags: "text" });
+ProductSchema.index({ school: 1, status: 1 });
 
 if (models.Product) {
   try {

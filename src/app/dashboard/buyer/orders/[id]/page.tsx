@@ -2,29 +2,40 @@ import { notFound } from "next/navigation";
 import { auth } from "@/lib/auth";
 import { connectDB } from "@/lib/db";
 import { Order } from "@/models/Order";
+import { OrderReport } from "@/models/OrderReport";
 import { User } from "@/models/User";
 import { Product } from "@/models/Product";
 import Image from "next/image";
 import Link from "next/link";
+import OrderReportButton from "@/components/orders/OrderReportButton";
 import type { Metadata } from "next";
 
 export const metadata: Metadata = { title: "Order Details" };
 
 type Props = { params: Promise<{ id: string }> };
 
-async function getOrder(id: string, userId: string) {
+async function getOrderData(id: string, userId: string) {
   await connectDB();
   try {
-    const order = await Order.findById(id)
-      .populate("buyer", "name email")
-      .populate("items.product", "title images _id")
-      .lean();
-    if (!order) return null;
+    const [order, report] = await Promise.all([
+      Order.findById(id)
+        .populate("buyer", "name email")
+        .populate("items.product", "title images _id")
+        .lean(),
+      OrderReport.findOne({ order: id, reportedBy: userId }).lean(),
+    ]);
+
+    if (!order) return { order: null, report: null };
     // Only the buyer (or admin) can view this page
-    if ((order.buyer as { _id: { toString(): string } })._id.toString() !== userId) return null;
-    return JSON.parse(JSON.stringify(order));
+    if ((order.buyer as { _id: { toString(): string } })._id.toString() !== userId) {
+      return { order: null, report: null };
+    }
+    return {
+      order: JSON.parse(JSON.stringify(order)),
+      report: report ? JSON.parse(JSON.stringify(report)) : null,
+    };
   } catch {
-    return null;
+    return { order: null, report: null };
   }
 }
 
@@ -44,7 +55,7 @@ export default async function BuyerOrderDetailsPage({ params }: Props) {
   const session = await auth();
   if (!session?.user) notFound();
 
-  const order = await getOrder(id, session.user.id);
+  const { order, report } = await getOrderData(id, session.user.id);
   if (!order) notFound();
 
   return (
@@ -61,16 +72,52 @@ export default async function BuyerOrderDetailsPage({ params }: Props) {
         </div>
       </div>
 
-      <div className="mb-4">
+      {/* Existing Report Banner */}
+      {report && (
+        <div className="mb-4 p-4 rounded-xl border border-red-200 bg-red-50 text-red-900 text-xs">
+          <div className="flex items-start justify-between gap-3">
+            <div className="flex items-start gap-2.5">
+              <i className="fa-solid fa-triangle-exclamation text-red-600 text-base mt-0.5" />
+              <div>
+                <p className="font-bold text-red-900 text-sm">Dispute / Complaint Lodged</p>
+                <p className="text-red-700 mt-0.5"><strong>Reason:</strong> {report.reason}</p>
+                <p className="text-red-600 mt-0.5">{report.description}</p>
+                {report.adminNotes && (
+                  <p className="mt-2 pt-2 border-t border-red-200 text-gray-800 bg-white/60 p-2 rounded-lg">
+                    <strong>Admin Note:</strong> {report.adminNotes}
+                  </p>
+                )}
+              </div>
+            </div>
+            <span className={`px-2.5 py-1 rounded-md text-[10px] font-bold uppercase shrink-0 ${
+              report.status === "resolved"
+                ? "bg-green-100 text-green-700"
+                : report.status === "investigating"
+                ? "bg-amber-100 text-amber-700"
+                : "bg-red-100 text-red-700"
+            }`}>
+              {report.status}
+            </span>
+          </div>
+        </div>
+      )}
+
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-4">
         <Link 
           href={`/dashboard/buyer/messages?orderId=${order._id}`}
-          className="flex items-center gap-2 justify-center w-full bg-teal-50 border border-teal-200 text-teal-700 py-3 rounded-2xl font-bold hover:bg-teal-100 transition-colors"
+          className="flex items-center gap-2 justify-center w-full bg-teal-50 border border-teal-200 text-teal-700 py-3 rounded-2xl font-bold hover:bg-teal-100 transition-colors text-sm"
         >
           <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
           </svg>
           Message Seller
         </Link>
+        <OrderReportButton
+          orderId={order._id}
+          role="buyer"
+          hasActiveReport={!!report}
+          className="flex items-center gap-2 justify-center w-full bg-red-50 border border-red-200 text-red-700 py-3 rounded-2xl font-bold hover:bg-red-100 transition-colors text-sm"
+        />
       </div>
 
       {/* Items */}

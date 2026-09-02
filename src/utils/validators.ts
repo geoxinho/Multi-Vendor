@@ -19,10 +19,11 @@ export const registerSchema = z.object({
   passport: z.string().optional(),
   confirmPassword: z.string().optional(),
 }).superRefine((data, ctx) => {
+  if (!data.school || data.school.trim() === "") {
+    ctx.addIssue({ code: z.ZodIssueCode.custom, path: ["school"], message: "Please select your school / campus" });
+  }
+
   if (data.role === "buyer") {
-    if (!data.school || data.school.trim() === "") {
-      ctx.addIssue({ code: z.ZodIssueCode.custom, path: ["school"], message: "Please select your school" });
-    }
     if (!data.hearAboutUs || data.hearAboutUs.trim() === "") {
       ctx.addIssue({ code: z.ZodIssueCode.custom, path: ["hearAboutUs"], message: "Please select how you heard about us" });
     }
@@ -33,9 +34,6 @@ export const registerSchema = z.object({
   if (data.role === "seller") {
     if (!data.passport || data.passport.trim() === "") {
       ctx.addIssue({ code: z.ZodIssueCode.custom, path: ["passport"], message: "Passport photograph upload is required for sellers" });
-    }
-    if (!data.nin || !/^\d{11}$/.test(data.nin)) {
-      ctx.addIssue({ code: z.ZodIssueCode.custom, path: ["nin"], message: "NIN must be exactly 11 digits for sellers" });
     }
     if (!data.sellerCategory || data.sellerCategory.trim() === "") {
       ctx.addIssue({ code: z.ZodIssueCode.custom, path: ["sellerCategory"], message: "Please select a product category for your store" });

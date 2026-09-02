@@ -49,7 +49,7 @@ export async function POST(req: NextRequest) {
       nin: role === "seller" ? nin : "",
       sellerCategory: role === "seller" ? sellerCategory : "",
       school,
-      passport: role === "seller" ? (passport ?? "") : "",
+      passport: passport ?? "",
       storeName: role === "seller" ? (storeName ?? "") : "",
       storeDescription: role === "seller" ? (storeDescription ?? "") : "",
       bankDetails: role === "seller" ? {

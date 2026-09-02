@@ -30,7 +30,9 @@ export interface IUser extends Document {
   lastNameChangeAt?: Date;
   passwordResetToken?: string;
   passwordResetTokenExpires?: Date;
+  lastActiveAt?: Date;
   createdAt: Date;
+  updatedAt: Date;
 }
 
 
@@ -65,8 +67,15 @@ const UserSchema = new Schema<IUser>(
     lastNameChangeAt: { type: Date },
     passwordResetToken: { type: String, default: "" },
     passwordResetTokenExpires: { type: Date },
+    lastActiveAt: { type: Date, default: Date.now, index: true },
   },
   { timestamps: true }
 );
+
+if (models.User) {
+  try {
+    delete (models as any).User;
+  } catch {}
+}
 
 export const User = models.User || model<IUser>("User", UserSchema);

@@ -5,6 +5,7 @@ import { Order } from "@/models/Order";
 import { Product } from "@/models/Product";
 import Image from "next/image";
 import Link from "next/link";
+import OrderReportButton from "@/components/orders/OrderReportButton";
 import type { Metadata } from "next";
 
 export const metadata: Metadata = { title: "Purchase Details" };
@@ -57,15 +58,20 @@ export default async function SellerPurchaseDetailsPage({ params }: Props) {
         </div>
       </div>
 
-      {/* Message Seller */}
-      <div className="mb-4">
+      {/* Message Seller & Report */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-4">
         <Link 
           href={`/dashboard/seller/messages?orderId=${order._id}`}
-          className="flex items-center gap-2 justify-center w-full bg-[#fdf8e8] border border-[#e8d48a] text-[#A4860E] py-3 rounded-2xl font-bold hover:bg-[#fdf8e8]/50 transition-colors"
+          className="flex items-center gap-2 justify-center w-full bg-[#fdf8e8] border border-[#e8d48a] text-[#A4860E] py-3 rounded-2xl font-bold hover:bg-[#fdf8e8]/50 transition-colors text-sm"
         >
           <i className="fa-solid fa-comment-dots text-sm" />
           Message Seller
         </Link>
+        <OrderReportButton
+          orderId={order._id}
+          role="buyer"
+          className="flex items-center gap-2 justify-center w-full bg-red-50 border border-red-200 text-red-700 py-3 rounded-2xl font-bold hover:bg-red-100 transition-colors text-sm"
+        />
       </div>
 
       {/* Delivery PIN Code Alert for the buyer (the seller who purchased) */}

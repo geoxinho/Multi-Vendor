@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import { useEffect, useState, use } from "react";
 import Link from "next/link";
@@ -75,18 +75,22 @@ const STATUS_COLOR: Record<string, string> = {
 export default function AdminOrderDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params);
   const [order, setOrder] = useState<OrderDetail | null>(null);
+  const [reports, setReports] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [updating, setUpdating] = useState(false);
 
   const fetchOrder = () => {
     setLoading(true);
-    fetch(`/api/orders/${id}`)
-      .then((res) => {
+    Promise.all([
+      fetch(`/api/orders/${id}`).then((res) => {
         if (!res.ok) throw new Error("Not found");
         return res.json();
-      })
-      .then((data) => {
-        setOrder(data);
+      }),
+      fetch(`/api/reports?orderId=${id}`).then((res) => res.json()).catch(() => ({ reports: [] })),
+    ])
+      .then(([orderData, reportsData]) => {
+        setOrder(orderData);
+        setReports(reportsData.reports ?? []);
         setLoading(false);
       })
       .catch(() => {
@@ -238,7 +242,43 @@ export default function AdminOrderDetailPage({ params }: { params: Promise<{ id:
         </div>
       )}
 
-      {/* 2-Column Grid */}
+      {/* Complaints / Disputes on this Order */}
+      {reports.length > 0 && (
+        <div className="bg-red-50 border border-red-200 rounded-2xl p-5 space-y-3">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2 text-red-900 font-bold text-sm">
+              <i className="fa-solid fa-triangle-exclamation text-red-600" />
+              <span>{reports.length} Customer Dispute / Abnormality Report{reports.length > 1 ? "s" : ""} on this Order</span>
+            </div>
+            <Link
+              href="/dashboard/admin/reports"
+              className="text-xs font-bold text-red-700 hover:underline"
+            >
+              Open Complaints Hub &rarr;
+            </Link>
+          </div>
+          <div className="space-y-2">
+            {reports.map((r) => (
+              <div key={r._id} className="bg-white p-3.5 rounded-xl border border-red-100 text-xs text-gray-800 space-y-1">
+                <div className="flex justify-between items-center">
+                  <span className="font-bold text-gray-900">{r.subject}</span>
+                  <span className={`px-2 py-0.5 rounded text-[10px] font-bold uppercase ${
+                    r.status === "resolved" ? "bg-green-100 text-green-700" : "bg-red-100 text-red-700"
+                  }`}>
+                    {r.status}
+                  </span>
+                </div>
+                <p className="text-gray-600">
+                  <strong>Reported by {r.reporterRole}:</strong> {r.reportedBy?.name || "User"} ({r.reportedBy?.email}) &bull; Reason: <strong>{r.reason}</strong>
+                </p>
+                <p className="text-gray-700 bg-gray-50 p-2 rounded-lg mt-1 italic">
+                  "{r.description}"
+                </p>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Left Column: Items & Customer Details (2 cols) */}
         <div className="lg:col-span-2 space-y-6">

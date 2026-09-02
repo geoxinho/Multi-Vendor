@@ -21,6 +21,7 @@ export async function GET(req: NextRequest) {
     const maxPrice = parseFloat(searchParams.get("maxPrice") ?? "999999999");
     const sort = searchParams.get("sort") ?? "-createdAt";
     const sellerId = searchParams.get("seller") ?? "";
+    const schoolParam = searchParams.get("school");
     const mine = searchParams.get("mine") === "true";
 
     // If "mine=true", return the authenticated seller's own products (all statuses)
@@ -36,16 +37,44 @@ export async function GET(req: NextRequest) {
       return NextResponse.json({ products: myProducts, total: myProducts.length });
     }
 
+    // Determine target school filter
+    let targetSchool = schoolParam;
+    if (!targetSchool) {
+      const session = await auth();
+      if (session?.user?.role === "buyer" && session?.user?.school) {
+        targetSchool = session.user.school;
+      }
+    }
+
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const query: any = { status: "active" };
 
+    const andConditions: any[] = [];
+
     if (search) {
-      query.$or = [
-        { title: { $regex: search, $options: "i" } },
-        { tags: { $regex: search, $options: "i" } },
-        { description: { $regex: search, $options: "i" } },
-      ];
+      andConditions.push({
+        $or: [
+          { title: { $regex: search, $options: "i" } },
+          { tags: { $regex: search, $options: "i" } },
+          { description: { $regex: search, $options: "i" } },
+        ],
+      });
     }
+
+    if (targetSchool && targetSchool !== "all") {
+      const sellersInSchool = await User.find({ school: targetSchool }).distinct("_id");
+      andConditions.push({
+        $or: [
+          { school: targetSchool },
+          { seller: { $in: sellersInSchool } },
+        ],
+      });
+    }
+
+    if (andConditions.length > 0) {
+      query.$and = andConditions;
+    }
+
     if (category) query.category = category;
     if (condition) query.condition = condition;
     if (minPrice || maxPrice < 999999999) query.price = { $gte: minPrice, $lte: maxPrice };
@@ -55,7 +84,7 @@ export async function GET(req: NextRequest) {
     const total = await Product.countDocuments(query);
 
     const products = await Product.find(query)
-      .populate("seller", "name storeName avatar")
+      .populate("seller", "name storeName avatar school")
       .populate("category", "name slug")
       .sort(sort)
       .skip(skip)
@@ -63,7 +92,7 @@ export async function GET(req: NextRequest) {
       .lean();
 
     return NextResponse.json(
-      { products, total, page, pages: Math.ceil(total / limit) },
+      { products, total, page, pages: Math.ceil(total / limit), activeSchool: targetSchool || null },
       {
         headers: {
           "Cache-Control": "public, s-maxage=60, stale-while-revalidate=300",
@@ -92,9 +121,13 @@ export async function POST(req: NextRequest) {
 
     await connectDB();
 
+    const sellerUser = await User.findById(session.user.id).select("school").lean();
+    const sellerSchool = sellerUser?.school || session.user.school || "";
+
     const product = await Product.create({
       ...parsed.data,
       seller: session.user.id,
+      school: sellerSchool,
       status: "pending_approval", // always starts pending — admin must approve
     });
 

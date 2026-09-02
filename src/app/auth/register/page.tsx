@@ -114,6 +114,10 @@ function RegisterForm() {
 
   /* Misc */
   const [categories, setCategories] = useState<{ _id: string; name: string }[]>([]);
+  const [schools, setSchools] = useState<{ _id: string; name: string; code?: string }[]>([
+    { _id: "1", name: "Adeleke University" },
+    { _id: "2", name: "Federal Polytechnic Ede" },
+  ]);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
@@ -122,8 +126,13 @@ function RegisterForm() {
   const [isRegistered, setIsRegistered] = useState(false);
   const [isAutoVerified, setIsAutoVerified] = useState(false);
 
-  /* Load categories & banks */
+  /* Load categories, schools & banks */
   useEffect(() => {
+    fetch("/api/schools")
+      .then((r) => r.json())
+      .then((d) => { if (Array.isArray(d) && d.length > 0) setSchools(d); })
+      .catch(() => {});
+
     fetch("/api/categories")
       .then((r) => r.json())
       .then((d) => { if (Array.isArray(d)) setCategories(d); })
@@ -455,14 +464,16 @@ function RegisterForm() {
                   <>
                     {/* School */}
                     <div>
-                      <label className={labelClass}>School <span className="text-[#DC2626]">*</span></label>
+                      <label className={labelClass}>School / Campus <span className="text-[#DC2626]">*</span></label>
                       <div className="relative">
                         <i className="fa-solid fa-graduation-cap absolute left-3.5 top-1/2 -translate-y-1/2 text-[#9B9B9B] text-xs" />
                         <select required value={form.school}
                           onChange={(e) => setForm((f) => ({ ...f, school: e.target.value }))}
                           className={`${inputClassBare} pl-9`}>
-                          <option value="" disabled>Select your school</option>
-                          <option value="Adeleke University">Adeleke University</option>
+                          <option value="" disabled>Select your school / campus</option>
+                          {schools.map((s) => (
+                            <option key={s._id} value={s.name}>{s.name}</option>
+                          ))}
                         </select>
                       </div>
                     </div>
@@ -506,20 +517,28 @@ function RegisterForm() {
                 {/* ─── SELLER fields ─── */}
                 {form.role === "seller" && (
                   <>
-                    {/* NIN + Category */}
-                    <div className="grid grid-cols-2 gap-3">
+                    {/* School + Category */}
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                       <div>
-                        <label className={labelClass}>NIN <span className="text-[#DC2626]">*</span></label>
-                        <input type="text" required value={form.nin}
-                          onChange={(e) => setForm((f) => ({ ...f, nin: e.target.value.replace(/\D/g, "") }))}
-                          placeholder="11-digit NIN" maxLength={11} className={inputClassBare} />
+                        <label className={labelClass}>School / Campus <span className="text-[#DC2626]">*</span></label>
+                        <div className="relative">
+                          <i className="fa-solid fa-graduation-cap absolute left-3.5 top-1/2 -translate-y-1/2 text-[#9B9B9B] text-xs" />
+                          <select required value={form.school}
+                            onChange={(e) => setForm((f) => ({ ...f, school: e.target.value }))}
+                            className={`${inputClassBare} pl-9`}>
+                            <option value="" disabled>Select your school</option>
+                            {schools.map((s) => (
+                              <option key={s._id} value={s.name}>{s.name}</option>
+                            ))}
+                          </select>
+                        </div>
                       </div>
                       <div>
-                        <label className={labelClass}>Category <span className="text-[#DC2626]">*</span></label>
+                        <label className={labelClass}>Primary Category <span className="text-[#DC2626]">*</span></label>
                         <select required value={form.sellerCategory}
                           onChange={(e) => setForm((f) => ({ ...f, sellerCategory: e.target.value }))}
                           className={inputClassBare}>
-                          <option value="" disabled>Category</option>
+                          <option value="" disabled>Select category</option>
                           {categories.map((c) => (<option key={c._id} value={c.name}>{c.name}</option>))}
                           <option value="General/Other">General / Other</option>
                         </select>

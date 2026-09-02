@@ -2,6 +2,7 @@
 
 import { useEffect, useState, useCallback, Suspense } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
+import { useSession } from "next-auth/react";
 import ProductGrid from "@/components/product/ProductGrid";
 import Pagination from "@/components/shared/Pagination";
 import EmptyState from "@/components/ui/EmptyState";
@@ -30,13 +31,17 @@ function ProductSkeletonGrid() {
 }
 
 interface Category { _id: string; name: string; slug: string }
+interface School { _id: string; name: string; slug: string; code?: string }
 
 function ProductsContent() {
+  const { data: session } = useSession();
   const searchParams = useSearchParams();
   const router = useRouter();
 
   const [products, setProducts] = useState<ProductSummary[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
+  const [schools, setSchools] = useState<School[]>([]);
+  const [activeSchool, setActiveSchool] = useState<string | null>(null);
   const [total, setTotal] = useState(0);
   const [pages, setPages] = useState(1);
   const [loading, setLoading] = useState(true);
@@ -45,6 +50,7 @@ function ProductsContent() {
   const search = searchParams.get("search") ?? "";
   const category = searchParams.get("category") ?? "";
   const condition = searchParams.get("condition") ?? "";
+  const school = searchParams.get("school") ?? "";
   const sort = searchParams.get("sort") ?? "-createdAt";
 
   const fetchProducts = useCallback(async () => {
@@ -53,17 +59,22 @@ function ProductsContent() {
     if (search) params.set("search", search);
     if (category) params.set("category", category);
     if (condition) params.set("condition", condition);
+    if (school) params.set("school", school);
 
     const res = await fetch(`/api/products?${params}`);
     const data = await res.json();
     setProducts(data.products ?? []);
     setTotal(data.total ?? 0);
     setPages(data.pages ?? 1);
+    setActiveSchool(data.activeSchool || null);
     setLoading(false);
-  }, [page, search, category, condition, sort]);
+  }, [page, search, category, condition, school, sort]);
 
   useEffect(() => { fetchProducts(); }, [fetchProducts]);
-  useEffect(() => { fetch("/api/categories").then((r) => r.json()).then(setCategories); }, []);
+  useEffect(() => {
+    fetch("/api/categories").then((r) => r.json()).then((d) => { if (Array.isArray(d)) setCategories(d); }).catch(() => {});
+    fetch("/api/schools").then((r) => r.json()).then((d) => { if (Array.isArray(d)) setSchools(d); }).catch(() => {});
+  }, []);
 
   const updateParam = (key: string, value: string) => {
     const p = new URLSearchParams(searchParams.toString());
@@ -90,7 +101,7 @@ function ProductsContent() {
 
       <div className="flex flex-col lg:flex-row gap-8">
         {/* Sidebar filters */}
-        <aside className={`w-full lg:w-56 shrink-0 ${isFilterOpen ? "block" : "hidden lg:block"}`}>
+        <aside className={`w-full lg:w-60 shrink-0 ${isFilterOpen ? "block" : "hidden lg:block"}`}>
           <div className="bg-white rounded-md border border-[#E5E5E5] p-5 space-y-6 sticky top-20">
             <div className="flex justify-between items-center pb-2 border-b border-[#E5E5E5]">
               <h2 className="font-bold text-[#111111] text-sm uppercase tracking-wider">Filters</h2>
@@ -98,6 +109,32 @@ function ProductsContent() {
                 <i className="fa-solid fa-xmark" />
               </button>
             </div>
+
+            {/* Campus / School */}
+            {schools.length > 0 && (
+              <div>
+                <p className="text-xs font-semibold text-[#9B9B9B] uppercase tracking-wider mb-2 flex items-center gap-1.5">
+                  <i className="fa-solid fa-graduation-cap text-[#A4860E]" /> Campus
+                </p>
+                <button
+                  onClick={() => updateParam("school", "all")}
+                  className={`block w-full text-left px-3 py-2 rounded-md text-sm mb-1 transition-colors ${school === "all" || (!school && !activeSchool) ? "bg-[#fdf8e8] text-[#A4860E] font-semibold" : "text-[#6B6B6B] hover:bg-[#F5F5F5]"}`}>
+                  All Campuses
+                </button>
+                {schools.map((s) => {
+                  const isSelected = school === s.name || (!school && activeSchool === s.name);
+                  return (
+                    <button
+                      key={s._id}
+                      onClick={() => updateParam("school", s.name)}
+                      className={`block w-full text-left px-3 py-2 rounded-md text-sm mb-1 transition-colors truncate ${isSelected ? "bg-[#fdf8e8] text-[#A4860E] font-semibold" : "text-[#6B6B6B] hover:bg-[#F5F5F5]"}`}
+                    >
+                      {s.name}
+                    </button>
+                  );
+                })}
+              </div>
+            )}
 
             {/* Condition */}
             <div>
@@ -155,11 +192,31 @@ function ProductsContent() {
             <SearchBar defaultValue={search} />
           </div>
 
+          {/* Active Campus Banner */}
+          {activeSchool && activeSchool !== "all" && (
+            <div className="mb-4 p-3.5 bg-[#fdf8e8] border border-[#e8d48a] rounded-xl flex items-center justify-between gap-3 shadow-xs">
+              <div className="flex items-center gap-2.5 text-xs text-[#7a6310]">
+                <div className="w-7 h-7 rounded-lg bg-white border border-[#e8d48a] flex items-center justify-center shrink-0">
+                  <i className="fa-solid fa-graduation-cap text-[#A4860E] text-xs" />
+                </div>
+                <span>
+                  Showing products from campus: <strong className="text-gray-900 font-bold">{activeSchool}</strong>
+                </span>
+              </div>
+              <button
+                onClick={() => updateParam("school", "all")}
+                className="text-xs text-[#A4860E] hover:text-[#8a7009] font-bold underline shrink-0"
+              >
+                View all campuses
+              </button>
+            </div>
+          )}
+
           <div className="flex items-center justify-between mb-4">
             <p className="text-sm text-[#6B6B6B]">
               {loading ? "Loading..." : `${total} product${total !== 1 ? "s" : ""} found`}
             </p>
-            {(search || category || condition) && (
+            {(search || category || condition || (school && school !== "all")) && (
               <button
                 onClick={() => router.push("/products")}
                 className="text-sm text-[#DC2626] hover:underline font-medium">

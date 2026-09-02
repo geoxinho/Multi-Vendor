@@ -20,7 +20,7 @@ const FAQ_ITEMS = [
   },
   {
     q: "How do I become a verified seller on CampusGo?",
-    a: "Sign in to your account, click 'Become a Seller' in the navigation header or dashboard, enter your Store Name, school details, and submit your NIN for instant verification.",
+    a: "Sign in to your account, click 'Become a Seller' in the navigation header or dashboard, enter your Store Name, school / campus details, and start listing products immediately.",
   },
   {
     q: "How long does seller payout transfer take?",

@@ -7,6 +7,7 @@ import EmptyState from "@/components/ui/EmptyState";
 import ConfirmDeliveryForm from "@/components/orders/ConfirmDeliveryForm";
 import Link from "next/link";
 import { useSession } from "next-auth/react";
+import OrderReportButton from "@/components/orders/OrderReportButton";
 
 interface OrderItem {
   title: string;
@@ -171,15 +172,20 @@ export default function SellerOrdersPage() {
                 </div>
               )}
 
-              {/* Message Buyer */}
-              <div className="mb-4">
+              {/* Actions: Message Buyer & Report Issue */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-4">
                  <Link 
                    href={`/dashboard/seller/messages?orderId=${order._id}`}
-                   className="flex items-center gap-2 justify-center w-full bg-[#fdf8e8] border border-[#e8d48a] text-[#A4860E] py-2.5 rounded-xl font-bold hover:bg-[#fdf8e8]/50 transition-colors text-sm"
+                   className="flex items-center gap-2 justify-center w-full bg-[#fdf8e8] border border-[#e8d48a] text-[#A4860E] py-2.5 rounded-xl font-bold hover:bg-[#fdf8e8]/50 transition-colors text-xs"
                  >
-                   <i className="fa-solid fa-comment-dots text-sm" />
+                   <i className="fa-solid fa-comment-dots text-xs" />
                    Message Buyer
                  </Link>
+                 <OrderReportButton
+                   orderId={order._id}
+                   role="seller"
+                   className="flex items-center gap-2 justify-center w-full bg-red-50 border border-red-200 text-red-700 py-2.5 rounded-xl font-bold hover:bg-red-100 transition-colors text-xs"
+                 />
               </div>
 
               {/* Footer */}

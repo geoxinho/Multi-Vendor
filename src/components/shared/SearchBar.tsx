@@ -12,9 +12,10 @@ interface Suggestion {
 
 interface SearchBarProps {
   defaultValue?: string;
+  showSubmitButton?: boolean;
 }
 
-export default function SearchBar({ defaultValue = "" }: SearchBarProps) {
+export default function SearchBar({ defaultValue = "", showSubmitButton = true }: SearchBarProps) {
   const router = useRouter();
   const [q, setQ] = useState(defaultValue);
   const [suggestions, setSuggestions] = useState<Suggestion>({ categories: [], products: [], tags: [] });
@@ -76,27 +77,33 @@ export default function SearchBar({ defaultValue = "" }: SearchBarProps) {
 
   return (
     <div ref={wrapperRef} className="relative w-full">
-      <form onSubmit={handleSubmit} className="relative flex items-center w-full">
-        <i className="fa-solid fa-magnifying-glass absolute left-3 text-[#9B9B9B] text-xs pointer-events-none" />
-
+      <form onSubmit={handleSubmit} className="relative flex items-center w-full bg-white border border-gray-200 hover:border-gray-400 focus-within:border-[#A4860E] rounded-full pl-5 pr-1.5 py-1.5 transition-all shadow-xs">
         <input
           type="search"
           value={q}
           onChange={(e) => setQ(e.target.value)}
           onFocus={() => hasSuggestions && setOpen(true)}
-          placeholder="Search products..."
-          className="w-full pl-9 pr-10 py-2 rounded-md border border-[#E5E5E5] bg-[#FAFAFA] text-sm text-[#111111] placeholder:text-[#9B9B9B] focus:outline-none focus:border-[#A4860E] focus:bg-white transition-colors"
+          placeholder="I'm shopping for textbooks, laptops, phones, fashion..."
+          className="w-full bg-transparent text-xs sm:text-sm text-gray-900 placeholder:text-gray-400 focus:outline-none pr-3"
         />
 
-        <div className="absolute right-2 flex items-center justify-center">
-          {loading ? (
-            <i className="fa-solid fa-circle-notch animate-spin text-[#9B9B9B] text-sm" />
-          ) : (
-            <button type="submit" className="p-1 rounded text-[#9B9B9B] hover:text-[#A4860E] transition-colors flex items-center justify-center" aria-label="Search">
-              <i className="fa-solid fa-magnifying-glass text-xs" />
-            </button>
-          )}
-        </div>
+        {showSubmitButton && (
+          <div className="flex items-center shrink-0">
+            {loading ? (
+              <div className="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center">
+                <i className="fa-solid fa-circle-notch animate-spin text-gray-500 text-xs" />
+              </div>
+            ) : (
+              <button
+                type="submit"
+                className="w-8 h-8 rounded-full bg-gray-900 hover:bg-black text-white flex items-center justify-center transition-all shadow-xs"
+                aria-label="Search"
+              >
+                <i className="fa-solid fa-magnifying-glass text-xs" />
+              </button>
+            )}
+          </div>
+        )}
       </form>
 
       {/* Dropdown */}

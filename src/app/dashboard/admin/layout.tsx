@@ -32,6 +32,16 @@ const navItems = [
     icon: <i className="fa-solid fa-tags text-lg" />,
   },
   {
+    href: "/dashboard/admin/schools",
+    label: "Campuses",
+    icon: <i className="fa-solid fa-graduation-cap text-lg" />,
+  },
+  {
+    href: "/dashboard/admin/reports",
+    label: "Complaints",
+    icon: <i className="fa-solid fa-triangle-exclamation text-lg" />,
+  },
+  {
     href: "/dashboard/admin/campaigns",
     label: "Campaigns",
     icon: <i className="fa-solid fa-paper-plane text-lg" />,

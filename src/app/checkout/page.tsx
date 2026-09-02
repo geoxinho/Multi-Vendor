@@ -25,14 +25,15 @@ declare global {
   }
 }
 
-const CAMPUS_SCHOOLS = [
-  "Adeleke University",
-];
-
 export default function CheckoutPage() {
   const { data: session, status } = useSession();
   const router = useRouter();
   const { items, totalPrice, clearCart } = useCartStore();
+
+  const [schools, setSchools] = useState<{ _id: string; name: string; city?: string; state?: string }[]>([
+    { _id: "1", name: "Adeleke University", city: "Ede", state: "Osun" },
+    { _id: "2", name: "Federal Polytechnic Ede", city: "Ede", state: "Osun" },
+  ]);
 
   const [address, setAddress] = useState({
     fullName: "",
@@ -46,6 +47,16 @@ export default function CheckoutPage() {
   const [scriptLoaded, setScriptLoaded] = useState(false);
   const [serverError, setServerError] = useState("");
   const callbackFired = useRef(false);
+
+  /* Fetch active schools */
+  useEffect(() => {
+    fetch("/api/schools")
+      .then((r) => r.json())
+      .then((d) => {
+        if (Array.isArray(d) && d.length > 0) setSchools(d);
+      })
+      .catch(() => {});
+  }, []);
 
   /* Redirect if not logged in, cart is empty, or trying to buy own product */
   useEffect(() => {
@@ -73,7 +84,7 @@ export default function CheckoutPage() {
       setAddress((a) => ({
         ...a,
         fullName: a.fullName || session.user.name || "",
-        school: (session.user as any).school || a.school || "Adeleke University",
+        school: session.user.school || (session.user as any).school || a.school || "Adeleke University",
       }));
     }
   }, [session]);
@@ -265,7 +276,11 @@ export default function CheckoutPage() {
                         onChange={(e) => setAddress((a) => ({ ...a, school: e.target.value }))}
                         className="w-full px-4 py-3 rounded-xl border border-[#E5E5E5] text-sm font-medium focus:outline-none focus:ring-2 focus:ring-[#A4860E]/30 focus:border-[#A4860E] transition-colors bg-white appearance-none pr-10"
                       >
-                        <option value="Adeleke University">Adeleke University (Ede, Osun State)</option>
+                        {schools.map((s) => (
+                          <option key={s._id} value={s.name}>
+                            {s.name} {s.city ? `(${s.city}${s.state ? `, ${s.state}` : ""})` : ""}
+                          </option>
+                        ))}
                       </select>
                       <span className="absolute right-3.5 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none">
                         <i className="fa-solid fa-chevron-down text-xs" />

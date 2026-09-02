@@ -47,6 +47,9 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
         if (!isMatch)
           throw new CustomAuthError("Incorrect password. Please try again.");
 
+        // Update lastActiveAt asynchronously
+        User.findByIdAndUpdate(user._id, { lastActiveAt: new Date() }).exec().catch(() => {});
+
         const roles: string[] =
           user.roles && user.roles.length > 0
             ? (user.roles as string[])
@@ -59,6 +62,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
           role: user.role as string,
           roles,
           storeName: user.storeName || "",
+          school: (user as any).school || "",
           image: user.avatar,
         };
       },
