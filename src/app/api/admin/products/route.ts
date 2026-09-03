@@ -1,10 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
 import { connectDB } from "@/lib/db";
 import { Product } from "@/models/Product";
-import { User } from "@/models/User";
 import { auth } from "@/lib/auth";
+import { getAllActiveSchools, getCampusProductModel, getCampusUserModel } from "@/lib/campusModels";
 
-// GET /api/admin/products — admin only, all statuses
+// GET /api/admin/products — admin only, all statuses, scans campus collections
 export async function GET(req: NextRequest) {
   try {
     const session = await auth();
@@ -17,39 +17,111 @@ export async function GET(req: NextRequest) {
     const { searchParams } = new URL(req.url);
     const page = parseInt(searchParams.get("page") ?? "1");
     const limit = parseInt(searchParams.get("limit") ?? "50");
-    const status = searchParams.get("status") ?? "";
+    const statusFilter = searchParams.get("status") ?? "";
     const search = searchParams.get("search") ?? "";
-    const school = searchParams.get("school") ?? "";
-    const skip = (page - 1) * limit;
+    const schoolFilter = searchParams.get("school") ?? "";
 
+    // Build per-model filter
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const query: any = {};
-    if (status && status !== "all") query.status = status;
-    if (search) {
-      query.title = { $regex: search, $options: "i" };
-    }
+    const buildQuery = (): any => {
+      const q: Record<string, any> = {};
+      if (statusFilter && statusFilter !== "all") q.status = statusFilter;
+      if (search) q.title = { $regex: search, $options: "i" };
+      if (schoolFilter && schoolFilter !== "all") q.school = schoolFilter;
+      return q;
+    };
 
-    if (school && school !== "all") {
-      const sellersInSchool = await User.find({ school }).distinct("_id");
-      query.$or = [
-        { school: school },
-        { seller: { $in: sellersInSchool } },
-      ];
-    }
+    const schools = await getAllActiveSchools();
 
-    const total = await Product.countDocuments(query);
-    const products = await Product.find(query)
-      .populate("seller", "name storeName email school")
-      .populate("category", "name")
-      .sort({ createdAt: -1 })
-      .skip(skip)
-      .limit(limit)
-      .lean();
+    // Gather all products across campus collections + legacy
+    const models = [
+      ...schools.map((s) => getCampusProductModel(s.slug)),
+      Product,
+    ];
 
-    // Count pending for nav badge
-    const pendingCount = await Product.countDocuments({ status: "pending_approval" });
+    const allProducts: any[] = [];
+    const seenIds = new Set<string>();
 
-    return NextResponse.json({ products, total, page, pages: Math.ceil(total / limit), pendingCount });
+    await Promise.all(
+      models.map(async (model) => {
+        try {
+          const docs = await model
+            .find(buildQuery())
+            .populate("category", "name")
+            .sort({ createdAt: -1 })
+            .lean();
+          for (const doc of docs) {
+            const idStr = (doc as any)._id.toString();
+            if (!seenIds.has(idStr)) {
+              seenIds.add(idStr);
+              allProducts.push(doc);
+            }
+          }
+        } catch (err) {
+          console.error("[ADMIN PRODUCTS GET] model error:", err);
+        }
+      })
+    );
+
+    // Sort all merged results by createdAt desc
+    allProducts.sort((a, b) => {
+      return new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime();
+    });
+
+    // Populate sellers across campus user models
+    const sellerIds = [...new Set(allProducts.map((p) => p.seller?.toString()).filter(Boolean))];
+    const sellerMap = new Map<string, any>();
+    const userModels: any[] = schools.map((s) => getCampusUserModel(s.slug));
+    try {
+      const { User } = await import("@/models/User");
+      userModels.push(User);
+    } catch {}
+    await Promise.all(
+      userModels.map(async (m: any) => {
+        try {
+          const users = await m.find({ _id: { $in: sellerIds } }).select("name storeName email school").lean();
+          for (const u of users) sellerMap.set((u as any)._id.toString(), u);
+        } catch {}
+      })
+    );
+
+    const enriched = allProducts.map((p) => {
+      const sId = p.seller?.toString();
+      return { ...p, seller: sId && sellerMap.has(sId) ? sellerMap.get(sId) : p.seller };
+    });
+
+    // Paginate after merge
+    const total = enriched.length;
+    const paginated = enriched.slice((page - 1) * limit, page * limit);
+
+    // Count pending across all campus collections
+    let pendingCount = 0;
+    await Promise.all(
+      models.map(async (model) => {
+        try {
+          pendingCount += await model.countDocuments({ status: "pending_approval" });
+        } catch {}
+      })
+    );
+    // Deduplicate pending count by IDs
+    const pendingIds = new Set<string>();
+    await Promise.all(
+      models.map(async (model) => {
+        try {
+          const docs = await model.find({ status: "pending_approval" }).select("_id").lean();
+          for (const d of docs) pendingIds.add((d as any)._id.toString());
+        } catch {}
+      })
+    );
+    pendingCount = pendingIds.size;
+
+    return NextResponse.json({
+      products: paginated,
+      total,
+      page,
+      pages: Math.ceil(total / limit),
+      pendingCount,
+    });
   } catch (err) {
     console.error("[ADMIN PRODUCTS GET]", err);
     return NextResponse.json({ error: "Internal server error" }, { status: 500 });

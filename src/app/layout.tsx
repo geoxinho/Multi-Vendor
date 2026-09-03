@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import "./globals.css";
 import { Providers } from "@/components/shared/Providers";
+import { auth } from "@/lib/auth";
 import { Analytics } from "@vercel/analytics/next";
 import { SpeedInsights } from "@vercel/speed-insights/next";
 
@@ -138,11 +139,13 @@ const ROOT_SCHEMA = {
   ],
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
+  const session = await auth();
+
   return (
     <html lang="en" className="overflow-x-hidden font-sans" suppressHydrationWarning>
       <head>
@@ -154,7 +157,7 @@ export default function RootLayout({
           suppressHydrationWarning
           dangerouslySetInnerHTML={{ __html: JSON.stringify(ROOT_SCHEMA) }}
         />
-        <Providers>
+        <Providers session={session}>
           {children}
         </Providers>
         {/* Vercel Analytics & Speed Insights for real-time monitoring */}

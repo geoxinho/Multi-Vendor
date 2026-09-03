@@ -5,7 +5,7 @@ import { User } from "@/models/User";
 import { Category } from "@/models/Category";
 import { auth } from "@/lib/auth";
 import { productSchema } from "@/utils/validators";
-import { getCampusProductModel, getAllActiveSchools } from "@/lib/campusModels";
+import { getCampusProductModel, getAllActiveSchools, populateProductsWithSellers, findUserAcrossCampuses } from "@/lib/campusModels";
 
 // GET /api/products — public listing with filters
 export async function GET(req: NextRequest) {
@@ -114,8 +114,9 @@ export async function GET(req: NextRequest) {
         ]);
       }
 
+      const enriched = await populateProductsWithSellers(products);
       return NextResponse.json(
-        { products, total, page, pages: Math.ceil(total / limit) || 1, activeSchool: targetSchool },
+        { products: enriched, total, page, pages: Math.ceil(total / limit) || 1, activeSchool: targetSchool },
         { headers: { "Cache-Control": "public, s-maxage=60, stale-while-revalidate=300" } }
       );
     }
@@ -146,9 +147,10 @@ export async function GET(req: NextRequest) {
     const allProducts = Array.from(allProductsMap.values());
     const total = allProducts.length;
     const paginatedProducts = allProducts.slice(skip, skip + limit);
+    const enrichedPaginated = await populateProductsWithSellers(paginatedProducts);
 
     return NextResponse.json(
-      { products: paginatedProducts, total, page, pages: Math.ceil(total / limit) || 1, activeSchool: null },
+      { products: enrichedPaginated, total, page, pages: Math.ceil(total / limit) || 1, activeSchool: null },
       { headers: { "Cache-Control": "public, s-maxage=60, stale-while-revalidate=300" } }
     );
   } catch (err) {
@@ -173,8 +175,11 @@ export async function POST(req: NextRequest) {
 
     await connectDB();
 
-    const sellerUser = await User.findById(session.user.id).select("school").lean();
-    const sellerSchool = sellerUser?.school || session.user.school || "";
+    let sellerSchool = session.user.school || "";
+    if (!sellerSchool) {
+      const found = await findUserAcrossCampuses({ _id: session.user.id });
+      sellerSchool = found?.school || "";
+    }
 
     const CampusProduct = getCampusProductModel(sellerSchool);
     const product = await CampusProduct.create({

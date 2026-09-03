@@ -30,15 +30,24 @@ export default function ProductCard({ product, priority = false, wishlisted: ini
 
   useEffect(() => { setWishlisted(initialWishlisted); }, [initialWishlisted]);
 
+  const sellerIdStr = (product.seller?._id || (typeof product.seller === "string" ? product.seller : ""))?.toString();
+  const isMine = Boolean(
+    session?.user?.id &&
+    sellerIdStr &&
+    session.user.id.toString() === sellerIdStr
+  );
+
   const handleAddToCart = (e: React.MouseEvent) => {
     e.preventDefault();
+    e.stopPropagation();
+    if (isMine || product.stock === 0) return;
     addItem({
       productId: product._id,
       title: product.title,
       price: product.price,
-      image: product.images[0] ?? "/placeholder.png",
+      image: product.images?.[0] ?? "/placeholder.png",
       condition: product.condition,
-      sellerId: product.seller?._id || "",
+      sellerId: sellerIdStr,
       quantity: 1,
       stock: product.stock,
     });
@@ -148,16 +157,16 @@ export default function ProductCard({ product, priority = false, wishlisted: ini
             </span>
             <button
               onClick={handleAddToCart}
-              disabled={product.stock === 0 || session?.user?.id === product.seller?._id}
+              disabled={product.stock === 0 || isMine}
               className={`px-3.5 py-2 rounded-md text-xs font-bold transition-all duration-150 shadow-sm ${
-                session?.user?.id === product.seller?._id
+                isMine
                   ? "bg-gray-100 border border-gray-200 text-gray-400 cursor-not-allowed shadow-none"
                   : added
                   ? "bg-[#F0FDF4] text-[#A4860E] border border-[#A4860E]"
                   : "bg-[#A4860E] text-white hover:bg-[#8a6f0b]"
               } disabled:opacity-40`}
             >
-              {session?.user?.id === product.seller?._id ? "Mine" : added ? "✓ Added" : "Add"}
+              {isMine ? "Mine" : added ? "✓ Added" : "Add"}
             </button>
           </div>
         </div>

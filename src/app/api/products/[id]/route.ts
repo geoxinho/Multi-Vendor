@@ -1,8 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { connectDB } from "@/lib/db";
 import { Product } from "@/models/Product";
-import { User } from "@/models/User";
-import { Category } from "@/models/Category";
+import { findProductAcrossCampuses } from "@/lib/campusModels";
 import { auth } from "@/lib/auth";
 import { productSchema } from "@/utils/validators";
 
@@ -12,15 +11,13 @@ export async function GET(_req: NextRequest, { params }: Params) {
   try {
     await connectDB();
     const { id } = await params;
-    const product = await Product.findById(id)
-      .populate("seller", "name storeName email phone avatar storeDescription school nin bankDetails")
-      .populate("category", "name slug")
-      .lean();
+    const result = await findProductAcrossCampuses(id);
 
-    if (!product) {
+    if (!result || !result.product) {
       return NextResponse.json({ error: "Product not found" }, { status: 404 });
     }
 
+    const product = result.product;
     const session = await auth();
     const isOwner = session && (product.seller as any)?._id?.toString() === session.user.id;
     const isAdmin = session && session.user.role === "admin";
@@ -60,11 +57,13 @@ export async function PUT(req: NextRequest, { params }: Params) {
 
     await connectDB();
     const { id } = await params;
-    const product = await Product.findById(id);
-    if (!product)
+    const found = await findProductAcrossCampuses(id);
+    if (!found || !found.product)
       return NextResponse.json({ error: "Not found" }, { status: 404 });
 
-    const isOwner = product.seller.toString() === session.user.id;
+    const product = found.product;
+    const sellerId = (product.seller?._id || product.seller)?.toString();
+    const isOwner = sellerId === session.user.id;
     const isAdmin = session.user.role === "admin";
     if (!isOwner && !isAdmin) {
       return NextResponse.json({ error: "Forbidden" }, { status: 403 });
@@ -103,9 +102,12 @@ export async function PUT(req: NextRequest, { params }: Params) {
       if (body.rejectionReason !== undefined) updateData.rejectionReason = body.rejectionReason;
     }
 
-    const updated = await Product.findByIdAndUpdate(id, updateData, {
+    const updated = await found.model.findByIdAndUpdate(id, updateData, {
       new: true,
     });
+    // Mirror update to fallback Product model if needed
+    await Product.findByIdAndUpdate(id, updateData).catch(() => {});
+
     return NextResponse.json(updated);
   } catch (err) {
     console.error("[PRODUCT PUT]", err);
@@ -124,17 +126,21 @@ export async function DELETE(_req: NextRequest, { params }: Params) {
 
     await connectDB();
     const { id } = await params;
-    const product = await Product.findById(id);
-    if (!product)
+    const found = await findProductAcrossCampuses(id);
+    if (!found || !found.product)
       return NextResponse.json({ error: "Not found" }, { status: 404 });
 
-    const isOwner = product.seller.toString() === session.user.id;
+    const product = found.product;
+    const sellerId = (product.seller?._id || product.seller)?.toString();
+    const isOwner = sellerId === session.user.id;
     const isAdmin = session.user.role === "admin";
     if (!isOwner && !isAdmin) {
       return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }
 
-    await product.deleteOne();
+    await found.model.findByIdAndDelete(id);
+    await Product.findByIdAndDelete(id).catch(() => {});
+
     return NextResponse.json({ message: "Product deleted" });
   } catch (err) {
     console.error("[PRODUCT DELETE]", err);

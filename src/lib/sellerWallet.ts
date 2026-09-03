@@ -23,8 +23,15 @@ export interface SellerWalletData {
 export async function getSellerWalletData(sellerId: string): Promise<SellerWalletData> {
   await connectDB();
 
+  const { findUserAcrossCampuses } = await import("@/lib/campusModels");
+  const sellerPromise = (async () => {
+    const found = await findUserAcrossCampuses({ _id: sellerId });
+    if (found?.user) return found.user;
+    return User.findById(sellerId).select("name email storeName bankDetails").lean();
+  })();
+
   const [seller, orders, withdrawals] = await Promise.all([
-    User.findById(sellerId).select("name email storeName bankDetails").lean(),
+    sellerPromise,
     Order.find({
       "items.seller": sellerId,
       paymentStatus: "paid",

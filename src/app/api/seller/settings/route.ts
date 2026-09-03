@@ -2,6 +2,29 @@ import { NextRequest, NextResponse } from "next/server";
 import { connectDB } from "@/lib/db";
 import { User } from "@/models/User";
 import { auth } from "@/lib/auth";
+import { getCampusUserModel, findUserAcrossCampuses } from "@/lib/campusModels";
+
+async function getSellerDoc(userId: string, school?: string) {
+  if (school) {
+    try {
+      const CampusUser = getCampusUserModel(school);
+      const u = await CampusUser.findById(userId);
+      if (u) return { user: u, model: CampusUser };
+    } catch {}
+  }
+
+  const found = await findUserAcrossCampuses({ _id: userId });
+  if (found) {
+    const CampusUser = getCampusUserModel(found.campusSlug);
+    const u = await CampusUser.findById(userId);
+    if (u) return { user: u, model: CampusUser };
+  }
+
+  const legacy = await User.findById(userId);
+  if (legacy) return { user: legacy, model: User };
+
+  return null;
+}
 
 export async function GET(req: NextRequest) {
   try {
@@ -11,11 +34,13 @@ export async function GET(req: NextRequest) {
     }
 
     await connectDB();
-    const user = await User.findById(session.user.id).lean();
+    const doc = await getSellerDoc(session.user.id, session.user.school);
 
-    if (!user) {
+    if (!doc || !doc.user) {
       return NextResponse.json({ error: "User not found" }, { status: 404 });
     }
+
+    const user = doc.user;
 
     return NextResponse.json({
       name: user.name || "",
@@ -50,11 +75,13 @@ export async function PUT(req: NextRequest) {
     const { name, phone, storeName, storeDescription, bankDetails } = body;
 
     await connectDB();
-    const user = await User.findById(session.user.id);
+    const doc = await getSellerDoc(session.user.id, session.user.school);
 
-    if (!user) {
+    if (!doc || !doc.user) {
       return NextResponse.json({ error: "User not found" }, { status: 404 });
     }
+
+    const user = doc.user;
 
     // ── Bank details update ─────────────────────────────────────────
     if (bankDetails) {
@@ -79,6 +106,7 @@ export async function PUT(req: NextRequest) {
         bankName,
         accountNumber,
         accountName,
+        bankCode,
         ...(user.bankDetails as unknown as object),
       };
       // Mongoose doesn't pick up nested changes automatically — use set
@@ -88,6 +116,12 @@ export async function PUT(req: NextRequest) {
       user.set("bankDetails.accountName", accountName);
 
       await user.save();
+
+      // Mirror to legacy User collection if present
+      await User.findByIdAndUpdate(session.user.id, {
+        bankDetails: { bankName, bankCode, accountNumber, accountName },
+      }).catch(() => {});
+
       return NextResponse.json({ message: "Bank details saved successfully" });
     }
 
@@ -117,6 +151,15 @@ export async function PUT(req: NextRequest) {
     if (storeDescription !== undefined) user.storeDescription = storeDescription;
 
     await user.save();
+
+    // Mirror to legacy User collection if present
+    await User.findByIdAndUpdate(session.user.id, {
+      storeName: user.storeName,
+      phone: user.phone,
+      storeDescription: user.storeDescription,
+      lastBrandNameChangeAt: user.lastBrandNameChangeAt,
+    }).catch(() => {});
+
     return NextResponse.json({ message: "Settings updated successfully" });
   } catch (error) {
     console.error("PUT Seller Settings Error:", error);

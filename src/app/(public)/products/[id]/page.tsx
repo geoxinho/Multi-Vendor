@@ -8,6 +8,7 @@ export const dynamic = "force-dynamic";
 export const dynamicParams = true;
 import { connectDB } from "@/lib/db";
 import { Product } from "@/models/Product";
+import { findProductAcrossCampuses } from "@/lib/campusModels";
 import { auth } from "@/lib/auth";
 import RatingStars from "@/components/shared/RatingStars";
 import Badge from "@/components/ui/Badge";
@@ -26,18 +27,34 @@ async function getProduct(id: string) {
 
   try {
     await connectDB();
-    const p = await Product.findById(id)
-      .populate("seller", "name storeName avatar storeDescription")
-      .populate("category", "name slug")
-      .lean();
+    const result = await findProductAcrossCampuses(id);
 
-    if (!p) return null;
+    if (!result || !result.product) {
+      console.warn("[PRODUCT_PAGE] Product not found in any campus collection. id=%s", id);
+      return null;
+    }
 
+    const p = result.product;
+
+    // For non-active products, check if the viewer is the owner or an admin
     if (p.status !== "active") {
       const session = await auth();
-      const isOwner = session && (p.seller as any)?._id?.toString() === session.user.id;
-      const isAdmin = session && session.user.role === "admin";
-      if (!isOwner && !isAdmin) return null;
+      // Seller _id may be a string (after JSON serialization) or ObjectId
+      const sellerIdStr =
+        (p.seller as any)?._id?.toString?.() ||
+        (typeof p.seller === "string" ? p.seller : null);
+
+      const isOwner = session?.user?.id && sellerIdStr && session.user.id === sellerIdStr;
+      const isAdmin = session?.user?.role === "admin";
+
+      if (!isOwner && !isAdmin) {
+        console.warn(
+          "[PRODUCT_PAGE] Non-active product access denied. id=%s status=%s",
+          id,
+          p.status
+        );
+        return null;
+      }
     }
 
     return JSON.parse(JSON.stringify(p));
@@ -48,6 +65,7 @@ async function getProduct(id: string) {
     throw error;
   }
 }
+
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { id } = await params;

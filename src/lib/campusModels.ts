@@ -101,5 +101,141 @@ export async function findUserAcrossCampuses(
       // Continue searching next campus
     }
   }
+
+  // Fallback to legacy User model
+  try {
+    const { User } = await import("@/models/User");
+    const legacyUser = await User.findOne(filter).lean();
+    if (legacyUser) {
+      return {
+        user: legacyUser as unknown as IUser,
+        campusSlug: getCampusSlug(legacyUser.school || ""),
+        school: legacyUser.school || "",
+      };
+    }
+  } catch {}
+
   return null;
+}
+
+/**
+ * Searches across all active campus product collections (and legacy collection) for a product.
+ */
+export async function findProductAcrossCampuses(
+  idOrFilter: string | Record<string, any>
+): Promise<{ product: any; campusSlug: string; model: Model<IProduct> } | null> {
+  const { Product } = await import("@/models/Product");
+  const schools = await getAllActiveSchools();
+  const filter = typeof idOrFilter === "string" ? { _id: idOrFilter } : idOrFilter;
+
+  const targets: { model: Model<IProduct>; slug: string }[] = schools.map((s) => ({
+    model: getCampusProductModel(s.slug),
+    slug: s.slug,
+  }));
+  targets.push({ model: Product, slug: "general" });
+
+  for (const { model, slug } of targets) {
+    try {
+      const doc = await model
+        .findOne(filter)
+        .populate("category", "name slug")
+        .lean();
+      if (doc) {
+        const enriched = await populateSingleProductSeller(doc, slug);
+        return { product: enriched, campusSlug: slug, model };
+      }
+    } catch (err) {
+      console.error(`[findProductAcrossCampuses] Error searching campus "${slug}":`, err);
+      // Continue searching next campus
+    }
+  }
+  return null;
+}
+
+
+/**
+ * Helper to ensure a product's seller is populated from campus user models
+ */
+export async function populateSingleProductSeller(product: any, schoolHint?: string): Promise<any> {
+  if (!product) return product;
+
+  // If seller is already populated with a valid name/storeName, return
+  if (product.seller && typeof product.seller === "object" && (product.seller.name || product.seller.storeName)) {
+    return product;
+  }
+
+  const sellerId = product.seller?._id || product.seller;
+  if (!sellerId) return product;
+
+  // Try school hint first if available
+  const school = schoolHint || product.school;
+  if (school) {
+    try {
+      const CampusUser = getCampusUserModel(school);
+      const sellerDoc = await CampusUser.findById(sellerId)
+        .select("name storeName email phone avatar school nin bankDetails")
+        .lean();
+      if (sellerDoc) {
+        return { ...product, seller: sellerDoc };
+      }
+    } catch {}
+  }
+
+  // Fallback: search across all campuses
+  const found = await findUserAcrossCampuses({ _id: sellerId });
+  if (found && found.user) {
+    return { ...product, seller: found.user };
+  }
+
+  return product;
+}
+
+/**
+ * Batch populates seller objects for an array of products across campus user models
+ */
+export async function populateProductsWithSellers(products: any[]): Promise<any[]> {
+  if (!Array.isArray(products) || products.length === 0) return products;
+
+  // Find all seller IDs that need population
+  const neededSellerIds = new Set<string>();
+  for (const p of products) {
+    if (!p.seller || typeof p.seller !== "object" || (!p.seller.name && !p.seller.storeName)) {
+      const sId = p.seller?._id || p.seller;
+      if (sId) neededSellerIds.add(sId.toString());
+    }
+  }
+
+  if (neededSellerIds.size === 0) return products;
+
+  // Search across campus user models for these sellers
+  const sellerMap = new Map<string, any>();
+  const schools = await getAllActiveSchools();
+  const userModels = schools.map((s) => getCampusUserModel(s.slug));
+  try {
+    const { User } = await import("@/models/User");
+    userModels.push(User);
+  } catch {}
+
+  const idsArray = Array.from(neededSellerIds);
+  await Promise.all(
+    userModels.map(async (m) => {
+      try {
+        const users = await m
+          .find({ _id: { $in: idsArray } })
+          .select("name storeName avatar school email phone")
+          .lean();
+        for (const u of users) {
+          sellerMap.set(u._id.toString(), u);
+        }
+      } catch {}
+    })
+  );
+
+  return products.map((p) => {
+    const sId = (p.seller?._id || p.seller)?.toString();
+    if (sId && sellerMap.has(sId)) {
+      return { ...p, seller: sellerMap.get(sId) };
+    }
+    return p;
+  });
 }

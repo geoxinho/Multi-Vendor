@@ -5,7 +5,7 @@ import { Product } from "@/models/Product";
 import { User } from "@/models/User";
 import { Category } from "@/models/Category";
 import ProductGrid from "@/components/product/ProductGrid";
-import { getAllActiveSchools, getCampusProductModel } from "@/lib/campusModels";
+import { getAllActiveSchools, getCampusProductModel, populateProductsWithSellers } from "@/lib/campusModels";
 import type { Metadata } from "next";
 
 export const dynamic = "force-dynamic";
@@ -70,7 +70,8 @@ async function getFeaturedProducts(targetSchool?: string) {
         .lean();
 
       if (campusProducts && campusProducts.length > 0) {
-        return JSON.parse(JSON.stringify(campusProducts));
+        const enriched = await populateProductsWithSellers(campusProducts);
+        return JSON.parse(JSON.stringify(enriched));
       }
     } else {
       // Unregistered user — display products across all campus collections & all users
@@ -93,7 +94,8 @@ async function getFeaturedProducts(targetSchool?: string) {
 
       if (allFound.length > 0) {
         const unique = Array.from(new Map(allFound.map((p) => [p._id.toString(), p])).values());
-        return JSON.parse(JSON.stringify(unique.slice(0, 4)));
+        const enriched = await populateProductsWithSellers(unique.slice(0, 4));
+        return JSON.parse(JSON.stringify(enriched));
       }
     }
 
@@ -102,7 +104,8 @@ async function getFeaturedProducts(targetSchool?: string) {
       .populate("category", "name slug")
       .limit(4)
       .lean();
-    return JSON.parse(JSON.stringify(fallback));
+    const enrichedFallback = await populateProductsWithSellers(fallback);
+    return JSON.parse(JSON.stringify(enrichedFallback));
   } catch (err) {
     console.error("[GET_FEATURED_PRODUCTS_ERROR]", err);
     return [];
@@ -133,7 +136,8 @@ async function getLatestProducts(targetSchool?: string) {
         .lean();
 
       if (campusProducts && campusProducts.length > 0) {
-        return JSON.parse(JSON.stringify(campusProducts));
+        const enriched = await populateProductsWithSellers(campusProducts);
+        return JSON.parse(JSON.stringify(enriched));
       }
     } else {
       // Unregistered user — display latest products across all campuses & all users
@@ -159,7 +163,8 @@ async function getLatestProducts(targetSchool?: string) {
         const unique = Array.from(new Map(allFound.map((p) => [p._id.toString(), p])).values()).sort(
           (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
         );
-        return JSON.parse(JSON.stringify(unique.slice(0, 8)));
+        const enriched = await populateProductsWithSellers(unique.slice(0, 8));
+        return JSON.parse(JSON.stringify(enriched));
       }
     }
 
@@ -169,7 +174,8 @@ async function getLatestProducts(targetSchool?: string) {
       .sort("-createdAt")
       .limit(8)
       .lean();
-    return JSON.parse(JSON.stringify(products));
+    const enrichedProducts = await populateProductsWithSellers(products);
+    return JSON.parse(JSON.stringify(enrichedProducts));
   } catch (err) {
     console.error("[GET_LATEST_PRODUCTS_ERROR]", err);
     return [];

@@ -24,7 +24,25 @@ export async function POST(req: NextRequest) {
     await connectDB();
     const sellerId = session.user.id;
 
-    const seller = await User.findById(sellerId);
+    const { getCampusUserModel, findUserAcrossCampuses } = await import("@/lib/campusModels");
+    let seller: any = null;
+    if (session.user.school) {
+      try {
+        const CampusUser = getCampusUserModel(session.user.school);
+        seller = await CampusUser.findById(sellerId);
+      } catch {}
+    }
+    if (!seller) {
+      const found = await findUserAcrossCampuses({ _id: sellerId });
+      if (found) {
+        const CampusUser = getCampusUserModel(found.campusSlug);
+        seller = await CampusUser.findById(sellerId);
+      }
+    }
+    if (!seller) {
+      seller = await User.findById(sellerId);
+    }
+
     if (!seller) {
       return NextResponse.json({ error: "Seller account not found" }, { status: 404 });
     }

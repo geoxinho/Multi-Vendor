@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useState, useCallback } from "react";
-import { useSession } from "next-auth/react";
 import { useWishlistStore } from "@/store/wishlistStore";
 import ProductCard from "./ProductCard";
 import { ProductSummary } from "@/types";
@@ -11,22 +10,21 @@ interface ProductGridProps {
 }
 
 export default function ProductGrid({ products }: ProductGridProps) {
-  const { data: session } = useSession();
   const { setCount } = useWishlistStore();
   const [wishlistedIds, setWishlistedIds] = useState<Set<string>>(new Set());
 
   // Single fetch for the whole grid — not one per card
   const fetchWishlist = useCallback(async () => {
-    if (session?.user?.role !== "buyer") return;
     try {
       const res = await fetch("/api/wishlist");
-      const items: { product: { _id: string } }[] = await res.json();
+      if (!res.ok) return;
+      const items = await res.json();
       if (Array.isArray(items)) {
         setCount(items.length);
-        setWishlistedIds(new Set(items.map((i) => i.product?._id).filter(Boolean)));
+        setWishlistedIds(new Set(items.map((i: any) => i.product?._id).filter(Boolean)));
       }
     } catch {}
-  }, [session, setCount]);
+  }, [setCount]);
 
   useEffect(() => { fetchWishlist(); }, [fetchWishlist]);
 
