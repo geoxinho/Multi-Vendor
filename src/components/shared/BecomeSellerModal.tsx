@@ -11,13 +11,58 @@ interface BecomeSellerModalProps {
 export default function BecomeSellerModal({ onClose }: BecomeSellerModalProps) {
   const { update } = useSession();
   const router = useRouter();
-  const [form, setForm] = useState({ storeName: "", storeDescription: "" });
+  const [form, setForm] = useState({ storeName: "", storeDescription: "", passport: "" });
+  const [passportPreview, setPassportPreview] = useState("");
+  const [passportUploading, setPassportUploading] = useState(false);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+
+  const handlePassportChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (!file.type.startsWith("image/")) {
+      setError("Please select an image file.");
+      return;
+    }
+
+    if (file.size > 5 * 1024 * 1024) {
+      setError("Image size must be less than 5MB.");
+      return;
+    }
+
+    setPassportUploading(true);
+    setPassportPreview(URL.createObjectURL(file));
+    setError("");
+
+    try {
+      const data = new FormData();
+      data.append("file", file);
+      const res = await fetch("/api/auth/upload-passport", { method: "POST", body: data });
+      const json = await res.json();
+      if (json.url) {
+        setForm((f) => ({ ...f, passport: json.url }));
+      } else {
+        setError(json.error ?? "Failed to upload passport photo.");
+        setPassportPreview("");
+      }
+    } catch {
+      setError("Failed to upload passport photo. Please check your network.");
+      setPassportPreview("");
+    } finally {
+      setPassportUploading(false);
+    }
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
+
+    if (!form.passport) {
+      setError("Passport photograph is required to become a seller.");
+      return;
+    }
+
     setLoading(true);
 
     const res = await fetch("/api/user/become-seller", {
@@ -30,8 +75,15 @@ export default function BecomeSellerModal({ onClose }: BecomeSellerModalProps) {
 
     if (!res.ok) { setError(data.error ?? "Something went wrong"); return; }
 
-    // Refresh session JWT with new role + roles
-    await update({ role: data.role, roles: data.roles });
+    // Refresh session JWT with new role + roles and passport avatar
+    await update({
+      role: data.role,
+      roles: data.roles,
+      storeName: data.storeName,
+      passport: data.passport,
+      avatar: data.avatar,
+      image: data.image,
+    });
     onClose();
     router.push("/dashboard/seller");
   };
@@ -93,6 +145,42 @@ export default function BecomeSellerModal({ onClose }: BecomeSellerModalProps) {
               value={form.storeDescription}
               onChange={(e) => setForm((f) => ({ ...f, storeDescription: e.target.value }))}
             />
+          </div>
+
+          {/* Passport Photograph */}
+          <div>
+            <label className="block text-xs font-semibold text-gray-700 mb-1.5 uppercase tracking-wider">
+              Passport Photograph <span className="text-[#DC2626]">*</span>
+            </label>
+            <div className="border border-dashed border-gray-300 rounded-xl p-4 bg-gray-50 text-center hover:bg-gray-100 transition relative">
+              {passportPreview ? (
+                <div className="flex items-center justify-center gap-3">
+                  <img
+                    src={passportPreview}
+                    alt="Passport preview"
+                    className="w-14 h-14 object-cover rounded-full border-2 border-[#A4860E]"
+                  />
+                  <div className="text-left text-xs">
+                    <p className="font-semibold text-gray-800">Photo selected</p>
+                    <p className="text-gray-500">{passportUploading ? "Uploading to Cloudinary..." : "✅ Uploaded"}</p>
+                  </div>
+                </div>
+              ) : (
+                <div>
+                  <i className="fa-solid fa-cloud-arrow-up text-2xl text-[#A4860E] mb-1" />
+                  <p className="text-xs font-semibold text-gray-700">Upload your passport photo</p>
+                  <p className="text-[11px] text-gray-500">JPG, PNG (max 5MB)</p>
+                </div>
+              )}
+              <input
+                type="file"
+                accept="image/*"
+                required={!form.passport}
+                disabled={passportUploading}
+                onChange={handlePassportChange}
+                className="absolute inset-0 opacity-0 cursor-pointer w-full h-full"
+              />
+            </div>
           </div>
 
           {error && (

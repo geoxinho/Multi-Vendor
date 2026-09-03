@@ -28,14 +28,14 @@ export async function GET(req: Request) {
           { buyer: userId }
         ]
       })
-        .populate("buyer", "name avatar")
-        .populate("items.seller", "name avatar")
+        .populate("buyer", "name avatar role")
+        .populate("items.seller", "name avatar passport role")
         .populate("items.product", "title images")
         .sort({ createdAt: -1 })
         .lean();
     } else {
       orders = await Order.find({ buyer: userId })
-        .populate("items.seller", "name avatar")
+        .populate("items.seller", "name avatar passport role")
         .populate("items.product", "title images")
         .sort({ createdAt: -1 })
         .lean();
@@ -68,6 +68,9 @@ export async function GET(req: Request) {
           convType = "sell";
         }
 
+        const isSellerParty = convType === "buy";
+        const sellerAvatar = isSellerParty ? (otherParty?.passport || otherParty?.avatar || "") : "";
+
         return {
           orderId: order._id.toString(),
           orderTitle: order.items[0]?.title || "Order",
@@ -75,7 +78,8 @@ export async function GET(req: Request) {
           otherParty: {
             id: otherParty?._id?.toString(),
             name: otherParty?.name || "Unknown User",
-            avatar: otherParty?.avatar,
+            avatar: sellerAvatar,
+            role: isSellerParty ? "seller" : "buyer",
           },
           latestMessage: latestMessage ? latestMessage.text : null,
           latestMessageAt: latestMessage ? latestMessage.createdAt : order.createdAt,

@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { connectDB } from "@/lib/db";
 import { Product } from "@/models/Product";
+import { User } from "@/models/User";
 import { auth } from "@/lib/auth";
 
 // GET /api/admin/products — admin only, all statuses
@@ -18,18 +19,27 @@ export async function GET(req: NextRequest) {
     const limit = parseInt(searchParams.get("limit") ?? "50");
     const status = searchParams.get("status") ?? "";
     const search = searchParams.get("search") ?? "";
+    const school = searchParams.get("school") ?? "";
     const skip = (page - 1) * limit;
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const query: any = {};
-    if (status) query.status = status;
+    if (status && status !== "all") query.status = status;
     if (search) {
-      query.$or = [{ title: { $regex: search, $options: "i" } }];
+      query.title = { $regex: search, $options: "i" };
+    }
+
+    if (school && school !== "all") {
+      const sellersInSchool = await User.find({ school }).distinct("_id");
+      query.$or = [
+        { school: school },
+        { seller: { $in: sellersInSchool } },
+      ];
     }
 
     const total = await Product.countDocuments(query);
     const products = await Product.find(query)
-      .populate("seller", "name storeName email")
+      .populate("seller", "name storeName email school")
       .populate("category", "name")
       .sort({ createdAt: -1 })
       .skip(skip)

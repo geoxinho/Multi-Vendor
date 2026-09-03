@@ -21,12 +21,24 @@ export async function GET(_req: NextRequest, { params }: Params) {
       return NextResponse.json({ error: "Product not found" }, { status: 404 });
     }
 
+    const session = await auth();
+    const isOwner = session && (product.seller as any)?._id?.toString() === session.user.id;
+    const isAdmin = session && session.user.role === "admin";
+
     if (product.status !== "active") {
-      const session = await auth();
-      const isOwner = session && (product.seller as any)?._id?.toString() === session.user.id;
-      const isAdmin = session && session.user.role === "admin";
       if (!isOwner && !isAdmin) {
         return NextResponse.json({ error: "Product not available" }, { status: 404 });
+      }
+    }
+
+    // Cross-campus isolation: Block viewing products belonging to a different campus
+    if (session?.user && !isAdmin && !isOwner && session.user.school) {
+      const productSchool = product.school || (product.seller as any)?.school;
+      if (productSchool && productSchool !== session.user.school) {
+        return NextResponse.json(
+          { error: `This product is only available for students at ${productSchool}` },
+          { status: 404 }
+        );
       }
     }
 

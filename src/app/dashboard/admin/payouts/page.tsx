@@ -12,9 +12,9 @@ interface PayoutOrder {
   sellerPaid: boolean;
   payoutHeld: boolean;
   payoutHoldReason?: string;
-  buyer: { name: string };
+  buyer: { name: string; school?: string };
   items: {
-    seller: { name: string; storeName?: string };
+    seller: { name: string; storeName?: string; school?: string };
     price: number;
     quantity: number;
     netPayout?: number;
@@ -25,8 +25,10 @@ type FilterType = "pending" | "held" | "paid" | "all";
 
 export default function AdminPayoutsPage() {
   const [orders, setOrders] = useState<PayoutOrder[]>([]);
+  const [schools, setSchools] = useState<{ _id: string; name: string; code?: string }[]>([]);
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState<FilterType>("pending");
+  const [schoolFilter, setSchoolFilter] = useState<string>("all");
   const [actioning, setActioning] = useState<string | null>(null);
   // Hold dialog state
   const [holdTarget, setHoldTarget] = useState<string | null>(null);
@@ -34,7 +36,10 @@ export default function AdminPayoutsPage() {
 
   const fetchPayouts = () => {
     setLoading(true);
-    fetch(`/api/admin/payouts?filter=${filter}`)
+    const params = new URLSearchParams({ filter });
+    if (schoolFilter !== "all") params.set("school", schoolFilter);
+
+    fetch(`/api/admin/payouts?${params.toString()}`)
       .then((r) => r.json())
       .then((d) => {
         setOrders(Array.isArray(d) ? d : []);
@@ -43,9 +48,18 @@ export default function AdminPayoutsPage() {
   };
 
   useEffect(() => {
+    fetch("/api/schools?all=true")
+      .then((r) => r.json())
+      .then((d) => {
+        if (Array.isArray(d)) setSchools(d);
+      })
+      .catch(() => {});
+  }, []);
+
+  useEffect(() => {
     fetchPayouts();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [filter]);
+  }, [filter, schoolFilter]);
 
   const handleHold = async () => {
     if (!holdTarget) return;
@@ -120,29 +134,44 @@ export default function AdminPayoutsPage() {
       )}
 
       {/* ── Page Header ── */}
-      <div className="flex items-center justify-between mb-8">
+      <div className="flex flex-wrap items-center justify-between gap-4 mb-8">
         <div>
           <h1 className="text-2xl font-bold text-gray-900">Seller Payouts</h1>
           <p className="text-gray-500 text-sm mt-1">
             Payouts release automatically 24 hrs after delivery. You can hold a payout before it releases.
           </p>
         </div>
-        <div className="flex gap-2">
-          {filters.map((f) => (
-            <button
-              key={f}
-              onClick={() => setFilter(f)}
-              className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors capitalize ${
-                filter === f
-                  ? f === "held"
-                    ? "bg-amber-500 text-white"
-                    : "bg-[#A4860E] text-white"
-                  : "bg-white border border-gray-200 text-gray-600 hover:border-[#A4860E]/50"
-              }`}
-            >
-              {filterLabels[f]}
-            </button>
-          ))}
+        <div className="flex flex-wrap items-center gap-3">
+          <select
+            value={schoolFilter}
+            onChange={(e) => setSchoolFilter(e.target.value)}
+            className="px-3 py-1.5 rounded-lg text-sm border border-gray-200 bg-white font-medium text-gray-700 shadow-2xs focus:outline-none focus:ring-2 focus:ring-[#A4860E]/30 focus:border-[#A4860E]"
+          >
+            <option value="all">All Campuses</option>
+            {schools.map((s) => (
+              <option key={s._id} value={s.name}>
+                {s.name} {s.code ? `(${s.code})` : ""}
+              </option>
+            ))}
+          </select>
+
+          <div className="flex gap-1.5">
+            {filters.map((f) => (
+              <button
+                key={f}
+                onClick={() => setFilter(f)}
+                className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors capitalize ${
+                  filter === f
+                    ? f === "held"
+                      ? "bg-amber-500 text-white"
+                      : "bg-[#A4860E] text-white"
+                    : "bg-white border border-gray-200 text-gray-600 hover:border-[#A4860E]/50"
+                }`}
+              >
+                {filterLabels[f]}
+              </button>
+            ))}
+          </div>
         </div>
       </div>
 
@@ -165,6 +194,7 @@ export default function AdminPayoutsPage() {
               (s, i) => s + (i.netPayout ?? i.price * i.quantity * 0.95),
               0,
             );
+            const orderSchool = order.buyer?.school || order.items?.[0]?.seller?.school || "General";
 
             return (
               <div
@@ -184,9 +214,15 @@ export default function AdminPayoutsPage() {
 
                 <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4">
                   <div>
-                    <p className="text-xs font-mono text-gray-400 mb-1">
-                      #{order._id.slice(-12).toUpperCase()}
-                    </p>
+                    <div className="flex items-center gap-2 mb-1">
+                      <p className="text-xs font-mono text-gray-400">
+                        #{order._id.slice(-12).toUpperCase()}
+                      </p>
+                      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[11px] font-bold bg-[#fdf8e8] text-[#A4860E] border border-[#e8d48a]">
+                        <i className="fa-solid fa-graduation-cap text-[9px]" />
+                        {orderSchool}
+                      </span>
+                    </div>
                     <p className="text-sm text-gray-600">
                       Buyer:{" "}
                       <span className="font-medium text-gray-900">{order.buyer?.name}</span>

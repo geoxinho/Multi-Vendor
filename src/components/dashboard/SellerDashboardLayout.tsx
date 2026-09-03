@@ -4,6 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useSession, signOut } from "next-auth/react";
 import { useState, useEffect } from "react";
+import RequireCampusModal from "@/components/dashboard/RequireCampusModal";
 
 interface NavItem {
   href: string;
@@ -53,6 +54,7 @@ export default function SellerDashboardLayout({ navItems, title, children }: Sel
 
   return (
     <div className="flex h-screen bg-gray-50 overflow-hidden">
+      <RequireCampusModal />
 
       {/* ─── Desktop Sidebar ─── */}
       <aside className="w-64 shrink-0 bg-[#FAFAFA] border-r border-[#E5E5E5] text-gray-900 flex flex-col h-full hidden md:flex">

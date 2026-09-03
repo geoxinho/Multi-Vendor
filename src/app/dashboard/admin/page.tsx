@@ -4,6 +4,8 @@ import { User } from "@/models/User";
 import { Product } from "@/models/Product";
 import { Order } from "@/models/Order";
 import { OrderReport } from "@/models/OrderReport";
+import { SupportTicket } from "@/models/SupportTicket";
+import { getAllActiveSchools, getCampusUserModel, getCampusProductModel } from "@/lib/campusModels";
 import StatCard from "@/components/dashboard/StatCard";
 import Link from "next/link";
 import type { Metadata } from "next";
@@ -19,52 +21,99 @@ export default async function AdminDashboardPage() {
   const d30 = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
   const d90 = new Date(now.getTime() - 90 * 24 * 60 * 60 * 1000);
 
-  const [
-    userCount,
-    productCount,
-    orderCount,
-    orders,
-    lowStockProducts,
-    activeUsersCount,
-    inactive7dCount,
-    inactive30dCount,
-    inactive90dCount,
-    pendingReportsCount,
-  ] = await Promise.all([
-    User.countDocuments(),
-    Product.countDocuments(),
-    Order.countDocuments(),
-    Order.find({ paymentStatus: "paid" }).lean(),
-    Product.find({ status: "active", stock: { $lte: 3 } })
-      .populate("seller", "name email storeName")
-      .limit(10)
-      .lean(),
-    User.countDocuments({
-      $or: [
-        { lastActiveAt: { $gte: d7 } },
-        { lastActiveAt: { $exists: false }, updatedAt: { $gte: d7 } },
-      ],
-    }),
-    User.countDocuments({
-      $or: [
-        { lastActiveAt: { $lt: d7, $gte: d30 } },
-        { lastActiveAt: { $exists: false }, updatedAt: { $lt: d7, $gte: d30 } },
-      ],
-    }),
-    User.countDocuments({
-      $or: [
-        { lastActiveAt: { $lt: d30, $gte: d90 } },
-        { lastActiveAt: { $exists: false }, updatedAt: { $lt: d30, $gte: d90 } },
-      ],
-    }),
-    User.countDocuments({
-      $or: [
-        { lastActiveAt: { $lt: d90 } },
-        { lastActiveAt: { $exists: false }, updatedAt: { $lt: d90 } },
-      ],
-    }),
-    OrderReport.countDocuments({ status: "pending" }),
+  // ── Fetch user counts across all campus collections ──
+  const activeSchools = await getAllActiveSchools();
+  const userModels = activeSchools.map((s) => getCampusUserModel(s.slug));
+  userModels.push(User); // include legacy
+
+  const productModels = activeSchools.map((s) => getCampusProductModel(s.slug));
+  productModels.push(Product);
+
+  // Deduplicate by _id to avoid double-counting across campus + legacy collections
+  const [userIdSets, productIdSets] = await Promise.all([
+    Promise.all(
+      userModels.map((m) =>
+        m
+          .find({})
+          .select("_id")
+          .lean()
+          .then((docs: any[]) => docs.map((d) => d._id.toString()))
+          .catch(() => [] as string[])
+      )
+    ),
+    Promise.all(
+      productModels.map((m) =>
+        m
+          .find({})
+          .select("_id")
+          .lean()
+          .then((docs: any[]) => docs.map((d) => d._id.toString()))
+          .catch(() => [] as string[])
+      )
+    ),
   ]);
+
+  const uniqueUserIds = new Set(userIdSets.flat());
+  const uniqueProductIds = new Set(productIdSets.flat());
+  const userCount = uniqueUserIds.size;
+  const productCount = uniqueProductIds.size;
+
+  const activityCounts = await Promise.all(
+    userModels.map((m) =>
+      Promise.all([
+        m
+          .countDocuments({
+            $or: [{ lastActiveAt: { $gte: d7 } }, { lastActiveAt: { $exists: false }, updatedAt: { $gte: d7 } }],
+          })
+          .catch(() => 0),
+        m
+          .countDocuments({
+            $or: [
+              { lastActiveAt: { $lt: d7, $gte: d30 } },
+              { lastActiveAt: { $exists: false }, updatedAt: { $lt: d7, $gte: d30 } },
+            ],
+          })
+          .catch(() => 0),
+        m
+          .countDocuments({
+            $or: [
+              { lastActiveAt: { $lt: d30, $gte: d90 } },
+              { lastActiveAt: { $exists: false }, updatedAt: { $lt: d30, $gte: d90 } },
+            ],
+          })
+          .catch(() => 0),
+        m
+          .countDocuments({
+            $or: [{ lastActiveAt: { $lt: d90 } }, { lastActiveAt: { $exists: false }, updatedAt: { $lt: d90 } }],
+          })
+          .catch(() => 0),
+      ])
+    )
+  );
+
+  let activeUsersCount = 0;
+  let inactive7dCount = 0;
+  let inactive30dCount = 0;
+  let inactive90dCount = 0;
+  for (const [a, b, c, d] of activityCounts) {
+    activeUsersCount += a;
+    inactive7dCount += b;
+    inactive30dCount += c;
+    inactive90dCount += d;
+  }
+
+  const [orderCount, orders, lowStockProducts, pendingReportsCount, openTicketsCount, recentTickets] =
+    await Promise.all([
+      Order.countDocuments(),
+      Order.find({ paymentStatus: "paid" }).lean(),
+      Product.find({ status: "active", stock: { $lte: 3 } })
+        .populate("seller", "name email storeName")
+        .limit(10)
+        .lean(),
+      OrderReport.countDocuments({ status: "pending" }),
+      SupportTicket.countDocuments({ status: "open" }),
+      SupportTicket.find().sort("-createdAt").limit(5).lean(),
+    ]);
 
   const totalRevenue = orders.reduce((sum, o) => sum + o.totalAmount, 0);
   const pendingPayouts = orders.filter(
@@ -79,6 +128,13 @@ export default async function AdminDashboardPage() {
   const inactive7dPercent = Math.round((inactive7dCount / totalUsersSafe) * 100);
   const inactive30dPercent = Math.round((inactive30dCount / totalUsersSafe) * 100);
   const inactive90dPercent = Math.round((inactive90dCount / totalUsersSafe) * 100);
+
+  const STATUS_STYLES: Record<string, string> = {
+    open: "bg-red-50 text-red-700 border border-red-200",
+    in_progress: "bg-yellow-50 text-yellow-700 border border-yellow-200",
+    resolved: "bg-green-50 text-green-700 border border-green-200",
+    closed: "bg-gray-100 text-gray-500 border border-gray-200",
+  };
 
   return (
     <div>
@@ -170,6 +226,27 @@ export default async function AdminDashboardPage() {
             </Link>
           </div>
         )}
+
+        {openTicketsCount > 0 && (
+          <div className="p-4 bg-purple-50 border border-purple-200 rounded-2xl flex items-center justify-between gap-3">
+            <div className="flex items-center gap-3">
+              <div className="w-8 h-8 rounded-lg bg-purple-100 flex items-center justify-center text-purple-600 shrink-0">
+                <i className="fa-solid fa-envelope-open-text" />
+              </div>
+              <div>
+                <p className="text-sm font-bold text-purple-900">
+                  {openTicketsCount} open support ticket{openTicketsCount > 1 ? "s" : ""} awaiting reply
+                </p>
+                <p className="text-xs text-purple-700 mt-0.5">
+                  Users have sent help desk messages from the /help page that need your attention.
+                </p>
+              </div>
+            </div>
+            <Link href="/dashboard/admin/support" className="text-xs font-bold text-white bg-purple-600 hover:bg-purple-700 px-3.5 py-2 rounded-xl transition-colors shrink-0">
+              View Messages &rarr;
+            </Link>
+          </div>
+        )}
       </div>
 
       {/* ── User Activity & Retention Analytics Section ── */}
@@ -184,20 +261,14 @@ export default async function AdminDashboardPage() {
               Live segmentation based on user session activity, login timestamps, and account engagement.
             </p>
           </div>
-          <Link
-            href="/dashboard/admin/users"
-            className="text-xs font-bold text-[#A4860E] hover:underline self-start sm:self-auto"
-          >
+          <Link href="/dashboard/admin/users" className="text-xs font-bold text-[#A4860E] hover:underline self-start sm:self-auto">
             View all users &rarr;
           </Link>
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
           {/* Active (<7 days) */}
-          <Link
-            href="/dashboard/admin/users?activity=active"
-            className="p-4 rounded-xl border border-emerald-100 bg-emerald-50/50 hover:bg-emerald-50 hover:border-emerald-200 transition group"
-          >
+          <Link href="/dashboard/admin/users?activity=active" className="p-4 rounded-xl border border-emerald-100 bg-emerald-50/50 hover:bg-emerald-50 hover:border-emerald-200 transition group">
             <div className="flex items-center justify-between mb-2">
               <span className="text-xs font-bold text-emerald-800 uppercase tracking-wider">Active Users</span>
               <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse" />
@@ -213,10 +284,7 @@ export default async function AdminDashboardPage() {
           </Link>
 
           {/* Inactive 7-30 days */}
-          <Link
-            href="/dashboard/admin/users?activity=inactive_7d"
-            className="p-4 rounded-xl border border-yellow-100 bg-yellow-50/40 hover:bg-yellow-50 hover:border-yellow-200 transition group"
-          >
+          <Link href="/dashboard/admin/users?activity=inactive_7d" className="p-4 rounded-xl border border-yellow-100 bg-yellow-50/40 hover:bg-yellow-50 hover:border-yellow-200 transition group">
             <div className="flex items-center justify-between mb-2">
               <span className="text-xs font-bold text-yellow-800 uppercase tracking-wider">Inactive 7+ Days</span>
               <i className="fa-solid fa-clock-rotate-left text-yellow-600 text-xs" />
@@ -232,10 +300,7 @@ export default async function AdminDashboardPage() {
           </Link>
 
           {/* Inactive 30-90 days */}
-          <Link
-            href="/dashboard/admin/users?activity=inactive_30d"
-            className="p-4 rounded-xl border border-amber-100 bg-amber-50/40 hover:bg-amber-50 hover:border-amber-200 transition group"
-          >
+          <Link href="/dashboard/admin/users?activity=inactive_30d" className="p-4 rounded-xl border border-amber-100 bg-amber-50/40 hover:bg-amber-50 hover:border-amber-200 transition group">
             <div className="flex items-center justify-between mb-2">
               <span className="text-xs font-bold text-amber-800 uppercase tracking-wider">Inactive 30+ Days</span>
               <i className="fa-solid fa-calendar-xmark text-amber-600 text-xs" />
@@ -251,10 +316,7 @@ export default async function AdminDashboardPage() {
           </Link>
 
           {/* Inactive >90 days */}
-          <Link
-            href="/dashboard/admin/users?activity=inactive_90d"
-            className="p-4 rounded-xl border border-red-100 bg-red-50/40 hover:bg-red-50 hover:border-red-200 transition group"
-          >
+          <Link href="/dashboard/admin/users?activity=inactive_90d" className="p-4 rounded-xl border border-red-100 bg-red-50/40 hover:bg-red-50 hover:border-red-200 transition group">
             <div className="flex items-center justify-between mb-2">
               <span className="text-xs font-bold text-red-800 uppercase tracking-wider">Inactive &gt;90 Days</span>
               <i className="fa-solid fa-user-slash text-red-600 text-xs" />
@@ -271,13 +333,69 @@ export default async function AdminDashboardPage() {
         </div>
       </div>
 
+      {/* ── Recent Support Messages ── */}
+      <div className="bg-white rounded-2xl border border-gray-100 p-6 mb-8 shadow-xs">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-5">
+          <div>
+            <h2 className="text-lg font-bold text-gray-900 flex items-center gap-2">
+              <i className="fa-solid fa-headset text-[#A4860E]" />
+              Recent Support Messages
+              {openTicketsCount > 0 && (
+                <span className="ml-1 px-2 py-0.5 text-xs font-bold rounded-full bg-purple-100 text-purple-700">
+                  {openTicketsCount} open
+                </span>
+              )}
+            </h2>
+            <p className="text-xs text-gray-500 mt-0.5">Messages submitted by users and visitors via the /help page.</p>
+          </div>
+          <Link href="/dashboard/admin/support" className="text-xs font-bold text-[#A4860E] hover:underline self-start sm:self-auto whitespace-nowrap">
+            View all tickets &rarr;
+          </Link>
+        </div>
+
+        {recentTickets.length === 0 ? (
+          <div className="text-center py-10 text-gray-400">
+            <i className="fa-solid fa-inbox text-4xl mb-3 block" />
+            <p className="text-sm font-medium">No support messages yet</p>
+            <p className="text-xs mt-1">Messages from the /help page will appear here.</p>
+          </div>
+        ) : (
+          <div className="space-y-3">
+            {recentTickets.map((ticket: any) => (
+              <div key={ticket._id.toString()} className="flex items-start gap-3 p-4 rounded-xl border border-gray-100 hover:bg-gray-50 transition">
+                <div className="w-9 h-9 rounded-full bg-purple-100 flex items-center justify-center shrink-0">
+                  <i className="fa-solid fa-user text-purple-600 text-sm" />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <span className="font-semibold text-gray-900 text-sm">{ticket.name}</span>
+                    <span className="text-gray-400 text-xs">·</span>
+                    <a href={`mailto:${ticket.email}`} className="text-xs text-[#A4860E] hover:underline">{ticket.email}</a>
+                    <span className={`ml-auto px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider ${STATUS_STYLES[ticket.status] || "bg-gray-100 text-gray-500"}`}>
+                      {ticket.status.replace("_", " ")}
+                    </span>
+                  </div>
+                  <p className="text-sm font-medium text-gray-800 mt-0.5">{ticket.subject}</p>
+                  <p className="text-xs text-gray-500 mt-0.5 line-clamp-1">{ticket.message}</p>
+                  <p className="text-[11px] text-gray-400 mt-1">
+                    {ticket.ticketId} · {ticket.category}
+                    {ticket.orderId ? ` · Order #${ticket.orderId}` : ""}
+                    · {new Date(ticket.createdAt).toLocaleDateString("en-NG", { day: "numeric", month: "short", year: "numeric" })}
+                  </p>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+
       {/* Quick Navigation Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
         {[
           { title: "Manage Users", desc: "View, ban, or filter by user activity status.", href: "/dashboard/admin/users", color: "bg-teal-600", icon: "fa-users" },
           { title: "Campuses & Schools", desc: "Manage universities & polytechnics.", href: "/dashboard/admin/schools", color: "bg-[#A4860E]", icon: "fa-graduation-cap" },
           { title: "Complaints & Reports", desc: "Resolve delivery & order disputes.", href: "/dashboard/admin/reports", color: "bg-rose-600", icon: "fa-triangle-exclamation" },
-          { title: "Release Payouts", desc: "Approve seller payouts after 24-hour hold.", href: "/dashboard/admin/payouts", color: "bg-blue-600", icon: "fa-money-bill-transfer" },
+          { title: "Support Messages", desc: "Read & respond to user help desk tickets.", href: "/dashboard/admin/support", color: "bg-purple-600", icon: "fa-headset" },
         ].map((card) => (
           <Link key={card.href} href={card.href}
             className="block bg-white rounded-2xl border border-gray-100 p-6 hover:shadow-md transition-shadow group">

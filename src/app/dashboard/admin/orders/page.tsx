@@ -7,7 +7,7 @@ import LoadingSpinner from "@/components/ui/LoadingSpinner";
 
 interface Order {
   _id: string;
-  buyer?: { name: string; email: string; phone?: string };
+  buyer?: { name: string; email: string; phone?: string; school?: string };
   totalAmount: number;
   platformFee: number;
   netPayout: number;
@@ -22,7 +22,7 @@ interface Order {
     image: string;
     quantity: number;
     price: number;
-    seller?: { storeName?: string; name?: string; email?: string };
+    seller?: { storeName?: string; name?: string; email?: string; school?: string };
   }[];
 }
 
@@ -38,19 +38,38 @@ const statusColor: Record<string, string> = {
 
 export default function AdminOrdersPage() {
   const [orders, setOrders] = useState<Order[]>([]);
+  const [schools, setSchools] = useState<{ _id: string; name: string; code?: string }[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>("all");
+  const [schoolFilter, setSchoolFilter] = useState<string>("all");
 
-  useEffect(() => {
-    fetch("/api/orders?limit=100")
+  const fetchOrders = () => {
+    setLoading(true);
+    const params = new URLSearchParams({ limit: "100" });
+    if (schoolFilter !== "all") params.set("school", schoolFilter);
+
+    fetch(`/api/orders?${params.toString()}`)
       .then((r) => r.json())
       .then((d) => {
         setOrders(d.orders ?? []);
         setLoading(false);
       })
       .catch(() => setLoading(false));
+  };
+
+  useEffect(() => {
+    fetch("/api/schools?all=true")
+      .then((r) => r.json())
+      .then((d) => {
+        if (Array.isArray(d)) setSchools(d);
+      })
+      .catch(() => {});
   }, []);
+
+  useEffect(() => {
+    fetchOrders();
+  }, [schoolFilter]);
 
   const filtered = orders.filter((o) => {
     const matchesSearch =
@@ -83,13 +102,28 @@ export default function AdminOrdersPage() {
           <p className="text-sm text-gray-500 mt-1">Track customer orders, delivery verification, and seller payouts</p>
         </div>
 
-        <input
-          type="text"
-          placeholder="Search buyer, order ID, seller, or item…"
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-          className="px-3.5 py-2 text-sm border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#A4860E]/30 focus:border-[#A4860E] w-72 bg-white"
-        />
+        <div className="flex items-center gap-3">
+          <select
+            value={schoolFilter}
+            onChange={(e) => setSchoolFilter(e.target.value)}
+            className="px-3.5 py-2 text-sm border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#A4860E]/30 focus:border-[#A4860E] bg-white font-medium text-gray-700 shadow-2xs"
+          >
+            <option value="all">All Campuses</option>
+            {schools.map((s) => (
+              <option key={s._id} value={s.name}>
+                {s.name} {s.code ? `(${s.code})` : ""}
+              </option>
+            ))}
+          </select>
+
+          <input
+            type="text"
+            placeholder="Search buyer, order ID, seller, or item…"
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            className="px-3.5 py-2 text-sm border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#A4860E]/30 focus:border-[#A4860E] w-64 bg-white shadow-2xs"
+          />
+        </div>
       </div>
 
       {/* Status Filter Tabs */}
@@ -124,10 +158,10 @@ export default function AdminOrdersPage() {
       ) : (
         <div className="bg-white rounded-2xl border border-gray-100 overflow-hidden shadow-xs">
           <div className="overflow-x-auto">
-            <table className="w-full text-sm min-w-[840px]">
+            <table className="w-full text-sm min-w-[900px]">
               <thead className="bg-gray-50 border-b border-gray-100">
                 <tr>
-                  {["Order", "Buyer", "Items & Seller", "Total", "Payment", "Delivery", "Payout", "Date", "Action"].map((h) => (
+                  {["Order", "Buyer", "Campus", "Items & Seller", "Total", "Payment", "Delivery", "Payout", "Date", "Action"].map((h) => (
                     <th
                       key={h}
                       className="px-4 py-3.5 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider whitespace-nowrap"
@@ -140,6 +174,7 @@ export default function AdminOrdersPage() {
               <tbody className="divide-y divide-gray-100">
                 {filtered.map((order) => {
                   const firstItem = order.items?.[0];
+                  const orderSchool = order.buyer?.school || firstItem?.seller?.school || "General";
                   return (
                     <tr key={order._id} className="hover:bg-gray-50/80 transition-colors">
                       {/* Order ID */}
@@ -156,6 +191,14 @@ export default function AdminOrdersPage() {
                       <td className="px-4 py-3">
                         <p className="font-semibold text-gray-900 text-xs">{order.buyer?.name || "Anonymous"}</p>
                         <p className="text-gray-400 text-[11px]">{order.buyer?.email}</p>
+                      </td>
+
+                      {/* Campus */}
+                      <td className="px-4 py-3 whitespace-nowrap">
+                        <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-bold bg-[#fdf8e8] text-[#A4860E] border border-[#e8d48a]">
+                          <i className="fa-solid fa-graduation-cap text-[10px]" />
+                          {orderSchool}
+                        </span>
                       </td>
 
                       {/* Items & Seller Preview */}

@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { sendMail } from "@/lib/email";
 import { auth } from "@/lib/auth";
+import { connectDB } from "@/lib/db";
+import { SupportTicket } from "@/models/SupportTicket";
 
 export async function POST(req: NextRequest) {
   try {
@@ -18,6 +20,21 @@ export async function POST(req: NextRequest) {
 
     const ticketId = `TK-${Math.floor(100000 + Math.random() * 900000)}`;
     const adminEmail = process.env.ADMIN_EMAIL || "georgex.edg@gmail.com";
+
+    // Save ticket to database
+    await connectDB();
+    await SupportTicket.create({
+      ticketId,
+      name,
+      email,
+      subject,
+      category: category || "General Inquiry",
+      orderId: orderId || "",
+      message,
+      isLoggedIn: !!session,
+      userId: session?.user?.id || "",
+      status: "open",
+    });
 
     const emailSubject = `🚨 Help Desk Ticket [${ticketId}] — ${subject}`;
     const emailHtml = `
@@ -90,5 +107,65 @@ export async function POST(req: NextRequest) {
       { error: "Internal server error. Please try again later." },
       { status: 500 }
     );
+  }
+}
+
+export async function GET(req: NextRequest) {
+  try {
+    const session = await auth();
+    if (!session || session.user.role !== "admin") {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
+    await connectDB();
+    const { searchParams } = new URL(req.url);
+    const page = parseInt(searchParams.get("page") ?? "1");
+    const limit = parseInt(searchParams.get("limit") ?? "20");
+    const status = searchParams.get("status") ?? "";
+    const skip = (page - 1) * limit;
+
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const query: any = {};
+    if (status && status !== "all") query.status = status;
+
+    const [tickets, total] = await Promise.all([
+      SupportTicket.find(query).sort("-createdAt").skip(skip).limit(limit).lean(),
+      SupportTicket.countDocuments(query),
+    ]);
+
+    return NextResponse.json({ tickets, total, page, pages: Math.ceil(total / limit) || 1 });
+  } catch (err) {
+    console.error("[HELP DESK GET ERROR]", err);
+    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
+  }
+}
+
+export async function PATCH(req: NextRequest) {
+  try {
+    const session = await auth();
+    if (!session || session.user.role !== "admin") {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
+    await connectDB();
+    const body = await req.json();
+    const { ticketId, status, adminNote } = body;
+
+    if (!ticketId) {
+      return NextResponse.json({ error: "Ticket ID required" }, { status: 400 });
+    }
+
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const updates: any = {};
+    if (status) updates.status = status;
+    if (typeof adminNote === "string") updates.adminNote = adminNote;
+
+    const updated = await SupportTicket.findOneAndUpdate({ ticketId }, updates, { new: true });
+    if (!updated) return NextResponse.json({ error: "Ticket not found" }, { status: 404 });
+
+    return NextResponse.json(updated);
+  } catch (err) {
+    console.error("[HELP DESK PATCH ERROR]", err);
+    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
   }
 }

@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { connectDB } from "@/lib/db";
+import { AdminUser } from "@/models/AdminUser";
 import { User } from "@/models/User";
+import { findUserAcrossCampuses, getCampusUserModel } from "@/lib/campusModels";
 import bcrypt from "bcryptjs";
 
 export async function POST(req: NextRequest) {
@@ -15,8 +17,46 @@ export async function POST(req: NextRequest) {
     }
 
     await connectDB();
+    const cleanEmail = email.toLowerCase().trim();
+
+    const hashedPassword = await bcrypt.hash(password, 12);
+
+    // 1. Check AdminUser
+    const admin = await AdminUser.findOne({
+      email: cleanEmail,
+      passwordResetToken: token,
+      passwordResetTokenExpires: { $gt: new Date() },
+    });
+
+    if (admin) {
+      await AdminUser.findByIdAndUpdate(admin._id, {
+        password: hashedPassword,
+        passwordResetToken: "",
+        $unset: { passwordResetTokenExpires: 1 },
+      });
+      return NextResponse.json({ message: "Password updated successfully." });
+    }
+
+    // 2. Check campus collections
+    const campusRes = await findUserAcrossCampuses({
+      email: cleanEmail,
+      passwordResetToken: token,
+      passwordResetTokenExpires: { $gt: new Date() },
+    });
+
+    if (campusRes) {
+      const CampusUser = getCampusUserModel(campusRes.campusSlug);
+      await CampusUser.findByIdAndUpdate(campusRes.user._id, {
+        password: hashedPassword,
+        passwordResetToken: "",
+        $unset: { passwordResetTokenExpires: 1 },
+      });
+      return NextResponse.json({ message: "Password updated successfully." });
+    }
+
+    // 3. Legacy fallback
     const user = await User.findOne({
-      email: email.toLowerCase().trim(),
+      email: cleanEmail,
       passwordResetToken: token,
       passwordResetTokenExpires: { $gt: new Date() },
     });
@@ -25,7 +65,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "This reset link is invalid or has expired." }, { status: 400 });
     }
 
-    user.password = await bcrypt.hash(password, 12);
+    user.password = hashedPassword;
     user.passwordResetToken = "";
     user.passwordResetTokenExpires = undefined;
     await user.save();

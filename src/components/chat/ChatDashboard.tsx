@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import Image from "next/image";
+import UserAvatar from "@/components/shared/UserAvatar";
 
 interface Conversation {
   orderId: string;
@@ -12,6 +13,7 @@ interface Conversation {
     id: string;
     name: string;
     avatar?: string;
+    role?: string;
   };
   latestMessage?: string;
   latestMessageAt: string;
@@ -168,9 +170,12 @@ export default function ChatDashboard({ currentUserId, role }: ChatDashboardProp
                       isActive ? "bg-blue-50 hover:bg-blue-50 border-l-4 border-[#A4860E]" : "border-l-4 border-transparent"
                     }`}
                   >
-                    <div className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-400 to-indigo-600 flex items-center justify-center text-white font-bold shrink-0">
-                      {conv.otherParty.name?.[0]?.toUpperCase()}
-                    </div>
+                    <UserAvatar
+                      name={conv.otherParty.name}
+                      image={conv.otherParty.avatar}
+                      role={conv.otherParty.role || (conv.type === "buy" ? "seller" : "buyer")}
+                      size="md"
+                    />
                     <div className="flex-1 min-w-0">
                       <div className="flex justify-between items-baseline mb-0.5">
                         <p className={`text-sm truncate ${isActive ? "font-bold text-blue-900" : "font-semibold text-gray-900"}`}>
@@ -232,9 +237,12 @@ export default function ChatDashboard({ currentUserId, role }: ChatDashboardProp
                   </svg>
                 </button>
 
-                <div className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-400 to-indigo-600 flex items-center justify-center text-white font-bold shrink-0">
-                  {activeConv.otherParty.name?.[0]?.toUpperCase()}
-                </div>
+                <UserAvatar
+                  name={activeConv.otherParty.name}
+                  image={activeConv.otherParty.avatar}
+                  role={activeConv.otherParty.role || (activeConv.type === "buy" ? "seller" : "buyer")}
+                  size="md"
+                />
                 <div>
                   <h3 className="font-bold text-gray-900 text-sm md:text-base">{activeConv.otherParty.name}</h3>
                   <p className="text-xs text-gray-500">Order: {activeConv.orderTitle}</p>
@@ -280,9 +288,12 @@ export default function ChatDashboard({ currentUserId, role }: ChatDashboardProp
                       {!isMe && (
                         <div className="w-6 shrink-0 flex items-end">
                           {showAvatar && (
-                            <div className="w-6 h-6 rounded-full bg-gray-200 flex items-center justify-center text-[8px] font-bold text-gray-600">
-                              {msg.sender.name?.[0]?.toUpperCase()}
-                            </div>
+                            <UserAvatar
+                              name={msg.sender.name}
+                              image={msg.sender.avatar}
+                              role={msg.sender.role}
+                              size="xs"
+                            />
                           )}
                         </div>
                       )}

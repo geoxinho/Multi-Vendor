@@ -9,6 +9,7 @@ import { verifyPayment } from "@/lib/paystack";
 import { shippingSchema } from "@/utils/validators";
 import { randomUUID } from "crypto";
 import { sendOrderConfirmationEmails } from "@/utils/email";
+import { getCampusOrderModel } from "@/lib/campusModels";
 
 // POST /api/orders — creates order after payment
 export async function POST(req: NextRequest) {
@@ -52,6 +53,7 @@ export async function POST(req: NextRequest) {
 
 
     await connectDB();
+    const buyerSchool = session.user.school || "";
 
     // Check if order already created for this reference
     const existingOrder = await Order.findOne({ paymentRef });
@@ -78,6 +80,15 @@ export async function POST(req: NextRequest) {
       if (product.seller._id.toString() === session.user.id) {
         return NextResponse.json({ error: "You cannot purchase your own product." }, { status: 400 });
       }
+
+      // Check cross-campus purchasing
+      if (buyerSchool && product.school && product.school !== buyerSchool) {
+        return NextResponse.json(
+          { error: `"${product.title}" is from another campus (${product.school}) and cannot be purchased.` },
+          { status: 400 }
+        );
+      }
+
       if (product.stock < item.quantity) {
         return NextResponse.json({ error: `Insufficient stock for ${product.title}` }, { status: 400 });
       }
@@ -119,6 +130,15 @@ export async function POST(req: NextRequest) {
       paymentStatus: "paid",
       shippingAddress: addressParsed.data,
     });
+
+    // Mirror to campus-specific orders collection
+    if (buyerSchool) {
+      const CampusOrder = getCampusOrderModel(buyerSchool);
+      await CampusOrder.create({
+        ...order.toObject(),
+        _id: order._id,
+      }).catch(() => {});
+    }
 
     // Send emails & create thank-you chat messages
     try {
@@ -186,6 +206,7 @@ export async function GET(req: NextRequest) {
     const page = parseInt(searchParams.get("page") ?? "1");
     const limit = parseInt(searchParams.get("limit") ?? "10");
     const skip = (page - 1) * limit;
+    const school = searchParams.get("school") ?? "";
     const asBuyer = searchParams.get("asBuyer") === "true";
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -198,13 +219,19 @@ export async function GET(req: NextRequest) {
       query = { buyer: session.user.id };
     } else if (session.user.role === "seller") {
       query = { "items.seller": session.user.id };
+    } else if (session.user.role === "admin" && school && school !== "all") {
+      const usersInSchool = await User.find({ school }).distinct("_id");
+      query.$or = [
+        { buyer: { $in: usersInSchool } },
+        { "items.seller": { $in: usersInSchool } },
+      ];
     }
     // admin with no asBuyer sees all
 
     const total = await Order.countDocuments(query);
     const orders = await Order.find(query)
-      .populate("buyer", "name email phone")
-      .populate("items.seller", "name storeName email phone")
+      .populate("buyer", "name email phone school")
+      .populate("items.seller", "name storeName email phone school")
       .populate("items.product", "title images")
       .sort("-createdAt")
       .skip(skip)

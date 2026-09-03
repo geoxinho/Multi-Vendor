@@ -1,12 +1,11 @@
 import { NextResponse } from "next/server";
 import { connectDB } from "@/lib/db";
-import { User } from "@/models/User";
+import { AdminUser } from "@/models/AdminUser";
 import bcrypt from "bcryptjs";
 
 /**
  * GET /api/setup-admin
- * Reads admin credentials from environment variables (ADMIN_EMAIL, ADMIN_USERNAME,
- * ADMIN_PASSWORD, ADMIN_NAME) and upserts the admin account in the database.
+ * Reads admin credentials from environment variables and upserts into the 'admins' collection.
  */
 export async function GET() {
   try {
@@ -39,8 +38,8 @@ export async function GET() {
     const isMatch = await bcrypt.compare(adminPassword, hashedPassword);
     if (!isMatch) throw new Error("Bcrypt verification failed");
 
-    // Update ONLY the account matching the admin email
-    const result = await User.updateOne(
+    // Upsert admin in 'admins' collection
+    const result = await AdminUser.updateOne(
       { email: adminEmail },
       {
         $set: {
@@ -48,45 +47,20 @@ export async function GET() {
           username: adminUsername,
           password: hashedPassword,
           role: "admin",
-          roles: ["admin", "buyer"],
+          roles: ["admin"],
           isEmailVerified: true,
         },
-      }
+      },
+      { upsert: true }
     );
 
-    if (result.matchedCount === 0) {
-      // No account found — create fresh
-      const newAdmin = await User.create({
-        name: adminName,
-        email: adminEmail,
-        username: adminUsername,
-        password: hashedPassword,
-        role: "admin",
-        roles: ["admin", "buyer"],
-        isEmailVerified: true,
-      });
-
-      return NextResponse.json({
-        message: "✅ Admin created successfully",
-        email: newAdmin.email,
-        username: newAdmin.username,
-        role: newAdmin.role,
-        isEmailVerified: newAdmin.isEmailVerified,
-        login_url: "/mystartup",
-      });
-    }
-
-    // Confirm what was saved
-    const updated = await User.findOne({ email: adminEmail }).select("-password").lean();
+    const savedAdmin = await AdminUser.findOne({ email: adminEmail }).select("-password").lean();
 
     return NextResponse.json({
-      message: "✅ Admin updated successfully",
-      email: updated?.email,
-      username: updated?.username,
-      role: updated?.role,
-      isEmailVerified: updated?.isEmailVerified,
-      matchedCount: result.matchedCount,
-      modifiedCount: result.modifiedCount,
+      message: "✅ Admin successfully configured in 'admins' collection",
+      email: savedAdmin?.email,
+      username: savedAdmin?.username,
+      role: savedAdmin?.role,
       login_url: "/mystartup",
     });
   } catch (error) {

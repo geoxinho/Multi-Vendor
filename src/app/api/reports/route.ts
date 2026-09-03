@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { connectDB } from "@/lib/db";
 import { Order } from "@/models/Order";
 import { OrderReport } from "@/models/OrderReport";
+import { User } from "@/models/User";
 import { auth } from "@/lib/auth";
 
 export async function GET(req: NextRequest) {
@@ -15,13 +16,18 @@ export async function GET(req: NextRequest) {
     const { searchParams } = new URL(req.url);
     const orderId = searchParams.get("orderId");
     const status = searchParams.get("status");
+    const school = searchParams.get("school");
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const query: any = {};
 
     if (session.user.role === "admin") {
       if (orderId) query.order = orderId;
-      if (status) query.status = status;
+      if (status && status !== "all") query.status = status;
+      if (school && school !== "all") {
+        const usersInSchool = await User.find({ school }).distinct("_id");
+        query.reportedBy = { $in: usersInSchool };
+      }
     } else {
       query.reportedBy = session.user.id;
       if (orderId) query.order = orderId;

@@ -13,12 +13,20 @@ export const authConfig = {
         ];
         token.storeName = (user as { storeName?: string }).storeName ?? "";
         token.school = (user as { school?: string }).school ?? "";
+        token.campusSlug = (user as { campusSlug?: string }).campusSlug ?? "";
+        token.passport = (user as { passport?: string }).passport ?? "";
+        token.avatar = (user as { avatar?: string }).avatar ?? "";
+        token.image = (user as { image?: string }).image ?? "";
       }
       if (trigger === "update" && session) {
         if (session.role) token.role = session.role;
         if (session.roles) token.roles = session.roles;
         if (session.storeName !== undefined) token.storeName = session.storeName;
         if (session.school !== undefined) token.school = session.school;
+        if (session.campusSlug !== undefined) token.campusSlug = session.campusSlug;
+        if (session.passport !== undefined) token.passport = session.passport;
+        if (session.avatar !== undefined) token.avatar = session.avatar;
+        if (session.image !== undefined) token.image = session.image;
       }
       return token;
     },
@@ -31,6 +39,10 @@ export const authConfig = {
         ];
         session.user.storeName = (token.storeName as string) ?? "";
         session.user.school = (token.school as string) ?? "";
+        session.user.campusSlug = (token.campusSlug as string) ?? "";
+        session.user.passport = (token.passport as string) ?? "";
+        session.user.avatar = (token.avatar as string) ?? "";
+        session.user.image = (token.image as string) ?? "";
       }
       return session;
     },

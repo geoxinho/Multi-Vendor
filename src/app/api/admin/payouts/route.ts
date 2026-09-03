@@ -16,6 +16,7 @@ export async function GET(req: NextRequest) {
     await connectDB();
     const { searchParams } = new URL(req.url);
     const filter = searchParams.get("filter") ?? "pending"; // pending | held | paid | all
+    const school = searchParams.get("school") ?? "";
 
     const now = new Date();
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -31,9 +32,17 @@ export async function GET(req: NextRequest) {
     }
     // "all" keeps base query
 
+    if (school && school !== "all") {
+      const usersInSchool = await User.find({ school }).distinct("_id");
+      query.$or = [
+        { buyer: { $in: usersInSchool } },
+        { "items.seller": { $in: usersInSchool } },
+      ];
+    }
+
     const orders = await Order.find(query)
-      .populate("buyer", "name email")
-      .populate("items.seller", "name email storeName")
+      .populate("buyer", "name email school")
+      .populate("items.seller", "name email storeName school")
       .sort("-deliveredAt")
       .lean();
 

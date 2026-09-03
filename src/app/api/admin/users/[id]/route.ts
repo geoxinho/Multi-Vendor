@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { connectDB } from "@/lib/db";
 import { User } from "@/models/User";
 import { auth } from "@/lib/auth";
+import { getAllActiveSchools, getCampusUserModel } from "@/lib/campusModels";
 
 type Params = { params: Promise<{ id: string }> };
 
@@ -31,10 +32,25 @@ export async function PATCH(req: NextRequest, { params }: Params) {
     if (typeof phone === "string") updates.phone = phone.trim();
     if (typeof storeName === "string") updates.storeName = storeName.trim();
 
-    const user = await User.findByIdAndUpdate(id, updates, { new: true }).select("-password");
-    if (!user) return NextResponse.json({ error: "User not found" }, { status: 404 });
+    // Search and update across campus models
+    const activeSchools = await getAllActiveSchools();
+    const targetModels = activeSchools.map((s) => getCampusUserModel(s.slug));
+    targetModels.push(User);
 
-    return NextResponse.json(user);
+    let updatedUser: any = null;
+    for (const model of targetModels) {
+      try {
+        const found = await model.findByIdAndUpdate(id, updates, { new: true }).select("-password");
+        if (found) {
+          updatedUser = found;
+          break;
+        }
+      } catch {}
+    }
+
+    if (!updatedUser) return NextResponse.json({ error: "User not found" }, { status: 404 });
+
+    return NextResponse.json(updatedUser);
   } catch (err) {
     console.error("[ADMIN USER PATCH]", err);
     return NextResponse.json({ error: "Internal server error" }, { status: 500 });
@@ -54,7 +70,16 @@ export async function DELETE(_req: NextRequest, { params }: Params) {
       return NextResponse.json({ error: "Cannot delete yourself" }, { status: 400 });
     }
 
-    await User.findByIdAndDelete(id);
+    const activeSchools = await getAllActiveSchools();
+    const targetModels = activeSchools.map((s) => getCampusUserModel(s.slug));
+    targetModels.push(User);
+
+    for (const model of targetModels) {
+      try {
+        await model.findByIdAndDelete(id);
+      } catch {}
+    }
+
     return NextResponse.json({ message: "User deleted" });
   } catch (err) {
     console.error("[ADMIN USER DELETE]", err);

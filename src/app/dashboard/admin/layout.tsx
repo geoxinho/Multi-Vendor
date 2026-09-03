@@ -46,6 +46,11 @@ const navItems = [
     label: "Campaigns",
     icon: <i className="fa-solid fa-paper-plane text-lg" />,
   },
+  {
+    href: "/dashboard/admin/support",
+    label: "Support Msgs",
+    icon: <i className="fa-solid fa-headset text-lg" />,
+  },
 ];
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {

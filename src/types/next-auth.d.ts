@@ -7,6 +7,9 @@ declare module "next-auth" {
     roles: string[];
     storeName?: string;
     school?: string;
+    campusSlug?: string;
+    passport?: string;
+    avatar?: string;
   }
   interface Session {
     user: {
@@ -18,6 +21,9 @@ declare module "next-auth" {
       roles: string[];
       storeName?: string;
       school?: string;
+      campusSlug?: string;
+      passport?: string;
+      avatar?: string;
     };
   }
 }
@@ -29,5 +35,9 @@ declare module "next-auth/jwt" {
     roles?: string[];
     storeName?: string;
     school?: string;
+    campusSlug?: string;
+    passport?: string;
+    avatar?: string;
+    image?: string;
   }
 }

@@ -53,18 +53,18 @@ export async function uploadImage(
   return new Promise((resolve) => {
     let completed = false;
 
-    // Timeout after 4 seconds to avoid hanging the UI
+    // Timeout after 25 seconds for remote upload completion
     const timeout = setTimeout(() => {
       if (!completed) {
         completed = true;
-        console.warn("[CLOUDINARY] Upload timed out after 4s. Falling back to local storage.");
+        console.warn("[CLOUDINARY] Upload timed out after 25s. Falling back to local storage.");
         try {
           resolve(saveLocally(fileBuffer));
         } catch (e) {
           resolve(""); // Fallback failed
         }
       }
-    }, 4000);
+    }, 25000);
 
     try {
       const stream = cloudinary.uploader.upload_stream(

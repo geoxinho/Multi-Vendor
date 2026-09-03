@@ -3,6 +3,7 @@
 import { useEffect, useState, Suspense } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import LoadingSpinner from "@/components/ui/LoadingSpinner";
+import UserAvatar from "@/components/shared/UserAvatar";
 
 interface User {
   _id: string;
@@ -12,6 +13,8 @@ interface User {
   role: string;
   storeName?: string;
   school?: string;
+  passport?: string;
+  avatar?: string;
   isBanned: boolean;
   lastActiveAt?: string;
   createdAt: string;
@@ -31,6 +34,7 @@ function AdminUsersContent() {
   const router = useRouter();
 
   const [users, setUsers] = useState<User[]>([]);
+  const [schools, setSchools] = useState<{ _id: string; name: string; code?: string }[]>([]);
   const [activityStats, setActivityStats] = useState<ActivityStats | null>(null);
   const [loading, setLoading] = useState(true);
 
@@ -39,12 +43,14 @@ function AdminUsersContent() {
 
   const [filter, setFilter] = useState(initialRole);
   const [activityFilter, setActivityFilter] = useState(initialActivity);
+  const [schoolFilter, setSchoolFilter] = useState<string>("all");
   const [search, setSearch] = useState("");
 
   const fetchUsers = () => {
     const params = new URLSearchParams({ limit: "150" });
     if (filter) params.set("role", filter);
     if (activityFilter) params.set("activity", activityFilter);
+    if (schoolFilter && schoolFilter !== "all") params.set("school", schoolFilter);
 
     fetch(`/api/admin/users?${params.toString()}`)
       .then((r) => r.json())
@@ -57,9 +63,18 @@ function AdminUsersContent() {
   };
 
   useEffect(() => {
+    fetch("/api/schools?all=true")
+      .then((r) => r.json())
+      .then((d) => {
+        if (Array.isArray(d)) setSchools(d);
+      })
+      .catch(() => {});
+  }, []);
+
+  useEffect(() => {
     setLoading(true);
     fetchUsers();
-  }, [filter, activityFilter]);
+  }, [filter, activityFilter, schoolFilter]);
 
   const handleRoleChange = async (id: string, role: string) => {
     await fetch(`/api/admin/users/${id}`, {
@@ -149,13 +164,28 @@ function AdminUsersContent() {
           <h1 className="text-2xl font-bold text-gray-900">Users Management</h1>
           <p className="text-sm text-gray-500 mt-1">Track user engagement, roles, campus affiliation, and ban status.</p>
         </div>
-        <input
-          type="text"
-          placeholder="Search name, email, school…"
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-          className="px-3.5 py-2 text-sm border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#A4860E]/30 focus:border-[#A4860E] w-64 bg-white"
-        />
+        <div className="flex items-center gap-3">
+          <select
+            value={schoolFilter}
+            onChange={(e) => setSchoolFilter(e.target.value)}
+            className="px-3.5 py-2 text-sm border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#A4860E]/30 focus:border-[#A4860E] bg-white font-medium text-gray-700 shadow-2xs"
+          >
+            <option value="all">All Campuses</option>
+            {schools.map((s) => (
+              <option key={s._id} value={s.name}>
+                {s.name} {s.code ? `(${s.code})` : ""}
+              </option>
+            ))}
+          </select>
+
+          <input
+            type="text"
+            placeholder="Search name, email, school…"
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            className="px-3.5 py-2 text-sm border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#A4860E]/30 focus:border-[#A4860E] w-64 bg-white shadow-2xs"
+          />
+        </div>
       </div>
 
       {/* Activity Filter Tabs */}
@@ -232,7 +262,19 @@ function AdminUsersContent() {
               <tbody className="divide-y divide-gray-100">
                 {filtered.map((user) => (
                   <tr key={user._id} className="hover:bg-gray-50/80 transition-colors">
-                    <td className="px-4 py-3 font-semibold text-gray-900 whitespace-nowrap">{user.name}</td>
+                    <td className="px-4 py-3 font-semibold text-gray-900 whitespace-nowrap">
+                      <div className="flex items-center gap-2.5">
+                        <UserAvatar
+                          name={user.name}
+                          passport={user.passport}
+                          image={user.avatar}
+                          role={user.role}
+                          size="sm"
+                          rounded="full"
+                        />
+                        <span>{user.name}</span>
+                      </div>
+                    </td>
                     <td className="px-4 py-3 text-xs">
                       {user.storeName ? (
                         <div className="mb-1">

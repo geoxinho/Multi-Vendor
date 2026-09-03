@@ -5,6 +5,7 @@ import { User } from "@/models/User";
 import { Category } from "@/models/Category";
 import { auth } from "@/lib/auth";
 import { productSchema } from "@/utils/validators";
+import { getCampusProductModel, getAllActiveSchools } from "@/lib/campusModels";
 
 // GET /api/products — public listing with filters
 export async function GET(req: NextRequest) {
@@ -25,8 +26,8 @@ export async function GET(req: NextRequest) {
     const mine = searchParams.get("mine") === "true";
 
     // If "mine=true", return the authenticated seller's own products (all statuses)
+    const session = await auth();
     if (mine) {
-      const session = await auth();
       if (!session || session.user.role !== "seller") {
         return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
       }
@@ -37,12 +38,16 @@ export async function GET(req: NextRequest) {
       return NextResponse.json({ products: myProducts, total: myProducts.length });
     }
 
-    // Determine target school filter
-    let targetSchool = schoolParam;
-    if (!targetSchool) {
-      const session = await auth();
-      if (session?.user?.role === "buyer" && session?.user?.school) {
-        targetSchool = session.user.school;
+    // Determine target school filter:
+    // Logged-in non-admin users always browse products scoped strictly to their registered campus
+    let targetSchool = "";
+    if (session?.user && session.user.role !== "admin") {
+      targetSchool = session.user.school || "";
+      if (!targetSchool && session.user.id) {
+        const dbUser = await User.findById(session.user.id).select("school").lean();
+        if (dbUser?.school) {
+          targetSchool = dbUser.school;
+        }
       }
     }
 
@@ -61,7 +66,7 @@ export async function GET(req: NextRequest) {
       });
     }
 
-    if (targetSchool && targetSchool !== "all") {
+    if (targetSchool) {
       const sellersInSchool = await User.find({ school: targetSchool }).distinct("_id");
       andConditions.push({
         $or: [
@@ -81,23 +86,70 @@ export async function GET(req: NextRequest) {
     if (sellerId) query.seller = sellerId;
 
     const skip = (page - 1) * limit;
-    const total = await Product.countDocuments(query);
 
-    const products = await Product.find(query)
-      .populate("seller", "name storeName avatar school")
-      .populate("category", "name slug")
-      .sort(sort)
-      .skip(skip)
-      .limit(limit)
-      .lean();
+    if (targetSchool) {
+      const CampusProduct = getCampusProductModel(targetSchool);
+      let [total, products] = await Promise.all([
+        CampusProduct.countDocuments(query),
+        CampusProduct.find(query)
+          .populate("seller", "name storeName avatar school")
+          .populate("category", "name slug")
+          .sort(sort)
+          .skip(skip)
+          .limit(limit)
+          .lean(),
+      ]);
+
+      if (total === 0) {
+        // Fallback to legacy Product collection
+        [total, products] = await Promise.all([
+          Product.countDocuments(query),
+          Product.find(query)
+            .populate("seller", "name storeName avatar school")
+            .populate("category", "name slug")
+            .sort(sort)
+            .skip(skip)
+            .limit(limit)
+            .lean(),
+        ]);
+      }
+
+      return NextResponse.json(
+        { products, total, page, pages: Math.ceil(total / limit) || 1, activeSchool: targetSchool },
+        { headers: { "Cache-Control": "public, s-maxage=60, stale-while-revalidate=300" } }
+      );
+    }
+
+    // Unregistered user — query across all active campus models & all users
+    const schools = await getAllActiveSchools();
+    const targetModels = schools.map((s) => getCampusProductModel(s.slug));
+    targetModels.push(Product);
+
+    const allProductsMap = new Map<string, any>();
+    await Promise.all(
+      targetModels.map(async (model) => {
+        try {
+          const docs = await model
+            .find(query)
+            .populate("seller", "name storeName avatar school")
+            .populate("category", "name slug")
+            .sort(sort)
+            .limit(100)
+            .lean();
+          for (const doc of docs) {
+            allProductsMap.set(doc._id.toString(), doc);
+          }
+        } catch {}
+      })
+    );
+
+    const allProducts = Array.from(allProductsMap.values());
+    const total = allProducts.length;
+    const paginatedProducts = allProducts.slice(skip, skip + limit);
 
     return NextResponse.json(
-      { products, total, page, pages: Math.ceil(total / limit), activeSchool: targetSchool || null },
-      {
-        headers: {
-          "Cache-Control": "public, s-maxage=60, stale-while-revalidate=300",
-        },
-      }
+      { products: paginatedProducts, total, page, pages: Math.ceil(total / limit) || 1, activeSchool: null },
+      { headers: { "Cache-Control": "public, s-maxage=60, stale-while-revalidate=300" } }
     );
   } catch (err) {
     console.error("[PRODUCTS GET]", err);
@@ -124,12 +176,22 @@ export async function POST(req: NextRequest) {
     const sellerUser = await User.findById(session.user.id).select("school").lean();
     const sellerSchool = sellerUser?.school || session.user.school || "";
 
-    const product = await Product.create({
+    const CampusProduct = getCampusProductModel(sellerSchool);
+    const product = await CampusProduct.create({
       ...parsed.data,
       seller: session.user.id,
       school: sellerSchool,
       status: "pending_approval", // always starts pending — admin must approve
     });
+
+    // Mirror to Product collection for fallback
+    await Product.create({
+      ...parsed.data,
+      _id: product._id,
+      seller: session.user.id,
+      school: sellerSchool,
+      status: "pending_approval",
+    }).catch(() => {});
 
     return NextResponse.json(product, { status: 201 });
   } catch (err) {

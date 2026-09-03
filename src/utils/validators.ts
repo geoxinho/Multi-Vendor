@@ -1,7 +1,9 @@
 import { z } from "zod";
 
 export const registerSchema = z.object({
-  name: z.string().min(2, "Name must be at least 2 characters"),
+  firstName: z.string().min(1, "First name is required").trim(),
+  lastName: z.string().min(1, "Last name is required").trim(),
+  name: z.string().optional(),
   email: z.string().email("Invalid email"),
   password: z.string().min(6, "Password must be at least 6 characters"),
   role: z.enum(["buyer", "seller"]),
@@ -27,9 +29,7 @@ export const registerSchema = z.object({
     if (!data.hearAboutUs || data.hearAboutUs.trim() === "") {
       ctx.addIssue({ code: z.ZodIssueCode.custom, path: ["hearAboutUs"], message: "Please select how you heard about us" });
     }
-    if (!data.passport || data.passport.trim() === "") {
-      ctx.addIssue({ code: z.ZodIssueCode.custom, path: ["passport"], message: "Passport photograph is required" });
-    }
+    // Buyers do NOT require passport photograph
   }
   if (data.role === "seller") {
     if (!data.passport || data.passport.trim() === "") {

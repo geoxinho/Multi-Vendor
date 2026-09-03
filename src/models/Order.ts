@@ -63,7 +63,7 @@ const ShippingAddressSchema = new Schema<ShippingAddress>({
   phone: String,
 });
 
-const OrderSchema = new Schema<IOrder>(
+export const OrderSchema = new Schema<IOrder>(
   {
     buyer: { type: Schema.Types.ObjectId, ref: "User", required: true },
     items: [OrderItemSchema],

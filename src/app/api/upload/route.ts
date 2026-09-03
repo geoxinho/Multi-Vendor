@@ -16,11 +16,14 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "No files provided" }, { status: 400 });
     }
 
+    const campusSlug = session.user.school ? session.user.school.toLowerCase().replace(/[^a-z0-9]/g, "_").replace(/_+/g, "_") : "general";
+    const uploadFolder = `marketplace/${campusSlug}/products`;
+
     const urls: string[] = [];
 
     for (const file of files) {
       const buffer = Buffer.from(await file.arrayBuffer());
-      const url = await uploadImage(buffer, "marketplace/products");
+      const url = await uploadImage(buffer, uploadFolder);
       urls.push(url);
     }
 

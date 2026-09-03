@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { connectDB } from "@/lib/db";
 import { School } from "@/models/School";
 import { auth } from "@/lib/auth";
+import mongoose from "mongoose";
 
 const DEFAULT_SCHOOLS = [
   {
@@ -82,6 +83,19 @@ export async function POST(req: NextRequest) {
       state: state ? state.trim() : "",
       isActive: true,
     });
+
+    // Auto-create campus folders/collections in MongoDB immediately
+    try {
+      const db = mongoose.connection.db;
+      const campusSlug = slug.replace(/[^a-z0-9]/g, "_").replace(/_+/g, "_");
+      if (db) {
+        await Promise.all([
+          db.createCollection(`${campusSlug}_users`).catch(() => {}),
+          db.createCollection(`${campusSlug}_products`).catch(() => {}),
+          db.createCollection(`${campusSlug}_orders`).catch(() => {}),
+        ]);
+      }
+    } catch {}
 
     return NextResponse.json(school, { status: 201 });
   } catch (err) {

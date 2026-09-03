@@ -292,28 +292,6 @@ export default function HelpDeskPage() {
         {/* ── Right Column: Info & FAQs (5 cols) ── */}
         <div className="lg:col-span-5 space-y-6">
 
-          {/* Quick Contact Box */}
-          <div className="bg-gradient-to-br from-[#fdf8e8] to-[#fffbeb] rounded-2xl border border-[#e8d48a] p-6">
-            <h3 className="text-base font-bold text-gray-900 mb-3 flex items-center gap-2">
-              <i className="fa-solid fa-envelope text-[#A4860E]" /> Direct Admin Contact
-            </h3>
-            <p className="text-xs text-gray-600 leading-relaxed mb-4">
-              Have an urgent safety concern or platform emergency? Reach our support desk directly via email or check platform guidelines.
-            </p>
-            <div className="space-y-2 text-xs">
-              <div className="flex items-center justify-between p-2.5 bg-white/80 rounded-xl border border-[#e8d48a]/50">
-                <span className="text-gray-500 font-medium">Support Email:</span>
-                <a href="mailto:support@campusgo.ng" className="font-bold text-[#A4860E] hover:underline">
-                  support@campusgo.ng
-                </a>
-              </div>
-              <div className="flex items-center justify-between p-2.5 bg-white/80 rounded-xl border border-[#e8d48a]/50">
-                <span className="text-gray-500 font-medium">Response Time:</span>
-                <span className="font-bold text-green-700">Within 24 Hours</span>
-              </div>
-            </div>
-          </div>
-
           {/* Legal Quick Links */}
           <div className="bg-white rounded-2xl border border-gray-100 p-6 shadow-sm">
             <h3 className="text-base font-bold text-gray-900 mb-4 flex items-center gap-2">

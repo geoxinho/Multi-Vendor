@@ -15,7 +15,8 @@ interface Product {
   stock: number;
   sold: number;
   images?: string[];
-  seller?: { name: string; storeName?: string; email?: string };
+  school?: string;
+  seller?: { name: string; storeName?: string; email?: string; school?: string };
   category?: { name: string };
   createdAt: string;
 }
@@ -29,10 +30,12 @@ const STATUS_CONFIG = {
 
 export default function AdminProductsPage() {
   const [products, setProducts] = useState<Product[]>([]);
+  const [schools, setSchools] = useState<{ _id: string; name: string; code?: string }[]>([]);
   const [pendingCount, setPendingCount] = useState(0);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>("all");
+  const [schoolFilter, setSchoolFilter] = useState<string>("all");
 
   // Reject modal state
   const [rejectModalOpen, setRejectModalOpen] = useState(false);
@@ -42,7 +45,11 @@ export default function AdminProductsPage() {
 
   const fetchProducts = () => {
     setLoading(true);
-    const query = statusFilter !== "all" ? `?status=${statusFilter}` : "";
+    const params = new URLSearchParams();
+    if (statusFilter !== "all") params.set("status", statusFilter);
+    if (schoolFilter !== "all") params.set("school", schoolFilter);
+
+    const query = params.toString() ? `?${params.toString()}` : "";
     fetch(`/api/admin/products${query}`)
       .then((r) => r.json())
       .then((d) => {
@@ -54,8 +61,17 @@ export default function AdminProductsPage() {
   };
 
   useEffect(() => {
+    fetch("/api/schools?all=true")
+      .then((r) => r.json())
+      .then((d) => {
+        if (Array.isArray(d)) setSchools(d);
+      })
+      .catch(() => {});
+  }, []);
+
+  useEffect(() => {
     fetchProducts();
-  }, [statusFilter]);
+  }, [statusFilter, schoolFilter]);
 
   const handleApprove = async (product: Product) => {
     if (!confirm(`Approve "${product.title}"? It will go live immediately.`)) return;
@@ -148,13 +164,28 @@ export default function AdminProductsPage() {
           <p className="text-sm text-gray-500 mt-1">Review, approve, or manage seller product listings</p>
         </div>
 
-        <input
-          type="text"
-          placeholder="Search title, seller, or email…"
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-          className="px-3.5 py-2 text-sm border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#A4860E]/30 focus:border-[#A4860E] w-64 bg-white"
-        />
+        <div className="flex items-center gap-3">
+          <select
+            value={schoolFilter}
+            onChange={(e) => setSchoolFilter(e.target.value)}
+            className="px-3.5 py-2 text-sm border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#A4860E]/30 focus:border-[#A4860E] bg-white font-medium text-gray-700 shadow-2xs"
+          >
+            <option value="all">All Campuses</option>
+            {schools.map((s) => (
+              <option key={s._id} value={s.name}>
+                {s.name} {s.code ? `(${s.code})` : ""}
+              </option>
+            ))}
+          </select>
+
+          <input
+            type="text"
+            placeholder="Search title, seller, or email…"
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            className="px-3.5 py-2 text-sm border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#A4860E]/30 focus:border-[#A4860E] w-64 bg-white shadow-2xs"
+          />
+        </div>
       </div>
 
       {/* Tabs */}
@@ -197,10 +228,10 @@ export default function AdminProductsPage() {
       ) : (
         <div className="bg-white rounded-2xl border border-gray-100 overflow-hidden shadow-sm">
           <div className="overflow-x-auto">
-            <table className="w-full text-sm min-w-[760px]">
+            <table className="w-full text-sm min-w-[800px]">
               <thead className="bg-gray-50 border-b border-gray-100">
                 <tr>
-                  {["Product", "Seller", "Price", "Stock", "Status", "Review Actions", "Manage"].map((h) => (
+                  {["Product", "Seller", "Campus", "Price", "Stock", "Status", "Review Actions", "Manage"].map((h) => (
                     <th
                       key={h}
                       className="px-4 py-3.5 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider whitespace-nowrap"
@@ -213,6 +244,7 @@ export default function AdminProductsPage() {
               <tbody className="divide-y divide-gray-100">
                 {filtered.map((p) => {
                   const statusCfg = STATUS_CONFIG[p.status] ?? STATUS_CONFIG.inactive;
+                  const itemSchool = p.school || p.seller?.school || "General";
                   return (
                     <tr key={p._id} className="hover:bg-gray-50/80 transition-colors">
                       {/* Product details */}
@@ -238,6 +270,14 @@ export default function AdminProductsPage() {
                       <td className="px-4 py-3">
                         <p className="text-xs font-semibold text-gray-800">{p.seller?.storeName || p.seller?.name || "Unknown"}</p>
                         <p className="text-xs text-gray-400">{p.seller?.email}</p>
+                      </td>
+
+                      {/* Campus */}
+                      <td className="px-4 py-3 whitespace-nowrap">
+                        <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-bold bg-[#fdf8e8] text-[#A4860E] border border-[#e8d48a]">
+                          <i className="fa-solid fa-graduation-cap text-[10px]" />
+                          {itemSchool}
+                        </span>
                       </td>
 
                       {/* Price */}

@@ -45,15 +45,22 @@ const STATUS_BADGE: Record<string, string> = {
 
 export default function AdminReportsPage() {
   const [reports, setReports] = useState<Report[]>([]);
+  const [schools, setSchools] = useState<{ _id: string; name: string; code?: string }[]>([]);
   const [loading, setLoading] = useState(true);
   const [statusFilter, setStatusFilter] = useState("all");
   const [roleFilter, setRoleFilter] = useState("all");
+  const [schoolFilter, setSchoolFilter] = useState("all");
   const [search, setSearch] = useState("");
   const [editingNotes, setEditingNotes] = useState<Record<string, string>>({});
   const [savingId, setSavingId] = useState<string | null>(null);
 
   const fetchReports = () => {
-    fetch("/api/reports")
+    setLoading(true);
+    const params = new URLSearchParams();
+    if (schoolFilter !== "all") params.set("school", schoolFilter);
+
+    const query = params.toString() ? `?${params.toString()}` : "";
+    fetch(`/api/reports${query}`)
       .then((r) => r.json())
       .then((d) => {
         setReports(d.reports ?? []);
@@ -63,8 +70,17 @@ export default function AdminReportsPage() {
   };
 
   useEffect(() => {
-    fetchReports();
+    fetch("/api/schools?all=true")
+      .then((r) => r.json())
+      .then((d) => {
+        if (Array.isArray(d)) setSchools(d);
+      })
+      .catch(() => {});
   }, []);
+
+  useEffect(() => {
+    fetchReports();
+  }, [schoolFilter]);
 
   const handleUpdateStatus = async (reportId: string, status: string) => {
     setSavingId(reportId);
@@ -161,13 +177,28 @@ export default function AdminReportsPage() {
           </p>
         </div>
 
-        <input
-          type="text"
-          placeholder="Search by subject, buyer, order ID…"
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-          className="px-3.5 py-2 text-sm border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-red-500/20 focus:border-red-500 w-72 bg-white"
-        />
+        <div className="flex items-center gap-3">
+          <select
+            value={schoolFilter}
+            onChange={(e) => setSchoolFilter(e.target.value)}
+            className="px-3.5 py-2 text-sm border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-red-500/20 focus:border-red-500 bg-white font-medium text-gray-700 shadow-2xs"
+          >
+            <option value="all">All Campuses</option>
+            {schools.map((s) => (
+              <option key={s._id} value={s.name}>
+                {s.name} {s.code ? `(${s.code})` : ""}
+              </option>
+            ))}
+          </select>
+
+          <input
+            type="text"
+            placeholder="Search by subject, buyer, order ID…"
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            className="px-3.5 py-2 text-sm border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-red-500/20 focus:border-red-500 w-64 bg-white shadow-2xs"
+          />
+        </div>
       </div>
 
       {/* Filter Tabs */}

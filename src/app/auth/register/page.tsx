@@ -89,7 +89,7 @@ function RegisterForm() {
 
   const [step, setStep] = useState(1);
   const [form, setForm] = useState({
-    name: "", email: "", password: "", confirmPassword: "", phone: "",
+    firstName: "", lastName: "", name: "", email: "", password: "", confirmPassword: "", phone: "",
     hearAboutUs: "", school: "", nin: "", sellerCategory: "",
     role: defaultRole, storeName: "", storeDescription: "",
     bankName: "", bankCode: "", accountNumber: "", accountName: "",
@@ -250,7 +250,7 @@ function RegisterForm() {
   const handleNext = () => {
     setError("");
     if (step === 2) {
-      if (!form.name || !form.email || !form.password || !form.confirmPassword || !form.phone) {
+      if (!form.firstName || !form.lastName || !form.email || !form.password || !form.confirmPassword || !form.phone) {
         setError("Please fill out all fields."); return;
       }
       if (form.password !== form.confirmPassword) {
@@ -397,13 +397,24 @@ function RegisterForm() {
             {/* ── STEP 2: Basic info ── */}
             {step === 2 && (
               <div className="space-y-4">
-                <div>
-                  <label className={labelClass}>Full Name <span className="text-[#DC2626]">*</span></label>
-                  <div className="relative">
-                    <i className="fa-solid fa-user absolute left-3.5 top-1/2 -translate-y-1/2 text-[#9B9B9B] text-xs" />
-                    <input type="text" required value={form.name}
-                      onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))}
-                      placeholder="John Doe" className={inputClass} />
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <div>
+                    <label className={labelClass}>First Name <span className="text-[#DC2626]">*</span></label>
+                    <div className="relative">
+                      <i className="fa-solid fa-user absolute left-3.5 top-1/2 -translate-y-1/2 text-[#9B9B9B] text-xs" />
+                      <input type="text" required value={form.firstName}
+                        onChange={(e) => setForm((f) => ({ ...f, firstName: e.target.value, name: `${e.target.value} ${f.lastName}`.trim() }))}
+                        placeholder="John" className={inputClass} />
+                    </div>
+                  </div>
+                  <div>
+                    <label className={labelClass}>Last Name <span className="text-[#DC2626]">*</span></label>
+                    <div className="relative">
+                      <i className="fa-solid fa-user absolute left-3.5 top-1/2 -translate-y-1/2 text-[#9B9B9B] text-xs" />
+                      <input type="text" required value={form.lastName}
+                        onChange={(e) => setForm((f) => ({ ...f, lastName: e.target.value, name: `${f.firstName} ${e.target.value}`.trim() }))}
+                        placeholder="Doe" className={inputClass} />
+                    </div>
                   </div>
                 </div>
                 <div>
@@ -491,18 +502,9 @@ function RegisterForm() {
                           <option value="Friend/Referral">Friend / Referral</option>
                           <option value="Google Search">Google Search</option>
                           <option value="Advertisement">Advertisement</option>
-                          <option value="Other">Other</option>
                         </select>
                       </div>
                     </div>
-
-                    {/* Passport upload for buyers */}
-                    <PassportUpload
-                      preview={passportPreview}
-                      uploading={passportUploading}
-                      uploaded={!!form.passport}
-                      onFileChange={handlePassportChange}
-                    />
 
                     {/* No-return-policy notice */}
                     <div className="flex items-start gap-3 p-3.5 bg-amber-50 border border-amber-200 rounded-xl">

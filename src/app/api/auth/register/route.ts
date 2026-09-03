@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import bcrypt from "bcryptjs";
 import { connectDB } from "@/lib/db";
-import { User } from "@/models/User";
+import { AdminUser } from "@/models/AdminUser";
+import { getCampusUserModel, findUserAcrossCampuses } from "@/lib/campusModels";
 import { registerSchema } from "@/utils/validators";
 import { randomBytes } from "crypto";
 import { sendVerificationEmail, sendWelcomeEmail } from "@/utils/email";
@@ -18,14 +19,21 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const { name, email, password, role, phone, hearAboutUs, school, nin, sellerCategory, storeName, storeDescription, bankName, bankCode, accountNumber, accountName, passport } = parsed.data;
+    const { firstName, lastName, name, email, password, role, phone, hearAboutUs, school, nin, sellerCategory, storeName, storeDescription, bankName, bankCode, accountNumber, accountName, passport } = parsed.data;
+    const fullName = `${firstName} ${lastName}`.trim() || name || "";
 
     const hasSMTP = !!(process.env.SMTP_HOST && process.env.SMTP_USER && process.env.SMTP_PASS);
 
     await connectDB();
 
-    const existing = await User.findOne({ email });
-    if (existing) {
+    // Check if email already in use by Admin or any Campus User
+    const existingAdmin = await AdminUser.findOne({ email });
+    if (existingAdmin) {
+      return NextResponse.json({ error: "Email already in use" }, { status: 409 });
+    }
+
+    const existingCampusUser = await findUserAcrossCampuses({ email });
+    if (existingCampusUser) {
       return NextResponse.json({ error: "Email already in use" }, { status: 409 });
     }
 
@@ -39,8 +47,11 @@ export async function POST(req: NextRequest) {
     const token = Math.floor(100000 + Math.random() * 900000).toString();
     const tokenExpires = new Date(Date.now() + 24 * 60 * 60 * 1000); // 24 hours
 
-    const user = await User.create({
-      name,
+    const CampusUser = getCampusUserModel(school || "");
+    const user = await CampusUser.create({
+      name: fullName,
+      firstName,
+      lastName,
       email,
       password: hashed,
       role,
@@ -49,7 +60,8 @@ export async function POST(req: NextRequest) {
       nin: role === "seller" ? nin : "",
       sellerCategory: role === "seller" ? sellerCategory : "",
       school,
-      passport: passport ?? "",
+      passport: role === "seller" ? (passport ?? "") : "",
+      avatar: role === "seller" ? (passport ?? "") : "",
       storeName: role === "seller" ? (storeName ?? "") : "",
       storeDescription: role === "seller" ? (storeDescription ?? "") : "",
       bankDetails: role === "seller" ? {
@@ -66,9 +78,9 @@ export async function POST(req: NextRequest) {
     // Send verification email only if SMTP is configured
     if (hasSMTP) {
       await sendVerificationEmail(email, token);
-      await sendWelcomeEmail(email, name);
+      await sendWelcomeEmail(email, fullName);
     } else {
-      await sendWelcomeEmail(email, name); // Will use mock
+      await sendWelcomeEmail(email, fullName); // Will use mock
     }
 
     return NextResponse.json(

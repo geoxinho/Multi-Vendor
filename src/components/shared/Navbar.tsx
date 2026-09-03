@@ -9,6 +9,7 @@ import { useRouter, usePathname, useSearchParams } from "next/navigation";
 import SearchBar from "@/components/shared/SearchBar";
 import CartDrawer from "@/components/cart/CartDrawer";
 import BecomeSellerModal from "@/components/shared/BecomeSellerModal";
+import UserAvatar from "@/components/shared/UserAvatar";
 
 interface Category {
   _id: string;
@@ -65,20 +66,16 @@ function NavbarInner() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [mobileSearchOpen, setMobileSearchOpen] = useState(false);
   const [userMenuOpen, setUserMenuOpen] = useState(false);
-  const [campusMenuOpen, setCampusMenuOpen] = useState(false);
   const [confirmLogout, setConfirmLogout] = useState(false);
   const [becomeSellerOpen, setBecomeSellerOpen] = useState(false);
   const [switching, setSwitching] = useState(false);
   const [categories, setCategories] = useState<Category[]>([]);
-  const [schools, setSchools] = useState<School[]>([]);
 
   const userMenuRef = useRef<HTMLDivElement>(null);
-  const campusMenuRef = useRef<HTMLDivElement>(null);
 
   const role = session?.user?.role ?? null;
   const roles = session?.user?.roles ?? [];
   const userSchool = session?.user?.school ?? null;
-  const currentSchoolParam = searchParams?.get("school");
 
   const isbuyer = role === "buyer";
   const isSeller = role === "seller";
@@ -92,19 +89,11 @@ function NavbarInner() {
         if (Array.isArray(data)) setCategories(data);
       })
       .catch(() => {});
-
-    fetch("/api/schools")
-      .then((r) => r.json())
-      .then((data) => {
-        if (Array.isArray(data)) setSchools(data);
-      })
-      .catch(() => {});
   }, []);
 
   useEffect(() => {
     setMobileMenuOpen(false);
     setUserMenuOpen(false);
-    setCampusMenuOpen(false);
   }, [pathname]);
 
   useEffect(() => {
@@ -112,13 +101,10 @@ function NavbarInner() {
       if (userMenuRef.current && !userMenuRef.current.contains(e.target as Node)) {
         setUserMenuOpen(false);
       }
-      if (campusMenuRef.current && !campusMenuRef.current.contains(e.target as Node)) {
-        setCampusMenuOpen(false);
-      }
     }
-    if (userMenuOpen || campusMenuOpen) document.addEventListener("mousedown", handleClick);
+    if (userMenuOpen) document.addEventListener("mousedown", handleClick);
     return () => document.removeEventListener("mousedown", handleClick);
-  }, [userMenuOpen, campusMenuOpen]);
+  }, [userMenuOpen]);
 
   useEffect(() => {
     document.body.style.overflow = mobileMenuOpen ? "hidden" : "";
@@ -159,14 +145,6 @@ function NavbarInner() {
       setBecomeSellerOpen(true);
     }
   };
-
-  const activeCampusLabel = currentSchoolParam
-    ? currentSchoolParam === "all"
-      ? "All Campuses"
-      : currentSchoolParam
-    : userSchool
-    ? userSchool
-    : "All Campuses";
 
   const avatarInitial = session?.user?.name?.[0]?.toUpperCase() || "U";
   const avatarGradient = isAdmin
@@ -247,9 +225,14 @@ function NavbarInner() {
                     onClick={() => setUserMenuOpen((p) => !p)}
                     className="flex items-center gap-2.5 px-3 py-2 rounded-xl bg-gray-50 hover:bg-gray-100 transition-colors border border-gray-200 shadow-2xs"
                   >
-                    <div className={`w-8 h-8 rounded-lg bg-gradient-to-br ${avatarGradient} flex items-center justify-center text-white font-black text-xs shrink-0`}>
-                      {avatarInitial}
-                    </div>
+                    <UserAvatar
+                      name={session.user.name}
+                      image={session.user.image}
+                      passport={session.user.passport}
+                      role={session.user.role}
+                      size="sm"
+                      rounded="lg"
+                    />
                     <div className="text-left min-w-[60px]">
                       <p className="text-[10px] text-gray-400 font-bold uppercase tracking-wider leading-none">Account</p>
                       <p className="text-[12px] font-bold text-gray-900 leading-tight mt-0.5 truncate max-w-[80px]">
@@ -263,9 +246,14 @@ function NavbarInner() {
                     <div className="absolute right-0 top-full mt-2 w-64 bg-white border border-gray-100 rounded-2xl shadow-2xl py-2 z-50 scale-in overflow-hidden">
                       <div className="px-5 py-4 border-b border-gray-100 bg-gray-50/70">
                         <div className="flex items-center gap-3">
-                          <div className={`w-10 h-10 rounded-xl bg-gradient-to-br ${avatarGradient} flex items-center justify-center text-white font-bold text-sm shrink-0 shadow-sm`}>
-                            {avatarInitial}
-                          </div>
+                          <UserAvatar
+                            name={session.user.name}
+                            image={session.user.image}
+                            passport={session.user.passport}
+                            role={session.user.role}
+                            size="md"
+                            rounded="xl"
+                          />
                           <div className="min-w-0">
                             <p className="text-sm font-extrabold text-gray-900 truncate">{session.user.name}</p>
                             <p className="text-xs text-gray-500 truncate">{session.user.email}</p>
@@ -494,50 +482,18 @@ function NavbarInner() {
               </div>
             )}
 
-            {/* Campus Selector in Mobile Menu */}
-            {schools.length > 0 && (
-              <div className="px-4 py-3 border-b border-gray-100">
-                <p className="text-[10px] font-bold uppercase tracking-wider text-gray-400 mb-2">
-                  Campus Filter
-                </p>
-                <div className="grid grid-cols-1 gap-1.5">
-                  <Link
-                    href="/products?school=all"
-                    onClick={() => setMobileMenuOpen(false)}
-                    className={`px-3 py-2 rounded-xl text-xs font-bold border transition ${
-                      activeCampusLabel === "All Campuses"
-                        ? "bg-[#fdf8e8] text-[#A4860E] border-[#e8d48a]"
-                        : "bg-gray-50 border-gray-200 text-gray-700"
-                    }`}
-                  >
-                    All Campuses
-                  </Link>
-                  {schools.map((s) => (
-                    <Link
-                      key={s._id}
-                      href={`/products?school=${encodeURIComponent(s.name)}`}
-                      onClick={() => setMobileMenuOpen(false)}
-                      className={`px-3 py-2 rounded-xl text-xs font-bold border transition flex justify-between items-center ${
-                        activeCampusLabel === s.name
-                          ? "bg-[#fdf8e8] text-[#A4860E] border-[#e8d48a]"
-                          : "bg-gray-50 border-gray-200 text-gray-700"
-                      }`}
-                    >
-                      <span className="truncate">{s.name}</span>
-                      {s.code && <span className="text-[10px] text-gray-500 font-mono">{s.code}</span>}
-                    </Link>
-                  ))}
-                </div>
-              </div>
-            )}
-
             {/* Account Status / Login */}
             {session ? (
               <div className="px-5 py-4 border-b border-gray-100 bg-gray-50/70">
                 <div className="flex items-center gap-3 mb-3 text-left">
-                  <div className={`w-11 h-11 rounded-xl bg-gradient-to-br ${avatarGradient} flex items-center justify-center text-white font-bold text-base shadow-sm shrink-0`}>
-                    {avatarInitial}
-                  </div>
+                  <UserAvatar
+                    name={session.user.name}
+                    image={session.user.image}
+                    passport={session.user.passport}
+                    role={session.user.role}
+                    size="lg"
+                    rounded="xl"
+                  />
                   <div className="min-w-0">
                     <p className="text-sm font-bold text-gray-900 truncate">{session.user.name}</p>
                     <p className="text-xs text-gray-500 truncate">{session.user.email}</p>

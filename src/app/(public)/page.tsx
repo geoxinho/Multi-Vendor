@@ -5,6 +5,7 @@ import { Product } from "@/models/Product";
 import { User } from "@/models/User";
 import { Category } from "@/models/Category";
 import ProductGrid from "@/components/product/ProductGrid";
+import { getAllActiveSchools, getCampusProductModel } from "@/lib/campusModels";
 import type { Metadata } from "next";
 
 export const dynamic = "force-dynamic";
@@ -44,60 +45,59 @@ export const metadata: Metadata = {
   },
 };
 
+import { auth } from "@/lib/auth";
+
 /**
  * Fetch up to 4 random featured products
  */
-async function getFeaturedProducts() {
+async function getFeaturedProducts(targetSchool?: string) {
   try {
     await connectDB();
-    const randomProducts = await Product.aggregate([
-      { $match: { status: "active", stock: { $gt: 0 } } },
-      { $sample: { size: 4 } },
-      {
-        $lookup: {
-          from: "users",
-          localField: "seller",
-          foreignField: "_id",
-          as: "seller",
-        },
-      },
-      { $unwind: { path: "$seller", preserveNullAndEmptyArrays: true } },
-      {
-        $lookup: {
-          from: "categories",
-          localField: "category",
-          foreignField: "_id",
-          as: "category",
-        },
-      },
-      { $unwind: { path: "$category", preserveNullAndEmptyArrays: true } },
-      {
-        $project: {
-          _id: 1,
-          title: 1,
-          price: 1,
-          images: 1,
-          condition: 1,
-          rating: 1,
-          numReviews: 1,
-          stock: 1,
-          createdAt: 1,
-          "seller._id": 1,
-          "seller.name": 1,
-          "seller.storeName": 1,
-          "category._id": 1,
-          "category.name": 1,
-          "category.slug": 1,
-        },
-      },
-    ]);
+    const matchStage: any = { status: "active", stock: { $gt: 0 } };
 
-    if (randomProducts && randomProducts.length > 0) {
-      return JSON.parse(JSON.stringify(randomProducts));
+    if (targetSchool) {
+      const sellersInSchool = await User.find({ school: targetSchool }).distinct("_id");
+      matchStage.$or = [
+        { school: targetSchool },
+        { seller: { $in: sellersInSchool } },
+      ];
+
+      const CampusProduct = getCampusProductModel(targetSchool);
+      const campusProducts = await CampusProduct.find(matchStage)
+        .populate("seller", "name storeName avatar storeDescription")
+        .populate("category", "name slug")
+        .limit(4)
+        .lean();
+
+      if (campusProducts && campusProducts.length > 0) {
+        return JSON.parse(JSON.stringify(campusProducts));
+      }
+    } else {
+      // Unregistered user — display products across all campus collections & all users
+      const schools = await getAllActiveSchools();
+      const targetModels = schools.map((s) => getCampusProductModel(s.slug));
+      targetModels.push(Product);
+
+      const allFound: any[] = [];
+      for (const model of targetModels) {
+        try {
+          const docs = await model
+            .find(matchStage)
+            .populate("seller", "name storeName avatar storeDescription")
+            .populate("category", "name slug")
+            .limit(4)
+            .lean();
+          allFound.push(...docs);
+        } catch {}
+      }
+
+      if (allFound.length > 0) {
+        const unique = Array.from(new Map(allFound.map((p) => [p._id.toString(), p])).values());
+        return JSON.parse(JSON.stringify(unique.slice(0, 4)));
+      }
     }
 
-    // Fallback if aggregate pipeline returned empty
-    const fallback = await Product.find({ status: "active", stock: { $gt: 0 } })
+    const fallback = await Product.find(matchStage)
       .populate("seller", "name storeName avatar storeDescription")
       .populate("category", "name slug")
       .limit(4)
@@ -112,10 +112,58 @@ async function getFeaturedProducts() {
 /**
  * Fetch latest 8 campus products sorted by -createdAt
  */
-async function getLatestProducts() {
+async function getLatestProducts(targetSchool?: string) {
   try {
     await connectDB();
-    const products = await Product.find({ status: "active", stock: { $gt: 0 } })
+    const query: any = { status: "active", stock: { $gt: 0 } };
+
+    if (targetSchool) {
+      const sellersInSchool = await User.find({ school: targetSchool }).distinct("_id");
+      query.$or = [
+        { school: targetSchool },
+        { seller: { $in: sellersInSchool } },
+      ];
+
+      const CampusProduct = getCampusProductModel(targetSchool);
+      const campusProducts = await CampusProduct.find(query)
+        .populate("seller", "name storeName avatar storeDescription")
+        .populate("category", "name slug")
+        .sort("-createdAt")
+        .limit(8)
+        .lean();
+
+      if (campusProducts && campusProducts.length > 0) {
+        return JSON.parse(JSON.stringify(campusProducts));
+      }
+    } else {
+      // Unregistered user — display latest products across all campuses & all users
+      const schools = await getAllActiveSchools();
+      const targetModels = schools.map((s) => getCampusProductModel(s.slug));
+      targetModels.push(Product);
+
+      const allFound: any[] = [];
+      for (const model of targetModels) {
+        try {
+          const docs = await model
+            .find(query)
+            .populate("seller", "name storeName avatar storeDescription")
+            .populate("category", "name slug")
+            .sort("-createdAt")
+            .limit(8)
+            .lean();
+          allFound.push(...docs);
+        } catch {}
+      }
+
+      if (allFound.length > 0) {
+        const unique = Array.from(new Map(allFound.map((p) => [p._id.toString(), p])).values()).sort(
+          (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+        );
+        return JSON.parse(JSON.stringify(unique.slice(0, 8)));
+      }
+    }
+
+    const products = await Product.find(query)
       .populate("seller", "name storeName avatar storeDescription")
       .populate("category", "name slug")
       .sort("-createdAt")
@@ -274,9 +322,15 @@ function getCategoryStyle(name: string, index: number) {
 }
 
 export default async function HomePage() {
+  const session = await auth();
+  const targetSchool =
+    session?.user && session.user.role !== "admin"
+      ? session.user.school || ""
+      : "";
+
   const [featuredProducts, latestProducts, categories] = await Promise.all([
-    getFeaturedProducts(),
-    getLatestProducts(),
+    getFeaturedProducts(targetSchool),
+    getLatestProducts(targetSchool),
     getCategories(),
   ]);
 

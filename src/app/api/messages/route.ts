@@ -38,11 +38,23 @@ export async function GET(req: NextRequest) {
     );
 
     const messages = await Message.find({ order: orderId })
-      .populate("sender", "name avatar role")
+      .populate("sender", "name avatar passport role")
       .sort("createdAt")
       .lean();
 
-    return NextResponse.json(messages);
+    const mappedMessages = messages.map((m: any) => {
+      const sender = m.sender || {};
+      const isSeller = sender.role === "seller";
+      return {
+        ...m,
+        sender: {
+          ...sender,
+          avatar: isSeller ? (sender.passport || sender.avatar || "") : "",
+        },
+      };
+    });
+
+    return NextResponse.json(mappedMessages);
   } catch (err) {
     console.error("[MESSAGES GET]", err);
     return NextResponse.json({ error: "Internal server error" }, { status: 500 });

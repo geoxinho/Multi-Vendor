@@ -24,7 +24,7 @@ export interface IProduct extends Document {
   createdAt: Date;
 }
 
-const ProductSchema = new Schema<IProduct>(
+export const ProductSchema = new Schema<IProduct>(
   {
     title: { type: String, required: true, trim: true },
     description: { type: String, required: true },
