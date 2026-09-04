@@ -34,7 +34,7 @@ export async function GET(req: NextRequest) {
     const schools = await getAllActiveSchools();
 
     // Gather all products across campus collections + legacy
-    const models = [
+    const models: any[] = [
       ...schools.map((s) => getCampusProductModel(s.slug)),
       Product,
     ];

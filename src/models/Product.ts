@@ -56,6 +56,10 @@ export const ProductSchema = new Schema<IProduct>(
 
 ProductSchema.index({ title: "text", description: "text", tags: "text" });
 ProductSchema.index({ school: 1, status: 1 });
+ProductSchema.index({ status: 1, stock: 1, createdAt: -1 });
+ProductSchema.index({ status: 1, createdAt: -1 });
+ProductSchema.index({ seller: 1, status: 1 });
+ProductSchema.index({ category: 1, status: 1 });
 
 if (models.Product) {
   try {

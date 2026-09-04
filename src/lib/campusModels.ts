@@ -1,8 +1,9 @@
 import mongoose, { Model } from "mongoose";
-import { UserSchema, IUser } from "@/models/User";
-import { ProductSchema, IProduct } from "@/models/Product";
-import { OrderSchema, IOrder } from "@/models/Order";
+import { User, UserSchema, IUser } from "@/models/User";
+import { Product, ProductSchema, IProduct } from "@/models/Product";
+import { Order, OrderSchema, IOrder } from "@/models/Order";
 import { School, ISchool } from "@/models/School";
+import { Category } from "@/models/Category";
 
 /**
  * Normalizes any campus name, code, or slug to a safe, consistent MongoDB collection prefix.
@@ -60,14 +61,25 @@ export function getCampusOrderModel(school: string): Model<IOrder> {
   return getCampusModel<IOrder>(school, "Order", OrderSchema, "orders");
 }
 
+// In-memory micro-caches for database rendering speed
+let cachedActiveSchools: { data: { name: string; slug: string }[]; expiresAt: number } | null = null;
+let cachedDiscoveredSlugs: { data: string[]; expiresAt: number } | null = null;
+
 /**
- * Retrieves all active registered schools from MongoDB.
+ * Retrieves all active registered schools from MongoDB (cached for 60s).
  */
 export async function getAllActiveSchools(): Promise<{ name: string; slug: string }[]> {
+  const now = Date.now();
+  if (cachedActiveSchools && cachedActiveSchools.expiresAt > now) {
+    return cachedActiveSchools.data;
+  }
+
   try {
     const schools = await School.find({ isActive: true }).select("name slug").lean();
     if (schools && schools.length > 0) {
-      return schools.map((s: any) => ({ name: s.name, slug: s.slug || s.name }));
+      const data = schools.map((s: any) => ({ name: s.name, slug: s.slug || s.name }));
+      cachedActiveSchools = { data, expiresAt: now + 60_000 };
+      return data;
     }
   } catch (err) {
     console.error("[GET_ALL_ACTIVE_SCHOOLS]", err);
@@ -79,14 +91,13 @@ export async function getAllActiveSchools(): Promise<{ name: string; slug: strin
 }
 
 /**
- * Searches across all active campus user collections for a user matching the query.
- * Useful for login and password recovery when the campus isn't pre-specified.
+ * Searches in parallel across all active campus user collections for a user matching the query.
  */
 export async function findUserAcrossCampuses(
   filter: Record<string, any>
 ): Promise<{ user: IUser; campusSlug: string; school: string } | null> {
   const schools = await getAllActiveSchools();
-  for (const s of schools) {
+  const queries = schools.map(async (s) => {
     try {
       const CampusUser = getCampusUserModel(s.slug);
       const user = await CampusUser.findOne(filter).lean();
@@ -97,14 +108,17 @@ export async function findUserAcrossCampuses(
           school: user.school || s.name,
         };
       }
-    } catch {
-      // Continue searching next campus
-    }
+    } catch {}
+    return null;
+  });
+
+  const results = await Promise.all(queries);
+  for (const r of results) {
+    if (r) return r;
   }
 
   // Fallback to legacy User model
   try {
-    const { User } = await import("@/models/User");
     const legacyUser = await User.findOne(filter).lean();
     if (legacyUser) {
       return {
@@ -119,12 +133,11 @@ export async function findUserAcrossCampuses(
 }
 
 /**
- * Searches across all active campus product collections (and legacy collection) for a product.
+ * Searches across all campus product collections in parallel for blazing-fast product rendering.
  */
 export async function findProductAcrossCampuses(
   idOrFilter: string | Record<string, any>
 ): Promise<{ product: any; campusSlug: string; model: Model<IProduct> } | null> {
-  const { Product } = await import("@/models/Product");
   const schools = await getAllActiveSchools();
   const filter = typeof idOrFilter === "string" ? { _id: idOrFilter } : idOrFilter;
 
@@ -134,21 +147,70 @@ export async function findProductAcrossCampuses(
   }));
   targets.push({ model: Product, slug: "general" });
 
-  for (const { model, slug } of targets) {
+  // Discover and cache any other collection ending with _products (cached for 60s)
+  const now = Date.now();
+  if (cachedDiscoveredSlugs && cachedDiscoveredSlugs.expiresAt > now) {
+    for (const slug of cachedDiscoveredSlugs.data) {
+      if (!targets.some((t) => t.slug === slug || getCampusSlug(t.slug) === slug)) {
+        targets.push({
+          model: getCampusModel<IProduct>(slug, "Product", ProductSchema, "products"),
+          slug,
+        });
+      }
+    }
+  } else {
     try {
-      const doc = await model
-        .findOne(filter)
-        .populate("category", "name slug")
-        .lean();
+      const db = mongoose.connection.db;
+      if (db) {
+        const collections = await db.listCollections().toArray();
+        const discovered: string[] = [];
+        for (const col of collections) {
+          if (col.name.endsWith("_products") && col.name !== "products") {
+            const slug = col.name.replace(/_products$/, "");
+            discovered.push(slug);
+            if (!targets.some((t) => t.slug === slug || getCampusSlug(t.slug) === slug)) {
+              targets.push({
+                model: getCampusModel<IProduct>(slug, "Product", ProductSchema, "products"),
+                slug,
+              });
+            }
+          }
+        }
+        cachedDiscoveredSlugs = { data: discovered, expiresAt: now + 60_000 };
+      }
+    } catch (err) {
+      console.warn("[findProductAcrossCampuses] dynamic collections discovery warning:", err);
+    }
+  }
+
+  // Query all candidate collections simultaneously in parallel
+  const searchPromises = targets.map(async ({ model, slug }) => {
+    try {
+      let doc: any = null;
+      try {
+        doc = await model
+          .findOne(filter)
+          .populate("category", "name slug")
+          .lean();
+      } catch {
+        doc = await model.findOne(filter).lean();
+      }
+
       if (doc) {
         const enriched = await populateSingleProductSeller(doc, slug);
         return { product: enriched, campusSlug: slug, model };
       }
     } catch (err) {
       console.error(`[findProductAcrossCampuses] Error searching campus "${slug}":`, err);
-      // Continue searching next campus
     }
+    return null;
+  });
+
+  const searchResults = await Promise.all(searchPromises);
+  for (const res of searchResults) {
+    if (res) return res;
   }
+
   return null;
 }
 

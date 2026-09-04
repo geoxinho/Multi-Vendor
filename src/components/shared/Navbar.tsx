@@ -136,16 +136,6 @@ function NavbarInner() {
     }
   };
 
-  const handleSellClick = () => {
-    if (!session) {
-      router.push("/auth/register?role=seller");
-    } else if (isSeller) {
-      router.push("/dashboard/seller");
-    } else {
-      setBecomeSellerOpen(true);
-    }
-  };
-
   const avatarInitial = session?.user?.name?.[0]?.toUpperCase() || "U";
   const avatarGradient = isAdmin
     ? "from-purple-600 to-indigo-700"
@@ -190,17 +180,6 @@ function NavbarInner() {
 
             {/* Right: Actions */}
             <div className="flex items-center justify-end gap-2 shrink-0">
-              
-              {/* Sell on Campus — desktop only */}
-              {!isAdmin && (
-                <button
-                  onClick={handleSellClick}
-                  className="hidden lg:flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-[#A4860E] to-[#bfa01d] hover:from-[#8f750b] hover:to-[#a88a12] text-white rounded-xl text-xs font-extrabold transition-all shadow-sm hover:shadow-md shrink-0"
-                >
-                  <i className="fa-solid fa-store text-xs" />
-                  <span>{isSeller ? "Seller Hub" : "Sell on Campus"}</span>
-                </button>
-              )}
 
               {/* Wishlist — desktop only */}
               {isbuyer && (
@@ -454,34 +433,6 @@ function NavbarInner() {
           </div>
 
           <div className="flex-1 overflow-y-auto">
-            {/* Sell on Campus CTA Banner */}
-            {!isAdmin && (
-              <div className="p-4 m-4 bg-[#fdf8e8] border border-[#e8d48a] rounded-2xl">
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-xl bg-white border border-[#e8d48a] flex items-center justify-center text-[#A4860E] shrink-0 font-bold">
-                    <i className="fa-solid fa-store" />
-                  </div>
-                  <div className="min-w-0 flex-1">
-                    <p className="text-xs font-bold text-gray-900">
-                      {isSeller ? "Seller Control Hub" : "Sell to Students on Campus"}
-                    </p>
-                    <p className="text-[10px] text-gray-600">
-                      {isSeller ? "Manage stock & incoming orders" : "Turn your items into cash today"}
-                    </p>
-                  </div>
-                </div>
-                <button
-                  onClick={() => {
-                    setMobileMenuOpen(false);
-                    handleSellClick();
-                  }}
-                  className="w-full mt-3 py-2.5 bg-[#A4860E] hover:bg-[#8a7009] text-white rounded-xl text-xs font-bold transition shadow-xs"
-                >
-                  {isSeller ? "Go to Seller Dashboard →" : "Start Selling on Campus →"}
-                </button>
-              </div>
-            )}
-
             {/* Account Status / Login */}
             {session ? (
               <div className="px-5 py-4 border-b border-gray-100 bg-gray-50/70">

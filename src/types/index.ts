@@ -27,5 +27,6 @@ export interface ProductSummary {
     sizes: string[];
     colors: string[];
   };
+  school?: string;
 }
 

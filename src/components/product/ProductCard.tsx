@@ -4,7 +4,6 @@ import Image from "next/image";
 import Link from "next/link";
 import { useCartStore } from "@/store/cartStore";
 import { useWishlistStore } from "@/store/wishlistStore";
-import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import RatingStars from "@/components/shared/RatingStars";
 import Badge from "@/components/ui/Badge";
@@ -18,29 +17,30 @@ interface ProductCardProps {
   onWishlistChange?: (productId: string, newState: boolean) => void;
 }
 
-export default function ProductCard({ product, priority = false, wishlisted: initialWishlisted = false, onWishlistChange }: ProductCardProps) {
+export default function ProductCard({
+  product,
+  priority = false,
+  wishlisted: initialWishlisted = false,
+  onWishlistChange,
+}: ProductCardProps) {
   const addItem = useCartStore((s) => s.addItem);
   const { increment, decrement } = useWishlistStore();
-  const { data: session } = useSession();
   const router = useRouter();
 
   const [added, setAdded] = useState(false);
   const [wishlisted, setWishlisted] = useState(initialWishlisted);
   const [wishlistLoading, setWishlistLoading] = useState(false);
 
-  useEffect(() => { setWishlisted(initialWishlisted); }, [initialWishlisted]);
+  useEffect(() => {
+    setWishlisted(initialWishlisted);
+  }, [initialWishlisted]);
 
   const sellerIdStr = (product.seller?._id || (typeof product.seller === "string" ? product.seller : ""))?.toString();
-  const isMine = Boolean(
-    session?.user?.id &&
-    sellerIdStr &&
-    session.user.id.toString() === sellerIdStr
-  );
 
   const handleAddToCart = (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
-    if (isMine || product.stock === 0) return;
+    if (product.stock === 0) return;
     addItem({
       productId: product._id,
       title: product.title,
@@ -58,33 +58,37 @@ export default function ProductCard({ product, priority = false, wishlisted: ini
   const handleWishlist = async (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
-    if (!session) { router.push("/auth/login"); return; }
-    if (session.user.role !== "buyer") return;
 
     setWishlistLoading(true);
-    if (wishlisted) {
-      await fetch("/api/wishlist", {
-        method: "DELETE",
+    try {
+      const res = await fetch("/api/wishlist", {
+        method: wishlisted ? "DELETE" : "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ productId: product._id }),
       });
-      setWishlisted(false);
-      decrement();
-      onWishlistChange?.(product._id, false);
-    } else {
-      await fetch("/api/wishlist", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ productId: product._id }),
-      });
-      setWishlisted(true);
-      increment();
-      onWishlistChange?.(product._id, true);
-    }
-    setWishlistLoading(false);
-  };
 
-  const isBuyer = session?.user?.role === "buyer" || !session;
+      if (res.status === 401) {
+        router.push(`/auth/login?callbackUrl=${encodeURIComponent(window.location.pathname)}`);
+        return;
+      }
+
+      if (res.ok) {
+        if (wishlisted) {
+          setWishlisted(false);
+          decrement();
+          onWishlistChange?.(product._id, false);
+        } else {
+          setWishlisted(true);
+          increment();
+          onWishlistChange?.(product._id, true);
+        }
+      }
+    } catch (err) {
+      console.error("[WISHLIST_TOGGLE_ERROR]", err);
+    } finally {
+      setWishlistLoading(false);
+    }
+  };
 
   return (
     <Link href={`/products/${product._id}`} className="group block h-full">
@@ -112,61 +116,81 @@ export default function ProductCard({ product, priority = false, wishlisted: ini
             )}
           </div>
 
-          {/* Wishlist button appearing with elegant slide/fade overlay on hover */}
-          {isBuyer && (
-            <div className="absolute top-3 right-3 z-10 md:opacity-0 md:translate-y-1 group-hover:opacity-100 group-hover:translate-y-0 transition-all duration-200">
-              <button
-                onClick={handleWishlist}
-                disabled={wishlistLoading}
-                title={wishlisted ? "Remove from wishlist" : "Save to wishlist"}
-                className={`w-8 h-8 rounded-full border flex items-center justify-center transition-colors duration-150 ${
-                  wishlisted
-                    ? "bg-[#DC2626] border-[#DC2626] text-white shadow-sm"
-                    : "bg-white border-[#E5E5E5] text-[#9B9B9B] hover:border-[#DC2626] hover:text-[#DC2626] shadow-sm"
-                } ${wishlistLoading ? "opacity-50 cursor-wait" : ""}`}
-              >
-                <i className={`${wishlisted ? "fa-solid" : "fa-regular"} fa-heart text-xs`} />
-              </button>
-            </div>
-          )}
-
-          {product.stock === 0 && (
-            <div className="absolute inset-0 bg-white/70 flex items-center justify-center z-10">
-              <span className="text-[#6B6B6B] font-bold text-xs tracking-wider uppercase">Out of Stock</span>
-            </div>
-          )}
+          {/* Wishlist Button */}
+          <button
+            onClick={handleWishlist}
+            disabled={wishlistLoading}
+            className={`absolute top-3 right-3 z-10 w-8 h-8 rounded-full flex items-center justify-center transition-all cursor-pointer ${
+              wishlisted
+                ? "bg-white text-red-500 shadow-sm"
+                : "bg-white/80 backdrop-blur-xs text-gray-500 hover:text-red-500 hover:bg-white shadow-xs"
+            }`}
+            title={wishlisted ? "Remove from wishlist" : "Add to wishlist"}
+          >
+            <i className={`fa-heart text-xs ${wishlisted ? "fa-solid" : "fa-regular"}`} />
+          </button>
         </div>
 
-        {/* Info Area */}
-        <div className="p-4 flex flex-col flex-1">
-          <p className="text-[11px] font-semibold text-[#9B9B9B] uppercase tracking-wider mb-1 truncate">
-            {product.seller?.storeName || product.seller?.name}
-          </p>
-          <h3 className="text-sm font-bold text-[#111111] line-clamp-2 mb-2 group-hover:text-[#A4860E] transition-colors leading-snug flex-1">
+        {/* Content Wrapper */}
+        <div className="p-3.5 flex flex-col flex-1">
+          {/* Category */}
+          {product.category && (
+            <span className="text-[10px] font-bold uppercase tracking-wider text-[#A4860E] mb-1 truncate">
+              {product.category.name}
+            </span>
+          )}
+
+          {/* Title */}
+          <h3 className="font-bold text-gray-900 text-sm line-clamp-2 mb-1 group-hover:text-[#A4860E] transition-colors leading-snug">
             {product.title}
           </h3>
 
-          <div className="flex items-center gap-1.5 mb-3.5">
+          {/* Rating */}
+          <div className="flex items-center gap-1 mb-2">
             <RatingStars rating={product.rating} size="sm" />
-            <span className="text-xs text-[#9B9B9B] font-medium">({product.numReviews})</span>
+            <span className="text-[10px] text-gray-500 font-medium">
+              ({product.numReviews})
+            </span>
           </div>
 
-          <div className="flex items-center justify-between mt-auto pt-3 border-t border-[#E5E5E5]/40">
-            <span className="text-base font-extrabold text-[#111111]">
-              ₦{product.price.toLocaleString()}
-            </span>
+          {/* Price & Action CTA */}
+          <div className="mt-auto pt-3 flex flex-col gap-2.5 border-t border-gray-100">
+            <div className="flex items-center justify-between">
+              <span className="font-extrabold text-base text-[#111111]">
+                ₦{product.price.toLocaleString()}
+              </span>
+              {product.stock === 0 && (
+                <span className="text-[10px] font-bold text-red-600 bg-red-50 px-2 py-0.5 rounded">
+                  Out of Stock
+                </span>
+              )}
+            </div>
+
+            {/* Prominent CTA Button with Cart Icon */}
             <button
+              type="button"
               onClick={handleAddToCart}
-              disabled={product.stock === 0 || isMine}
-              className={`px-3.5 py-2 rounded-md text-xs font-bold transition-all duration-150 shadow-sm ${
-                isMine
-                  ? "bg-gray-100 border border-gray-200 text-gray-400 cursor-not-allowed shadow-none"
+              disabled={product.stock === 0}
+              className={`w-full py-2 px-3 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-2 shadow-xs ${
+                product.stock === 0
+                  ? "bg-gray-100 text-gray-400 cursor-not-allowed border border-gray-200"
                   : added
-                  ? "bg-[#F0FDF4] text-[#A4860E] border border-[#A4860E]"
-                  : "bg-[#A4860E] text-white hover:bg-[#8a6f0b]"
-              } disabled:opacity-40`}
+                  ? "bg-[#F0FDF4] text-[#8a6f0b] border border-[#BBF7D0]"
+                  : "bg-[#A4860E] hover:bg-[#8a6f0b] active:scale-[0.98] text-white cursor-pointer hover:shadow-sm"
+              }`}
+              title={product.stock === 0 ? "Out of stock" : "Add to Cart"}
             >
-              {isMine ? "Mine" : added ? "✓ Added" : "Add"}
+              {added ? (
+                <>
+                  <i className="fa-solid fa-check text-xs" />
+                  <span>Added to Cart</span>
+                </>
+              ) : (
+                <>
+                  <i className="fa-solid fa-cart-shopping text-xs" />
+                  <span>{product.stock === 0 ? "Out of Stock" : "Add to Cart"}</span>
+                </>
+              )}
             </button>
           </div>
         </div>

@@ -74,23 +74,27 @@ async function getFeaturedProducts(targetSchool?: string) {
         return JSON.parse(JSON.stringify(enriched));
       }
     } else {
-      // Unregistered user — display products across all campus collections & all users
+      // Unregistered user — display products across all campus collections & all users in parallel
       const schools = await getAllActiveSchools();
       const targetModels = schools.map((s) => getCampusProductModel(s.slug));
       targetModels.push(Product);
 
-      const allFound: any[] = [];
-      for (const model of targetModels) {
-        try {
-          const docs = await model
-            .find(matchStage)
-            .populate("seller", "name storeName avatar storeDescription")
-            .populate("category", "name slug")
-            .limit(4)
-            .lean();
-          allFound.push(...docs);
-        } catch {}
-      }
+      const docsArrays = await Promise.all(
+        targetModels.map(async (model) => {
+          try {
+            return await model
+              .find(matchStage)
+              .populate("seller", "name storeName avatar storeDescription")
+              .populate("category", "name slug")
+              .limit(4)
+              .lean();
+          } catch {
+            return [];
+          }
+        })
+      );
+
+      const allFound = docsArrays.flat();
 
       if (allFound.length > 0) {
         const unique = Array.from(new Map(allFound.map((p) => [p._id.toString(), p])).values());
@@ -140,24 +144,28 @@ async function getLatestProducts(targetSchool?: string) {
         return JSON.parse(JSON.stringify(enriched));
       }
     } else {
-      // Unregistered user — display latest products across all campuses & all users
+      // Unregistered user — display latest products across all campuses & all users in parallel
       const schools = await getAllActiveSchools();
       const targetModels = schools.map((s) => getCampusProductModel(s.slug));
       targetModels.push(Product);
 
-      const allFound: any[] = [];
-      for (const model of targetModels) {
-        try {
-          const docs = await model
-            .find(query)
-            .populate("seller", "name storeName avatar storeDescription")
-            .populate("category", "name slug")
-            .sort("-createdAt")
-            .limit(8)
-            .lean();
-          allFound.push(...docs);
-        } catch {}
-      }
+      const docsArrays = await Promise.all(
+        targetModels.map(async (model) => {
+          try {
+            return await model
+              .find(query)
+              .populate("seller", "name storeName avatar storeDescription")
+              .populate("category", "name slug")
+              .sort("-createdAt")
+              .limit(8)
+              .lean();
+          } catch {
+            return [];
+          }
+        })
+      );
+
+      const allFound = docsArrays.flat();
 
       if (allFound.length > 0) {
         const unique = Array.from(new Map(allFound.map((p) => [p._id.toString(), p])).values()).sort(
