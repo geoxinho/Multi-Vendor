@@ -12,7 +12,11 @@ export function Providers({
   session?: Session | null;
 }) {
   return (
-    <SessionProvider session={session}>
+    <SessionProvider
+      session={session}
+      basePath="/api/auth"
+      refetchOnWindowFocus={false}
+    >
       <CartSessionSync />
       {children}
     </SessionProvider>

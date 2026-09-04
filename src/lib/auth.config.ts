@@ -1,6 +1,11 @@
 import type { NextAuthConfig } from "next-auth";
 
 export const authConfig = {
+  trustHost: true,
+  secret:
+    process.env.AUTH_SECRET ||
+    process.env.NEXTAUTH_SECRET ||
+    "e27427393f0bfe4ab8dd910965350cd03154bc905b7ca923ea057b90db1c5d44",
   providers: [], // we will add credentials in auth.ts
   session: { strategy: "jwt" },
   callbacks: {

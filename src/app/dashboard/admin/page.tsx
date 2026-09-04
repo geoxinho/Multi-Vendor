@@ -58,6 +58,33 @@ export default async function AdminDashboardPage() {
   const userCount = uniqueUserIds.size;
   const productCount = uniqueProductIds.size;
 
+  // ── Buyer / Seller counts (deduplicated across campus + legacy) ──
+  const [buyerIdSets, sellerIdSets] = await Promise.all([
+    Promise.all(
+      userModels.map((m) =>
+        m
+          .find({ $or: [{ role: "buyer" }, { roles: "buyer" }] })
+          .select("_id")
+          .lean()
+          .then((docs: any[]) => docs.map((d) => d._id.toString()))
+          .catch(() => [] as string[])
+      )
+    ),
+    Promise.all(
+      userModels.map((m) =>
+        m
+          .find({ $or: [{ role: "seller" }, { roles: "seller" }] })
+          .select("_id")
+          .lean()
+          .then((docs: any[]) => docs.map((d) => d._id.toString()))
+          .catch(() => [] as string[])
+      )
+    ),
+  ]);
+
+  const buyerCount = new Set(buyerIdSets.flat()).size;
+  const sellerCount = new Set(sellerIdSets.flat()).size;
+
   const activityCounts = await Promise.all(
     userModels.map((m) =>
       Promise.all([
@@ -172,8 +199,8 @@ export default async function AdminDashboardPage() {
         </div>
       )}
 
-      {/* Stats Cards */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+      {/* Stats Cards — Row 1 */}
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-4">
         <StatCard label="Total Users" value={userCount} color="green"
           icon={<svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" /></svg>}
         />
@@ -186,6 +213,41 @@ export default async function AdminDashboardPage() {
         <StatCard label="GMV" value={`₦${totalRevenue.toLocaleString()}`} color="green"
           icon={<svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>}
         />
+      </div>
+
+      {/* Stats Cards — Row 2: Buyers & Sellers */}
+      <div className="grid grid-cols-2 gap-4 mb-8">
+        {/* Total Buyers */}
+        <div className="bg-white rounded-2xl border border-blue-100 p-5 shadow-xs flex items-center gap-4">
+          <div className="w-12 h-12 rounded-xl bg-blue-50 flex items-center justify-center shrink-0">
+            <svg className="w-6 h-6 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
+            </svg>
+          </div>
+          <div>
+            <p className="text-xs font-semibold text-blue-500 uppercase tracking-wider mb-0.5">Total Buyers</p>
+            <p className="text-3xl font-black text-blue-900">{buyerCount}</p>
+            <p className="text-[11px] text-gray-400 mt-0.5">
+              {userCount > 0 ? Math.round((buyerCount / userCount) * 100) : 0}% of all users
+            </p>
+          </div>
+        </div>
+
+        {/* Total Sellers */}
+        <div className="bg-white rounded-2xl border border-[#A4860E]/20 p-5 shadow-xs flex items-center gap-4">
+          <div className="w-12 h-12 rounded-xl bg-[#FFF8E1] flex items-center justify-center shrink-0">
+            <svg className="w-6 h-6 text-[#A4860E]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" />
+            </svg>
+          </div>
+          <div>
+            <p className="text-xs font-semibold text-[#A4860E] uppercase tracking-wider mb-0.5">Total Sellers</p>
+            <p className="text-3xl font-black text-[#7a6310]">{sellerCount}</p>
+            <p className="text-[11px] text-gray-400 mt-0.5">
+              {userCount > 0 ? Math.round((sellerCount / userCount) * 100) : 0}% of all users
+            </p>
+          </div>
+        </div>
       </div>
 
       {/* Alerts */}
