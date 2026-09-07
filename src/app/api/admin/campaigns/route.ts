@@ -76,7 +76,7 @@ export async function POST(req: NextRequest) {
         ${preheader ? `<div style="display:none;font-size:1px;color:#333;line-height:1px;max-height:0px;max-width:0px;opacity:0;overflow:hidden;">${preheader}</div>` : ""}
         <div style="background: linear-gradient(135deg, #A4860E, #c9a72a); padding: 32px 40px; text-align: center;">
           <h1 style="color: white; margin: 0; font-size: 26px; font-weight: 900; letter-spacing: -0.5px;">CampusGo</h1>
-          <p style="color: rgba(255,255,255,0.9); margin: 6px 0 0; font-size: 13px;">Adeleke University Campus Marketplace</p>
+          <p style="color: rgba(255,255,255,0.9); margin: 6px 0 0; font-size: 13px;">Nigeria's Campus Marketplace</p>
         </div>
         <div style="padding: 36px 40px;">
           <h2 style="font-size: 20px; font-weight: 800; color: #111827; margin: 0 0 16px; line-height: 1.3;">${subject}</h2>
@@ -97,7 +97,7 @@ export async function POST(req: NextRequest) {
           }
         </div>
         <div style="background: #f9fafb; padding: 20px 40px; text-align: center; border-top: 1px solid #e5e7eb;">
-          <p style="color: #9ca3af; font-size: 12px; margin: 0;">CampusGo · Adeleke University Campus Marketplace</p>
+          <p style="color: #9ca3af; font-size: 12px; margin: 0;">CampusGo · Nigeria's Campus Marketplace</p>
         </div>
       </div>
     `;

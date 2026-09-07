@@ -3,7 +3,7 @@ import type { Metadata } from "next";
 export const metadata: Metadata = {
   title: "Help & Support | CampusGo — Campus Marketplace Nigeria",
   description:
-    "Need help? Get answers about orders, payments, seller verification, escrow protection, and refunds on CampusGo — Nigeria's campus marketplace for Adeleke University and Federal Polytechnic Ede.",
+    "Need help? Get answers about orders, payments, seller verification, escrow protection, and refunds on CampusGo — Nigeria's trusted campus marketplace for university and polytechnic students.",
   alternates: {
     canonical: "/help",
   },

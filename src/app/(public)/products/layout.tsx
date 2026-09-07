@@ -3,14 +3,14 @@ import type { Metadata } from "next";
 export const metadata: Metadata = {
   title: "Browse Products — Textbooks, Electronics & More | CampusGo",
   description:
-    "Shop thousands of student listings — textbooks, electronics, fashion, food & dorm essentials from verified sellers at Adeleke University and Federal Polytechnic Ede. Safe escrow payments.",
+    "Shop thousands of student listings — textbooks, electronics, fashion, food & dorm essentials from verified student sellers across Nigerian campuses. Safe escrow payments.",
   alternates: {
     canonical: "/products",
   },
   openGraph: {
     title: "Browse Products — Textbooks, Electronics & More | CampusGo",
     description:
-      "Shop thousands of student listings — textbooks, electronics, fashion, food & dorm essentials from verified sellers at Adeleke University and Federal Polytechnic Ede. Safe escrow payments.",
+      "Shop thousands of student listings — textbooks, electronics, fashion, food & dorm essentials from verified student sellers across Nigerian campuses. Safe escrow payments.",
     url: "https://campusgo.vercel.app/products",
     siteName: "CampusGo",
     type: "website",
@@ -27,7 +27,7 @@ export const metadata: Metadata = {
     card: "summary_large_image",
     title: "Browse Products — Textbooks, Electronics & More | CampusGo",
     description:
-      "Shop thousands of student listings — textbooks, electronics, fashion, food & dorm essentials from verified sellers at Adeleke University and Federal Polytechnic Ede.",
+      "Shop thousands of student listings — textbooks, electronics, fashion, food & dorm essentials from verified student sellers across Nigerian campuses.",
     images: ["/main_logo.png"],
   },
 };

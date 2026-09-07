@@ -75,7 +75,7 @@ const TEMPLATES = [
   {
     name: "🛒 Cart Abandonment Recovery",
     subject: "You left something special in your cart! 🛍️",
-    preheader: "Complete your order before items sell out on Adeleke Campus.",
+    preheader: "Complete your order before items sell out on campus.",
     content:
       "Hi there!\n\nWe noticed you left items in your shopping cart. Don't miss out — items on CampusGo sell fast!\n\nClick below to return to your cart and complete your order with ease.",
     ctaText: "Complete My Order",
@@ -87,7 +87,7 @@ const TEMPLATES = [
     subject: "🔥 Exclusive Deals Today on CampusGo!",
     preheader: "Save big on textbooks, fashion, food, and essentials.",
     content:
-      "Hello Adeleke Campus Community!\n\nGreat news! Sellers have dropped prices on top campus essentials today.\n\nBrowse fresh items listed by verified campus sellers right now.",
+      "Hello Campus Community!\n\nGreat news! Sellers have dropped prices on top campus essentials today.\n\nBrowse fresh items listed by verified campus sellers right now.",
     ctaText: "Explore Campus Deals",
     ctaUrl: "https://campusgo.vercel.app/products",
     recommendedAudience: "buyers" as AudienceType,
@@ -97,7 +97,7 @@ const TEMPLATES = [
     subject: "We miss you on CampusGo! Here's what's new ✨",
     preheader: "Check out new items and fast campus deliveries.",
     content:
-      "Hi there!\n\nIt's been a while since your last visit. CampusGo has added new features, fresh inventory, and fast 24-hour deliveries across Adeleke University.\n\nCome check out what's new today!",
+      "Hi there!\n\nIt's been a while since your last visit. CampusGo has added new features, fresh inventory, and fast 24-hour deliveries across campuses.\n\nCome check out what's new today!",
     ctaText: "Return to CampusGo",
     ctaUrl: "https://campusgo.vercel.app",
     recommendedAudience: "inactive" as AudienceType,
@@ -250,7 +250,7 @@ export default function AdminCampaignsPage() {
         ${preheader ? `<div style="background:#fef3c7;color:#92400e;padding:6px 16px;font-size:11px;text-align:center;">Preview Text: ${preheader}</div>` : ""}
         <div style="background: linear-gradient(135deg, #A4860E, #c9a72a); padding: 28px 32px; text-align: center;">
           <h1 style="color: white; margin: 0; font-size: 24px; font-weight: 900;">CampusGo</h1>
-          <p style="color: rgba(255,255,255,0.85); margin: 4px 0 0; font-size: 12px;">Adeleke University Campus Marketplace</p>
+          <p style="color: rgba(255,255,255,0.85); margin: 4px 0 0; font-size: 12px;">Nigeria's Campus Marketplace</p>
         </div>
         <div style="padding: 32px;">
           <h2 style="font-size: 18px; font-weight: 800; color: #111827; margin: 0 0 16px;">${subject || "Subject Line Preview"}</h2>
@@ -270,7 +270,7 @@ export default function AdminCampaignsPage() {
           }
         </div>
         <div style="background: #f9fafb; padding: 16px 32px; text-align: center; border-top: 1px solid #e5e7eb;">
-          <p style="color: #9ca3af; font-size: 11px; margin: 0;">CampusGo · Adeleke University Campus Marketplace</p>
+          <p style="color: #9ca3af; font-size: 11px; margin: 0;">CampusGo · Nigeria's Campus Marketplace</p>
         </div>
       </div>
     `;
@@ -385,7 +385,7 @@ export default function AdminCampaignsPage() {
                 <textarea
                   value={customEmails}
                   onChange={(e) => setCustomEmails(e.target.value)}
-                  placeholder="e.g. buyer1@gmail.com, buyer2@adeleke.edu.ng (separated by commas or newlines)"
+                  placeholder="e.g. buyer1@gmail.com, student@campus.edu.ng (separated by commas or newlines)"
                   className="w-full border border-gray-200 rounded-xl p-3 text-xs focus:ring-2 focus:ring-[#A4860E] outline-none h-24 resize-none"
                 />
               </div>
@@ -504,7 +504,7 @@ export default function AdminCampaignsPage() {
                 type="text"
                 value={preheader}
                 onChange={(e) => setPreheader(e.target.value)}
-                placeholder="e.g. Limited time offer for Adeleke University students."
+                placeholder="e.g. Limited time offer for campus students."
                 className="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-xs focus:ring-2 focus:ring-[#A4860E] outline-none"
               />
             </div>

@@ -73,10 +73,10 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   if (!p) return { title: "Product Not Found | CampusGo" };
 
   const baseUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "https://campusgo.vercel.app";
-  const description = (p.description || `${p.title} available on CampusGo Adeleke University Marketplace`).slice(0, 160);
+  const description = (p.description || `${p.title} available on CampusGo — Nigeria's Campus Marketplace`).slice(0, 160);
   const productUrl = `${baseUrl}/products/${p._id}`;
   const priceFormatted = `₦${(p.price || 0).toLocaleString()}`;
-  const title = `${p.title} (${priceFormatted}) — Adeleke University`;
+  const title = `${p.title} (${priceFormatted}) — CampusGo`;
 
   const ogImages = p.images?.length
     ? p.images.map((img: string) => ({
@@ -94,10 +94,12 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     keywords: [
       p.title,
       p.category?.name || "marketplace",
-      "Adeleke University",
-      "buy on campus",
-      "student seller",
-      p.condition === "new" ? "brand new" : "used items",
+      "Nigeria campus marketplace",
+      "buy from students Nigeria",
+      "student seller Nigeria",
+      "Nigerian university marketplace",
+      "campus thrift",
+      p.condition === "new" ? "brand new" : "used student item",
     ].filter(Boolean),
     alternates: {
       canonical: `/products/${p._id}`,

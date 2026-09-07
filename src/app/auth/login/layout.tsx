@@ -3,7 +3,7 @@ import type { Metadata } from "next";
 export const metadata: Metadata = {
   title: "Sign In | CampusGo — Campus Marketplace Nigeria",
   description:
-    "Sign in to your CampusGo account to buy, sell, and manage orders on Nigeria's leading campus marketplace for Adeleke University and Federal Polytechnic Ede students.",
+    "Sign in to your CampusGo account to buy, sell, and manage orders on Nigeria's leading campus marketplace for university and polytechnic students.",
   alternates: { canonical: "/auth/login" },
   openGraph: {
     title: "Sign In | CampusGo",

@@ -11,19 +11,19 @@ import type { Metadata } from "next";
 export const dynamic = "force-dynamic";
 
 const HOME_DESCRIPTION =
-  "Nigeria's dedicated campus marketplace for Adeleke University students. Buy and sell textbooks, electronics, fashion, food, dorm & hostel essentials with instant 24-hr escrow protection.";
+  "Nigeria's dedicated campus marketplace for students. Buy and sell textbooks, gadgets, smartphones, laptops, fashion, hostel essentials, and campus food safely with 24-hr escrow protection across Nigerian universities and polytechnics.";
 
 const SITE_URL =
   process.env.NEXT_PUBLIC_SITE_URL ?? "https://campusgo.vercel.app";
 
 export const metadata: Metadata = {
-  title: "CampusGo — Adeleke University Campus Marketplace",
+  title: "CampusGo — Nigeria's #1 Student Marketplace | Buy & Sell on Campus",
   description: HOME_DESCRIPTION,
   alternates: {
     canonical: "/",
   },
   openGraph: {
-    title: "CampusGo — Adeleke University Campus Marketplace",
+    title: "CampusGo — Nigeria's #1 Student Marketplace | Buy & Sell on Campus",
     description: HOME_DESCRIPTION,
     type: "website",
     siteName: "CampusGo",
@@ -33,13 +33,13 @@ export const metadata: Metadata = {
         url: "/main_logo.png",
         width: 1200,
         height: 630,
-        alt: "CampusGo homepage",
+        alt: "CampusGo — Nigeria's #1 Student Marketplace",
       },
     ],
   },
   twitter: {
     card: "summary_large_image",
-    title: "CampusGo — Adeleke University Campus Marketplace",
+    title: "CampusGo — Nigeria's #1 Student Marketplace | Buy & Sell on Campus",
     description: HOME_DESCRIPTION,
     images: ["/main_logo.png"],
   },

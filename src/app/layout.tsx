@@ -11,9 +11,9 @@ export const metadataBase = process.env.NEXT_PUBLIC_SITE_URL
 
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://campusgo.vercel.app";
 
-const ROOT_TITLE = "CampusGo — Buy & Sell on Campus in Nigeria";
+const ROOT_TITLE = "CampusGo — Nigeria's #1 Student Marketplace | Buy & Sell on Campus";
 const ROOT_DESCRIPTION =
-  "CampusGo is Nigeria's #1 campus marketplace. Buy and sell textbooks, electronics, fashion & more safely between students at Adeleke University and Federal Polytechnic Ede — with 24-hour escrow protection.";
+  "Nigeria's dedicated campus marketplace for students. Buy and sell textbooks, gadgets, smartphones, laptops, fashion, hostel essentials, and campus food safely with 24-hr escrow protection across Nigerian universities and polytechnics.";
 
 export const viewport: Viewport = {
   themeColor: "#A4860E",
@@ -35,18 +35,32 @@ export const metadata: Metadata = {
   },
   keywords: [
     "CampusGo",
-    "campus marketplace Nigeria",
+    "Nigeria campus marketplace",
     "student marketplace Nigeria",
+    "buy and sell on campus Nigeria",
+    "student buyers Nigeria",
+    "student sellers Nigeria",
+    "campus vendor Nigeria",
+    "buy used textbooks Nigerian universities",
+    "student thrift market Nigeria",
+    "campus second hand market",
+    "buy laptops campus Nigeria",
+    "hostel essentials Nigeria",
+    "student ecommerce Nigeria",
+    "peer to peer student marketplace",
+    "campus escrow payment Nigeria",
+    "Nigerian university students buy and sell",
+    "polytechnic student marketplace Nigeria",
+    "Unilag student market",
+    "OAU campus marketplace",
+    "UI student market",
+    "UNN campus market",
+    "FUTA campus marketplace",
     "Adeleke University marketplace",
     "Federal Polytechnic Ede marketplace",
-    "buy textbooks Nigeria campus",
-    "sell on campus Nigeria",
-    "student buy and sell",
-    "used electronics campus Nigeria",
-    "hostel essentials Nigeria",
-    "campus escrow payment",
-    "peer to peer student marketplace",
-    "buy sell Ede Osun State",
+    "UNILORIN student market",
+    "Covenant University student market",
+    "sell to students in Nigeria",
   ],
   authors: [{ name: "CampusGo", url: SITE_URL }],
   creator: "CampusGo",
@@ -71,7 +85,7 @@ export const metadata: Metadata = {
         url: "/main_logo.png",
         width: 1200,
         height: 630,
-        alt: "CampusGo — Nigeria's Campus Marketplace",
+        alt: "CampusGo — Nigeria's #1 Student Marketplace",
       },
     ],
   },
@@ -120,10 +134,14 @@ const ROOT_SCHEMA = {
         height: 512,
       },
       description: ROOT_DESCRIPTION,
-      areaServed: [
-        { "@type": "AdministrativeArea", name: "Adeleke University, Ede, Osun State, Nigeria" },
-        { "@type": "AdministrativeArea", name: "Federal Polytechnic Ede, Osun State, Nigeria" },
-      ],
+      areaServed: {
+        "@type": "Country",
+        name: "Nigeria",
+      },
+      audience: {
+        "@type": "Audience",
+        audienceType: "Nigerian University & Polytechnic Students, Campus Sellers, Student Buyers",
+      },
       sameAs: [SITE_URL],
     },
     {
@@ -131,7 +149,7 @@ const ROOT_SCHEMA = {
       "@id": `${SITE_URL}/#website`,
       url: SITE_URL,
       name: "CampusGo",
-      alternateName: "CampusGo Nigeria",
+      alternateName: "CampusGo Nigeria — Campus Marketplace",
       publisher: { "@id": `${SITE_URL}/#organization` },
       description: ROOT_DESCRIPTION,
       inLanguage: "en-NG",

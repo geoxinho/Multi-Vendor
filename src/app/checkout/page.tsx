@@ -38,7 +38,7 @@ export default function CheckoutPage() {
   const [address, setAddress] = useState({
     fullName: "",
     phone: "",
-    school: "Adeleke University",
+    school: "",
     hostel: "",
   });
 
@@ -53,7 +53,10 @@ export default function CheckoutPage() {
     fetch("/api/schools")
       .then((r) => r.json())
       .then((d) => {
-        if (Array.isArray(d) && d.length > 0) setSchools(d);
+        if (Array.isArray(d) && d.length > 0) {
+          setSchools(d);
+          setAddress((a) => ({ ...a, school: a.school || d[0]?.name || "" }));
+        }
       })
       .catch(() => {});
   }, []);
@@ -84,10 +87,10 @@ export default function CheckoutPage() {
       setAddress((a) => ({
         ...a,
         fullName: a.fullName || session.user.name || "",
-        school: session.user.school || (session.user as any).school || a.school || "Adeleke University",
+        school: a.school || session.user.school || (session.user as any).school || (schools[0]?.name ?? ""),
       }));
     }
-  }, [session]);
+  }, [session, schools]);
 
   const validate = () => {
     const e: Record<string, string> = {};

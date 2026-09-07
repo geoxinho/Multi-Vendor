@@ -94,7 +94,7 @@ export async function POST(req: NextRequest) {
             </p>
           </div>
           <div style="background: #f9fafb; padding: 16px 40px; text-align: center; border-top: 1px solid #e5e7eb;">
-            <p style="color: #9ca3af; font-size: 12px; margin: 0;">CampusGo · Adeleke University Campus Marketplace</p>
+            <p style="color: #9ca3af; font-size: 12px; margin: 0;">CampusGo · Nigeria's Campus Marketplace</p>
           </div>
         </div>
       `,

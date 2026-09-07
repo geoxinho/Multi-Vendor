@@ -166,7 +166,7 @@ export default function PrivacyPage() {
             </p>
             <div className="mt-2 p-3 bg-[#fdf8e8] rounded-xl border border-[#e8d48a] text-xs space-y-1">
               <p><i className="fa-solid fa-envelope text-[#A4860E] mr-2" /><a href="mailto:privacy@campusgo.ng" className="text-[#A4860E] hover:underline">privacy@campusgo.ng</a></p>
-              <p><i className="fa-solid fa-location-dot text-[#A4860E] mr-2" />Adeleke University, Ede, Osun State, Nigeria</p>
+              <p><i className="fa-solid fa-location-dot text-[#A4860E] mr-2" />Ede, Osun State, Nigeria</p>
             </div>
           </Section>
         </div>
