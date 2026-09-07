@@ -9,9 +9,11 @@ export const metadataBase = process.env.NEXT_PUBLIC_SITE_URL
   ? new URL(process.env.NEXT_PUBLIC_SITE_URL)
   : new URL("https://campusgo.vercel.app");
 
-const ROOT_TITLE = "CampusGo — Adeleke University Campus Marketplace";
+const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://campusgo.vercel.app";
+
+const ROOT_TITLE = "CampusGo — Buy & Sell on Campus in Nigeria";
 const ROOT_DESCRIPTION =
-  "Nigeria's dedicated campus marketplace for Adeleke University students. Buy and sell textbooks, electronics, fashion, food, dorm & hostel essentials with instant 24-hr escrow protection.";
+  "CampusGo is Nigeria's #1 campus marketplace. Buy and sell textbooks, electronics, fashion & more safely between students at Adeleke University and Federal Polytechnic Ede — with 24-hour escrow protection.";
 
 export const viewport: Viewport = {
   themeColor: "#A4860E",
@@ -28,20 +30,25 @@ export const metadata: Metadata = {
   description: ROOT_DESCRIPTION,
   applicationName: "CampusGo",
   category: "Ecommerce Marketplace",
+  verification: {
+    google: "vk7Pth0TYSQFGQef3xppKVdBcJRAaLhRR88kiPZuMII",
+  },
   keywords: [
     "CampusGo",
-    "Adeleke University",
-    "Adeleke University Marketplace",
-    "campus marketplace",
+    "campus marketplace Nigeria",
     "student marketplace Nigeria",
-    "buy textbooks Adeleke",
-    "used electronics campus",
-    "hostel essentials",
-    "student commerce Ede Osun",
+    "Adeleke University marketplace",
+    "Federal Polytechnic Ede marketplace",
+    "buy textbooks Nigeria campus",
+    "sell on campus Nigeria",
+    "student buy and sell",
+    "used electronics campus Nigeria",
+    "hostel essentials Nigeria",
+    "campus escrow payment",
     "peer to peer student marketplace",
-    "buy sell college campus",
+    "buy sell Ede Osun State",
   ],
-  authors: [{ name: "CampusGo", url: "https://campusgo.vercel.app" }],
+  authors: [{ name: "CampusGo", url: SITE_URL }],
   creator: "CampusGo",
   publisher: "CampusGo",
   formatDetection: {
@@ -55,7 +62,7 @@ export const metadata: Metadata = {
   openGraph: {
     title: ROOT_TITLE,
     description: ROOT_DESCRIPTION,
-    url: "https://campusgo.vercel.app",
+    url: SITE_URL,
     siteName: "CampusGo",
     locale: "en_NG",
     type: "website",
@@ -64,7 +71,7 @@ export const metadata: Metadata = {
         url: "/main_logo.png",
         width: 1200,
         height: 630,
-        alt: "CampusGo — Adeleke University Campus Marketplace",
+        alt: "CampusGo — Nigeria's Campus Marketplace",
       },
     ],
   },
@@ -103,38 +110,60 @@ const ROOT_SCHEMA = {
   "@graph": [
     {
       "@type": "Organization",
-      "@id": `${metadataBase.origin}/#organization`,
+      "@id": `${SITE_URL}/#organization`,
       name: "CampusGo",
-      url: metadataBase.origin,
+      url: SITE_URL,
       logo: {
         "@type": "ImageObject",
-        url: `${metadataBase.origin}/main_logo.png`,
+        url: `${SITE_URL}/main_logo.png`,
+        width: 512,
+        height: 512,
       },
       description: ROOT_DESCRIPTION,
-      areaServed: {
-        "@type": "AdministrativeArea",
-        name: "Adeleke University, Ede, Osun State, Nigeria",
-      },
+      areaServed: [
+        { "@type": "AdministrativeArea", name: "Adeleke University, Ede, Osun State, Nigeria" },
+        { "@type": "AdministrativeArea", name: "Federal Polytechnic Ede, Osun State, Nigeria" },
+      ],
+      sameAs: [SITE_URL],
     },
     {
       "@type": "WebSite",
-      "@id": `${metadataBase.origin}/#website`,
-      url: metadataBase.origin,
+      "@id": `${SITE_URL}/#website`,
+      url: SITE_URL,
       name: "CampusGo",
-      publisher: {
-        "@id": `${metadataBase.origin}/#organization`,
-      },
+      alternateName: "CampusGo Nigeria",
+      publisher: { "@id": `${SITE_URL}/#organization` },
       description: ROOT_DESCRIPTION,
+      inLanguage: "en-NG",
       potentialAction: [
         {
           "@type": "SearchAction",
           target: {
             "@type": "EntryPoint",
-            urlTemplate: `${metadataBase.origin}/products?search={search_term_string}`,
+            urlTemplate: `${SITE_URL}/products?search={search_term_string}`,
           },
           "query-input": "required name=search_term_string",
         },
       ],
+    },
+    {
+      "@type": "WebPage",
+      "@id": `${SITE_URL}/#webpage`,
+      url: SITE_URL,
+      name: ROOT_TITLE,
+      description: ROOT_DESCRIPTION,
+      isPartOf: { "@id": `${SITE_URL}/#website` },
+      about: { "@id": `${SITE_URL}/#organization` },
+      breadcrumb: {
+        "@type": "BreadcrumbList",
+        itemListElement: [
+          { "@type": "ListItem", position: 1, name: "Home", item: SITE_URL },
+          { "@type": "ListItem", position: 2, name: "Browse Products", item: `${SITE_URL}/products` },
+          { "@type": "ListItem", position: 3, name: "Help & Support", item: `${SITE_URL}/help` },
+          { "@type": "ListItem", position: 4, name: "Terms of Service", item: `${SITE_URL}/terms` },
+          { "@type": "ListItem", position: 5, name: "Privacy Policy", item: `${SITE_URL}/privacy` },
+        ],
+      },
     },
   ],
 };

@@ -1,16 +1,16 @@
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: "Help Desk & FAQ | CampusGo — Adeleke University Marketplace",
+  title: "Help & Support | CampusGo — Campus Marketplace Nigeria",
   description:
-    "Get assistance with your orders, seller verification, 24-hr escrow payout questions, or report issues on CampusGo.",
+    "Need help? Get answers about orders, payments, seller verification, escrow protection, and refunds on CampusGo — Nigeria's campus marketplace for Adeleke University and Federal Polytechnic Ede.",
   alternates: {
     canonical: "/help",
   },
   openGraph: {
-    title: "Help Desk & FAQ | CampusGo",
+    title: "Help & Support | CampusGo",
     description:
-      "Get assistance with your orders, seller verification, 24-hr escrow payout questions, or report issues on CampusGo.",
+      "Get answers about orders, payments, seller verification, escrow protection, and refunds on CampusGo — Nigeria's campus marketplace.",
     url: "https://campusgo.vercel.app/help",
     siteName: "CampusGo",
     type: "website",
