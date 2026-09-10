@@ -220,29 +220,29 @@ function CheckoutSuccessContent() {
 
           {/* ── ACTION BUTTONS ── */}
           <div className="flex flex-col sm:flex-row gap-3">
-            {(orderId || order?._id) && (
-              <Link
-                href={`/dashboard/buyer/messages?orderId=${orderId || order!._id}`}
-                className="flex-1 py-3 px-4 bg-[#fdf8e8] border border-[#e8d48a] text-[#A4860E] font-bold rounded-xl hover:bg-[#A4860E] hover:text-white transition-colors text-sm flex items-center justify-center gap-2"
-              >
-                <i className="fa-solid fa-comment-dots" />
-                <span>Chat with Seller</span>
-              </Link>
-            )}
             <Link
               href="/dashboard/buyer/orders"
-              className="flex-1 py-3 px-4 bg-[#A4860E] text-white font-bold rounded-xl hover:bg-[#8a7009] transition-colors text-sm shadow-md shadow-[#A4860E]/20 flex items-center justify-center gap-2"
+              className="flex-1 py-3.5 px-5 bg-[#A4860E] text-white font-bold rounded-xl hover:bg-[#8a7009] transition-all text-sm shadow-md shadow-[#A4860E]/20 flex items-center justify-center gap-2"
             >
               <i className="fa-solid fa-box-archive" />
-              <span>View My Orders</span>
+              <span>Go to Order Page</span>
             </Link>
             <Link
               href="/products"
-              className="flex-1 py-3 px-4 bg-gray-100 border border-gray-200 text-gray-800 font-semibold rounded-xl hover:bg-gray-200 transition-colors text-sm flex items-center justify-center gap-2"
+              className="flex-1 py-3.5 px-5 bg-gray-100 border border-gray-200 text-gray-800 font-semibold rounded-xl hover:bg-gray-200 transition-all text-sm flex items-center justify-center gap-2"
             >
               <i className="fa-solid fa-bag-shopping" />
               <span>Continue Shopping</span>
             </Link>
+            {(orderId || order?._id) && (
+              <Link
+                href={`/dashboard/buyer/messages?orderId=${orderId || order!._id}`}
+                className="py-3.5 px-4 bg-[#fdf8e8] border border-[#e8d48a] text-[#A4860E] font-bold rounded-xl hover:bg-[#A4860E] hover:text-white transition-all text-sm flex items-center justify-center gap-2"
+              >
+                <i className="fa-solid fa-comment-dots" />
+                <span>Chat Seller</span>
+              </Link>
+            )}
           </div>
         </div>
 
@@ -254,7 +254,7 @@ function CheckoutSuccessContent() {
               className="text-xs text-[#A4860E] font-bold hover:underline inline-flex items-center gap-1"
             >
               <i className="fa-solid fa-window-restore" />
-              Re-open Thank You Pop-Up Modal
+              Re-open Order Confirmation Pop-Up
             </button>
           </div>
         )}
@@ -282,7 +282,7 @@ function CheckoutSuccessContent() {
               Order Confirmed! 🎉
             </h2>
             <p className="text-xs text-gray-500 mb-4">
-              Thank you for purchasing on CampusGo. Your order details are below:
+              Thank you for purchasing on CampusGo. Your payment was successful!
             </p>
 
             {order?.deliveryPin && (
@@ -327,19 +327,27 @@ function CheckoutSuccessContent() {
               </div>
             )}
 
-            <div className="flex flex-col gap-2">
-              <button
-                onClick={() => setShowModal(false)}
-                className="w-full py-2.5 bg-[#A4860E] text-white font-bold rounded-xl hover:bg-[#8a7009] transition-colors text-sm shadow-md"
-              >
-                Got It, Thank You!
-              </button>
+            <div className="flex flex-col gap-2.5 pt-1">
               <Link
                 href="/dashboard/buyer/orders"
-                className="w-full py-2 bg-gray-100 text-gray-700 font-semibold rounded-xl hover:bg-gray-200 transition-colors text-xs"
+                className="w-full py-3 bg-[#A4860E] hover:bg-[#8a7009] text-white font-bold rounded-xl transition-all text-sm shadow-md shadow-[#A4860E]/20 flex items-center justify-center gap-2"
               >
-                View My Orders Page →
+                <i className="fa-solid fa-box-archive" />
+                <span>Go to Order Page</span>
               </Link>
+              <Link
+                href="/products"
+                className="w-full py-3 bg-gray-100 hover:bg-gray-200 text-gray-800 font-semibold rounded-xl transition-all text-sm flex items-center justify-center gap-2"
+              >
+                <i className="fa-solid fa-bag-shopping" />
+                <span>Continue Shopping</span>
+              </Link>
+              <button
+                onClick={() => setShowModal(false)}
+                className="w-full py-1.5 text-xs text-gray-400 hover:text-gray-600 transition-colors"
+              >
+                Close popup
+              </button>
             </div>
           </div>
         </div>

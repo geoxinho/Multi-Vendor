@@ -4,6 +4,7 @@ import { connectDB } from "@/lib/db";
 import { Product } from "@/models/Product";
 import { Order } from "@/models/Order";
 import { User } from "@/models/User";
+import { findOrdersAcrossCampuses, findUserAcrossCampuses } from "@/lib/campusModels";
 import StatCard from "@/components/dashboard/StatCard";
 import PayoutCountdownCard from "@/components/seller/PayoutCountdownCard";
 import SellerWalletCard from "@/components/seller/SellerWalletCard";
@@ -27,13 +28,19 @@ export default async function SellerDashboardPage() {
 
   const sellerId = session!.user.id;
 
+  const sellerUserPromise = (async () => {
+    const found = await findUserAcrossCampuses({ _id: sellerId });
+    if (found?.user) return found.user;
+    return User.findById(sellerId).select("name storeName").lean();
+  })();
+
   const [products, orders, sellerUser, walletData] = await Promise.all([
     Product.find({ seller: sellerId }).lean(),
-    Order.find({
+    findOrdersAcrossCampuses({
       "items.seller": sellerId,
       paymentStatus: "paid",
-    }).lean(),
-    User.findById(sellerId).select("name storeName").lean(),
+    }),
+    sellerUserPromise,
     getSellerWalletData(sellerId),
   ]);
 

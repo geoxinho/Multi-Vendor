@@ -78,6 +78,15 @@ export async function PATCH(req: NextRequest, { params }: Params) {
     order.sellerPayoutReleaseAt = sellerPayoutReleaseAt;
     await order.save();
 
+    try {
+      const { updateOrderAcrossCampuses } = await import("@/lib/campusModels");
+      await updateOrderAcrossCampuses(id, {
+        deliveryStatus: "delivered",
+        deliveredAt,
+        sellerPayoutReleaseAt,
+      });
+    } catch {}
+
     const orderId = (order._id as { toString(): string }).toString().slice(-8).toUpperCase();
     const productTitle = order.items[0]?.title || "your item";
     const buyer = order.buyer as any;

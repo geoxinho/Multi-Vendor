@@ -12,16 +12,16 @@ export const metadata: Metadata = { title: "Purchase Details" };
 
 type Props = { params: Promise<{ id: string }> };
 
+import { findOrderByIdAcrossCampuses } from "@/lib/campusModels";
+
 async function getOrder(id: string, userId: string) {
   await connectDB();
   try {
-    const order = await Order.findById(id)
-      .populate("buyer", "name email")
-      .populate("items.product", "title images _id")
-      .lean();
+    const order = await findOrderByIdAcrossCampuses(id);
     if (!order) return null;
     // Only the buyer (in this case, our seller user acting as a buyer) can view this
-    if ((order.buyer as { _id: { toString(): string } })._id.toString() !== userId) return null;
+    const buyerId = order.buyer?._id?.toString() || order.buyer?.toString();
+    if (buyerId !== userId) return null;
     return JSON.parse(JSON.stringify(order));
   } catch {
     return null;

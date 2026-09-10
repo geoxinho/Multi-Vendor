@@ -133,6 +133,114 @@ export async function findUserAcrossCampuses(
 }
 
 /**
+ * Finds multiple users by their IDs across all campus user collections.
+ * Returns a Map keyed by the string user ID.
+ */
+export async function findUsersByIdsAcrossCampuses(
+  ids: (string | mongoose.Types.ObjectId)[]
+): Promise<Map<string, any>> {
+  const result = new Map<string, any>();
+  if (!ids || ids.length === 0) return result;
+
+  const stringIds = ids.map((id) => id.toString());
+  const objectIds = stringIds
+    .filter((id) => mongoose.Types.ObjectId.isValid(id))
+    .map((id) => new mongoose.Types.ObjectId(id));
+
+  try {
+    const db = mongoose.connection.db;
+    if (db) {
+      const allCols = await db.listCollections().toArray();
+      const userColNames = allCols
+        .map((c) => c.name)
+        .filter((n) => n.endsWith("_users") || n === "users");
+
+      await Promise.all(
+        userColNames.map(async (colName) => {
+          try {
+            const col = db.collection(colName);
+            const filterQuery: any =
+              objectIds.length > 0
+                ? { $or: [{ _id: { $in: objectIds } }, { _id: { $in: stringIds } }] }
+                : { _id: { $in: stringIds } };
+            const found = await col.find(filterQuery).toArray();
+            for (const u of found) {
+              result.set(u._id.toString(), u);
+            }
+          } catch {}
+        })
+      );
+    }
+  } catch (err) {
+    console.error("[findUsersByIdsAcrossCampuses] Direct collection search error:", err);
+  }
+
+  // Fallback: Check via active registered school models if any IDs were not found
+  const missingIds = stringIds.filter((id) => !result.has(id));
+  if (missingIds.length > 0) {
+    try {
+      const schools = await getAllActiveSchools();
+      const userModels: Model<any>[] = schools.map((s) => getCampusUserModel(s.slug));
+      userModels.push(User);
+
+      await Promise.all(
+        userModels.map(async (m) => {
+          try {
+            const docs = await m
+              .find({
+                $or: [{ _id: { $in: objectIds } }, { _id: { $in: missingIds } }],
+              })
+              .lean();
+            for (const d of docs) {
+              result.set((d as any)._id.toString(), d);
+            }
+          } catch {}
+        })
+      );
+    } catch {}
+  }
+
+  return result;
+}
+
+/**
+ * Finds all admin users across all user collections.
+ */
+export async function findAdminsAcrossCampuses(): Promise<any[]> {
+  const admins: any[] = [];
+  const adminEmails = new Set<string>();
+
+  try {
+    const db = mongoose.connection.db;
+    if (db) {
+      const allCols = await db.listCollections().toArray();
+      const userColNames = allCols
+        .map((c) => c.name)
+        .filter((n) => n.endsWith("_users") || n === "users" || n === "admins");
+
+      await Promise.all(
+        userColNames.map(async (colName) => {
+          try {
+            const col = db.collection(colName);
+            const found = await col.find({ role: "admin" }).toArray();
+            for (const u of found) {
+              if (u.email && !adminEmails.has(u.email.toLowerCase())) {
+                adminEmails.add(u.email.toLowerCase());
+                admins.push(u);
+              }
+            }
+          } catch {}
+        })
+      );
+    }
+  } catch (err) {
+    console.error("[findAdminsAcrossCampuses] Error:", err);
+  }
+
+  return admins;
+}
+
+/**
  * Searches across all campus product collections in parallel for blazing-fast product rendering.
  */
 export async function findProductAcrossCampuses(
@@ -300,4 +408,273 @@ export async function populateProductsWithSellers(products: any[]): Promise<any[
     }
     return p;
   });
+}
+
+/**
+ * Finds all orders across all campus order collections and the root orders collection.
+ * Normalizes string and ObjectId queries for buyer, items.seller, and _id.
+ */
+export async function findOrdersAcrossCampuses(filter: any = {}): Promise<any[]> {
+  try {
+    const db = mongoose.connection.db;
+    if (!db) {
+      const { connectDB } = await import("@/lib/db");
+      await connectDB();
+    }
+    const realDb = mongoose.connection.db;
+    if (!realDb) return [];
+
+    const allCols = await realDb.listCollections().toArray();
+    const orderColNames = [
+      ...new Set(
+        allCols
+          .map((c) => c.name)
+          .filter((n) => n.endsWith("_orders") || n === "orders")
+      ),
+    ];
+
+    // Build normalized query to match both string and ObjectId representations
+    const normalizedQuery: any = { ...filter };
+
+    if (filter.buyer) {
+      const buyerStr = filter.buyer.toString();
+      const conds: any[] = [buyerStr];
+      if (mongoose.Types.ObjectId.isValid(buyerStr)) {
+        conds.push(new mongoose.Types.ObjectId(buyerStr));
+      }
+      normalizedQuery.buyer = { $in: conds };
+    }
+
+    if (filter["items.seller"]) {
+      const sellerStr = filter["items.seller"].toString();
+      const conds: any[] = [sellerStr];
+      if (mongoose.Types.ObjectId.isValid(sellerStr)) {
+        conds.push(new mongoose.Types.ObjectId(sellerStr));
+      }
+      normalizedQuery["items.seller"] = { $in: conds };
+    }
+
+    if (filter._id) {
+      const idStr = filter._id.toString();
+      const conds: any[] = [idStr];
+      if (mongoose.Types.ObjectId.isValid(idStr)) {
+        conds.push(new mongoose.Types.ObjectId(idStr));
+      }
+      normalizedQuery._id = { $in: conds };
+    }
+
+    const seenIds = new Set<string>();
+    const orders: any[] = [];
+
+    await Promise.all(
+      orderColNames.map(async (colName) => {
+        try {
+          const col = realDb.collection(colName);
+          const docs = await col.find(normalizedQuery).sort({ createdAt: -1 }).toArray();
+          for (const doc of docs) {
+            const idStr = doc._id.toString();
+            if (!seenIds.has(idStr)) {
+              seenIds.add(idStr);
+              orders.push(doc);
+            }
+          }
+        } catch (err) {
+          console.warn(`[findOrdersAcrossCampuses] Error querying ${colName}:`, err);
+        }
+      })
+    );
+
+    orders.sort((a, b) => {
+      const ta = a.createdAt ? new Date(a.createdAt).getTime() : 0;
+      const tb = b.createdAt ? new Date(b.createdAt).getTime() : 0;
+      return tb - ta;
+    });
+
+    return orders;
+  } catch (err) {
+    console.error("[findOrdersAcrossCampuses] Error:", err);
+    return [];
+  }
+}
+
+/**
+ * Populates buyer, seller, and product data for orders from campus collections.
+ */
+export async function populateOrdersWithUsersAndProducts(orders: any[]): Promise<any[]> {
+  if (!Array.isArray(orders) || orders.length === 0) return orders;
+
+  const db = mongoose.connection.db;
+  if (!db) return orders;
+
+  const allUserIds = new Set<string>();
+  const allProductIds = new Set<string>();
+
+  for (const o of orders) {
+    if (o.buyer && typeof o.buyer !== "object") {
+      allUserIds.add(o.buyer.toString());
+    } else if (o.buyer?._id && !o.buyer.name) {
+      allUserIds.add(o.buyer._id.toString());
+    }
+
+    if (Array.isArray(o.items)) {
+      for (const item of o.items) {
+        if (item.seller && typeof item.seller !== "object") {
+          allUserIds.add(item.seller.toString());
+        } else if (item.seller?._id && !item.seller.name && !item.seller.storeName) {
+          allUserIds.add(item.seller._id.toString());
+        }
+
+        if (item.product && typeof item.product !== "object") {
+          allProductIds.add(item.product.toString());
+        } else if (item.product?._id && !item.product.title) {
+          allProductIds.add(item.product._id.toString());
+        }
+      }
+    }
+  }
+
+  const userMap = new Map<string, any>();
+  const productMap = new Map<string, any>();
+
+  // Fetch users across all user collections
+  if (allUserIds.size > 0) {
+    const userIdsArray = Array.from(allUserIds);
+    const userObjIds = userIdsArray
+      .filter((id) => mongoose.Types.ObjectId.isValid(id))
+      .map((id) => new mongoose.Types.ObjectId(id));
+
+    const allCols = await db.listCollections().toArray();
+    const userColNames = allCols
+      .map((c) => c.name)
+      .filter((n) => n.endsWith("_users") || n === "users" || n === "admins");
+
+    await Promise.all(
+      userColNames.map(async (colName) => {
+        try {
+          const col = db.collection(colName);
+          const filterQ: any =
+            userObjIds.length > 0
+              ? { $or: [{ _id: { $in: userObjIds } }, { _id: { $in: userIdsArray } }] }
+              : { _id: { $in: userIdsArray } };
+          const found = await col
+            .find(filterQ)
+            .project({ name: 1, storeName: 1, email: 1, phone: 1, school: 1, avatar: 1, bankDetails: 1 })
+            .toArray();
+          for (const u of found) {
+            userMap.set(u._id.toString(), {
+              _id: u._id.toString(),
+              name: u.name || u.storeName || "Unknown",
+              storeName: u.storeName,
+              email: u.email,
+              phone: u.phone,
+              school: u.school,
+              avatar: u.avatar,
+              bankDetails: u.bankDetails,
+            });
+          }
+        } catch {}
+      })
+    );
+  }
+
+  // Fetch products across all product collections
+  if (allProductIds.size > 0) {
+    const prodIdsArray = Array.from(allProductIds);
+    const prodObjIds = prodIdsArray
+      .filter((id) => mongoose.Types.ObjectId.isValid(id))
+      .map((id) => new mongoose.Types.ObjectId(id));
+
+    const allCols = await db.listCollections().toArray();
+    const productColNames = allCols
+      .map((c) => c.name)
+      .filter((n) => n.endsWith("_products") || n === "products");
+
+    await Promise.all(
+      productColNames.map(async (colName) => {
+        try {
+          const col = db.collection(colName);
+          const filterQ: any =
+            prodObjIds.length > 0
+              ? { $or: [{ _id: { $in: prodObjIds } }, { _id: { $in: prodIdsArray } }] }
+              : { _id: { $in: prodIdsArray } };
+          const found = await col.find(filterQ).project({ title: 1, images: 1, price: 1 }).toArray();
+          for (const p of found) {
+            productMap.set(p._id.toString(), {
+              _id: p._id.toString(),
+              title: p.title,
+              images: p.images,
+              price: p.price,
+            });
+          }
+        } catch {}
+      })
+    );
+  }
+
+  return orders.map((o) => {
+    const bId = (o.buyer?._id || o.buyer)?.toString();
+    const buyer = bId ? userMap.get(bId) || o.buyer || { _id: bId } : o.buyer;
+
+    const items = (o.items || []).map((item: any) => {
+      const sId = (item.seller?._id || item.seller)?.toString();
+      const pId = (item.product?._id || item.product)?.toString();
+      return {
+        ...item,
+        seller: sId ? userMap.get(sId) || item.seller || { _id: sId } : item.seller,
+        product: pId ? productMap.get(pId) || item.product || { _id: pId } : item.product,
+      };
+    });
+
+    return {
+      ...o,
+      _id: o._id.toString(),
+      buyer,
+      items,
+    };
+  });
+}
+
+/**
+ * Finds a single order by ID across all collections and populates its buyer, seller, and product.
+ */
+export async function findOrderByIdAcrossCampuses(id: string): Promise<any | null> {
+  const orders = await findOrdersAcrossCampuses({ _id: id });
+  if (orders.length === 0) return null;
+  const populated = await populateOrdersWithUsersAndProducts(orders);
+  return populated[0] || null;
+}
+
+/**
+ * Updates an order across both the root orders collection and all campus order collections.
+ */
+export async function updateOrderAcrossCampuses(id: string, updates: any): Promise<void> {
+  try {
+    const db = mongoose.connection.db;
+    if (!db) return;
+
+    const allCols = await db.listCollections().toArray();
+    const orderColNames = [
+      ...new Set(
+        allCols
+          .map((c) => c.name)
+          .filter((n) => n.endsWith("_orders") || n === "orders")
+      ),
+    ];
+
+    const conds: any[] = [id];
+    if (mongoose.Types.ObjectId.isValid(id)) {
+      conds.push(new mongoose.Types.ObjectId(id));
+    }
+
+    await Promise.all(
+      orderColNames.map(async (colName) => {
+        try {
+          const col = db.collection(colName);
+          await col.updateMany({ _id: { $in: conds } }, { $set: updates });
+        } catch {}
+      })
+    );
+  } catch (err) {
+    console.error("[updateOrderAcrossCampuses] Error:", err);
+  }
 }

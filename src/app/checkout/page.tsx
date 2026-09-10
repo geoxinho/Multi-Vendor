@@ -94,13 +94,14 @@ export default function CheckoutPage() {
     }
   }, [session, status, items, router]);
 
-  /* Pre-fill name & school from session */
+  /* Pre-fill name & registered school from session */
   useEffect(() => {
     if (session?.user) {
+      const userSchool = session.user.school || (session.user as any).school || "";
       setAddress((a) => ({
         ...a,
         fullName: a.fullName || session.user.name || "",
-        school: a.school || session.user.school || (session.user as any).school || (schools[0]?.name ?? ""),
+        school: userSchool || a.school || (schools[0]?.name ?? ""),
       }));
     }
   }, [session, schools]);
@@ -109,7 +110,8 @@ export default function CheckoutPage() {
     const e: Record<string, string> = {};
     if (!address.fullName.trim() || address.fullName.length < 2) e.fullName = "Enter your full name";
     if (!address.phone.trim() || address.phone.length < 10) e.phone = "Enter a valid 10-digit phone number";
-    if (!address.school) e.school = "Select your campus/school";
+    const currentSchool = address.school || session?.user?.school || "";
+    if (!currentSchool) e.school = "Registered campus is required";
     if (!address.hostel.trim() || address.hostel.length < 2) e.hostel = "Enter your hostel/hall or campus location";
     setErrors(e);
     return Object.keys(e).length === 0;
@@ -300,26 +302,19 @@ export default function CheckoutPage() {
                     <p className="text-xs text-gray-400 mt-1">For delivery updates & seller calls</p>
                   </div>
 
-                  {/* University Campus */}
+                  {/* Registered University Campus */}
                   <div>
-                    <label className="block text-sm font-semibold text-gray-700 mb-1.5">
-                      University Campus <span className="text-red-500">*</span>
-                    </label>
-                    <div className="relative">
-                      <select
-                        value={address.school}
-                        onChange={(e) => setAddress((a) => ({ ...a, school: e.target.value }))}
-                        className="w-full px-4 py-3 rounded-xl border border-[#E5E5E5] text-sm font-medium focus:outline-none focus:ring-2 focus:ring-[#A4860E]/30 focus:border-[#A4860E] transition-colors bg-white appearance-none pr-10"
-                      >
-                        {schools.map((s) => (
-                          <option key={s._id} value={s.name}>
-                            {s.name} {s.city ? `(${s.city}${s.state ? `, ${s.state}` : ""})` : ""}
-                          </option>
-                        ))}
-                      </select>
-                      <span className="absolute right-3.5 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none">
-                        <i className="fa-solid fa-chevron-down text-xs" />
+                    <label className="block text-sm font-semibold text-gray-700 mb-1.5 flex items-center justify-between">
+                      <span>University Campus <span className="text-red-500">*</span></span>
+                      <span className="text-[11px] font-normal text-gray-400 flex items-center gap-1">
+                        <i className="fa-solid fa-lock text-[10px]" /> Registered campus
                       </span>
+                    </label>
+                    <div className="w-full px-4 py-3 rounded-xl border border-[#E5E5E5] bg-gray-50 text-gray-800 text-sm font-semibold flex items-center gap-2.5">
+                      <div className="w-7 h-7 rounded-lg bg-[#fdf8e8] border border-[#e8d48a] flex items-center justify-center text-[#A4860E] shrink-0">
+                        <i className="fa-solid fa-graduation-cap text-xs" />
+                      </div>
+                      <span className="truncate">{address.school || session?.user?.school || "Adeleke University"}</span>
                     </div>
                   </div>
 

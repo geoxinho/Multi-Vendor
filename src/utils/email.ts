@@ -229,13 +229,14 @@ export async function sendWelcomeEmail(email: string, name: string) {
 }
 
 /**
- * Sends order confirmation emails to both the buyer and all sellers involved.
+ * Sends order confirmation emails to buyer, seller(s), and admin dashboard.
  */
 export async function sendOrderConfirmationEmails(
   order: any,
   buyerEmail: string,
   buyerName: string,
-  sellerItemsMap: Map<string, any[]>
+  sellerItemsMap: Map<string, any[] | { sellerName?: string; items: any[] }>,
+  adminEmails?: string[]
 ) {
   const { transporter, hasSMTP, user } = getTransporter();
   let smtpFrom = process.env.SMTP_FROM
@@ -245,7 +246,10 @@ export async function sendOrderConfirmationEmails(
     smtpFrom = `"${smtpFrom}" <${user}>`;
   }
 
-  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : "");
+  const siteUrl =
+    process.env.NEXT_PUBLIC_APP_URL ||
+    process.env.NEXT_PUBLIC_SITE_URL ||
+    (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : "http://localhost:3000");
 
   const itemRowsHtml = order.items
     .map(
@@ -305,13 +309,9 @@ export async function sendOrderConfirmationEmails(
           <span style="font-size:18px;font-weight:800;color:#A4860E;">₦${order.totalAmount.toLocaleString()}</span>
         </div>
 
-        ${
-          siteUrl
-            ? `<div style="text-align:center;margin-top:28px;">
-                <a href="${siteUrl}/dashboard/buyer/orders" style="background:#A4860E;color:#ffffff;padding:12px 24px;border-radius:8px;font-weight:700;font-size:14px;text-decoration:none;display:inline-block;">View My Orders</a>
-               </div>`
-            : ""
-        }
+        <div style="text-align:center;margin-top:28px;">
+          <a href="${siteUrl}/dashboard/buyer/orders" style="background:#A4860E;color:#ffffff;padding:12px 24px;border-radius:8px;font-weight:700;font-size:14px;text-decoration:none;display:inline-block;">View My Orders</a>
+        </div>
       </div>
 
       <div style="background:#f9fafb;padding:16px 32px;text-align:center;border-top:1px solid #e5e7eb;">
@@ -320,7 +320,7 @@ export async function sendOrderConfirmationEmails(
     </div>
   `;
 
-  function buildSellerHtml(items: any[]) {
+  function buildSellerHtml(items: any[], sellerName?: string) {
     const sellerItemRows = items
       .map(
         (i) => `
@@ -337,6 +337,8 @@ export async function sendOrderConfirmationEmails(
       )
       .join("");
 
+    const sellerTotal = items.reduce((acc, curr) => acc + (curr.price * curr.quantity), 0);
+
     return `
       <div style="font-family:'Inter',Arial,sans-serif;max-width:600px;margin:0 auto;background:#ffffff;border:1px solid #e5e7eb;border-radius:16px;overflow:hidden;">
         <div style="background:#A4860E;padding:28px 32px;text-align:center;">
@@ -345,7 +347,7 @@ export async function sendOrderConfirmationEmails(
         </div>
 
         <div style="padding:32px;">
-          <p style="font-size:15px;color:#374151;margin:0 0 16px;">Hello,</p>
+          <p style="font-size:15px;color:#374151;margin:0 0 16px;">Hello <strong>${sellerName || "Partner"}</strong>,</p>
           <p style="font-size:14px;color:#4b5563;margin:0 0 24px;line-height:1.6;">
             Great news! A buyer has placed an order for item(s) in your store. Order reference: <strong>#${order._id.toString().slice(-8).toUpperCase()}</strong>.
           </p>
@@ -364,18 +366,21 @@ export async function sendOrderConfirmationEmails(
             </tbody>
           </table>
 
+          <div style="background:#f9fafb;border-radius:8px;padding:14px 16px;margin-bottom:20px;display:flex;justify-content:space-between;align-items:center;">
+            <span style="font-size:13px;font-weight:600;color:#374151;">Order Value:</span>
+            <span style="font-size:16px;font-weight:800;color:#A4860E;">₦${sellerTotal.toLocaleString()}</span>
+          </div>
+
           <div style="background:#f0fdf4;border:1.5px solid #86efac;border-radius:10px;padding:16px;margin-bottom:20px;">
             <p style="font-size:13px;font-weight:700;color:#166534;margin:0 0 6px;">🔐 Delivery PIN Required</p>
-            <p style="font-size:13px;color:#8a6f0b;margin:0;">
-              After delivering the order, ask the buyer for their 6-digit <strong>Delivery PIN</strong> and enter it in your seller dashboard to confirm delivery and trigger your payout.
+            <p style="font-size:13px;color:#15803d;margin:0;line-height:1.5;">
+              After safely delivering the order to the buyer, ask for their 6-digit <strong>Delivery PIN</strong> and enter it in your seller dashboard. Payout is automatically disbursed 24 hours after delivery confirmation!
             </p>
           </div>
 
-          ${
-            siteUrl
-              ? `<p style="font-size:13px;color:#6b7280;text-align:center;">Head to your <a href="${siteUrl}/dashboard/seller/orders" style="color:#A4860E;font-weight:600;text-decoration:none;">Seller Dashboard</a> to manage this order.</p>`
-              : ""
-          }
+          <div style="text-align:center;margin-top:24px;">
+            <a href="${siteUrl}/dashboard/seller/orders" style="background:#A4860E;color:#ffffff;padding:12px 24px;border-radius:8px;font-weight:700;font-size:14px;text-decoration:none;display:inline-block;">Go to Seller Orders</a>
+          </div>
         </div>
 
         <div style="background:#f9fafb;padding:16px 32px;text-align:center;border-top:1px solid #e5e7eb;">
@@ -385,9 +390,82 @@ export async function sendOrderConfirmationEmails(
     `;
   }
 
+  function buildAdminHtml() {
+    return `
+      <div style="font-family:'Inter',Arial,sans-serif;max-width:600px;margin:0 auto;background:#ffffff;border:1px solid #e5e7eb;border-radius:16px;overflow:hidden;">
+        <div style="background:#0f172a;padding:28px 32px;text-align:center;">
+          <h1 style="color:#ffffff;font-size:22px;margin:0;font-weight:800;">🔔 [Dashboard Alert] New Order Placed</h1>
+          <p style="color:#94a3b8;margin:6px 0 0;font-size:14px;">CampusGo Admin Notification</p>
+        </div>
+
+        <div style="padding:32px;">
+          <div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:12px;padding:16px;margin-bottom:24px;">
+            <p style="margin:0 0 8px;font-size:13px;color:#334155;">
+              <strong>Order Reference:</strong> #${order._id.toString().slice(-8).toUpperCase()}
+            </p>
+            <p style="margin:0 0 8px;font-size:13px;color:#334155;">
+              <strong>Buyer:</strong> ${buyerName} (<a href="mailto:${buyerEmail}" style="color:#A4860E;text-decoration:none;">${buyerEmail}</a>)
+            </p>
+            <p style="margin:0 0 8px;font-size:13px;color:#334155;">
+              <strong>Payment Gateway:</strong> Flutterwave (Paid & Verified)
+            </p>
+            <p style="margin:0;font-size:13px;color:#334155;">
+              <strong>Delivery PIN:</strong> <span style="font-family:monospace;font-weight:800;color:#A4860E;letter-spacing:3px;">${order.deliveryPin}</span>
+            </p>
+          </div>
+
+          <h3 style="font-size:15px;font-weight:700;color:#111827;margin:0 0 12px;">Order Summary (${order.items.length} item${order.items.length > 1 ? "s" : ""})</h3>
+          <table style="width:100%;border-collapse:collapse;font-size:14px;margin-bottom:24px;">
+            <thead>
+              <tr style="background:#f9fafb;color:#6b7280;font-size:12px;text-transform:uppercase;">
+                <th style="padding:8px 10px;text-align:left;">Item</th>
+                <th style="padding:8px 10px;text-align:center;">Qty</th>
+                <th style="padding:8px 10px;text-align:right;">Subtotal</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${itemRowsHtml}
+            </tbody>
+          </table>
+
+          <div style="background:#f9fafb;border-radius:10px;padding:16px;margin-bottom:24px;">
+            <div style="display:flex;justify-content:space-between;margin-bottom:6px;font-size:13px;color:#4b5563;">
+              <span>Platform Revenue (5%):</span>
+              <span style="font-weight:700;color:#16a34a;">+₦${(order.platformFee || 0).toLocaleString()}</span>
+            </div>
+            <div style="display:flex;justify-content:space-between;margin-bottom:6px;font-size:13px;color:#4b5563;">
+              <span>Total Seller Escrow Payout:</span>
+              <span style="font-weight:600;color:#374151;">₦${(order.netPayout || 0).toLocaleString()}</span>
+            </div>
+            <div style="display:flex;justify-content:space-between;font-size:16px;font-weight:800;color:#111827;border-top:1px solid #e5e7eb;padding-top:10px;margin-top:8px;">
+              <span>Total Amount Paid:</span>
+              <span style="color:#A4860E;">₦${order.totalAmount.toLocaleString()}</span>
+            </div>
+          </div>
+
+          <div style="text-align:center;margin-top:24px;">
+            <a href="${siteUrl}/dashboard/admin/orders" style="background:#0f172a;color:#ffffff;padding:12px 24px;border-radius:8px;font-weight:700;font-size:14px;text-decoration:none;display:inline-block;">Open Admin Orders Dashboard</a>
+          </div>
+        </div>
+
+        <div style="background:#f9fafb;padding:16px 32px;text-align:center;border-top:1px solid #e5e7eb;">
+          <p style="font-size:11px;color:#9ca3af;margin:0;">© ${new Date().getFullYear()} CampusGo · Dashboard Alert</p>
+        </div>
+      </div>
+    `;
+  }
+
+  // Resolve admin recipients
+  const finalAdminEmails = new Set<string>();
+  if (adminEmails && Array.isArray(adminEmails)) {
+    adminEmails.forEach((e) => { if (e && typeof e === "string") finalAdminEmails.add(e.trim().toLowerCase()); });
+  }
+  if (process.env.ADMIN_EMAIL) finalAdminEmails.add(process.env.ADMIN_EMAIL.trim().toLowerCase());
+  if (process.env.SMTP_USER) finalAdminEmails.add(process.env.SMTP_USER.trim().toLowerCase());
+
   if (hasSMTP && transporter) {
     try {
-      // Send to buyer
+      // 1. Send to buyer
       if (buyerEmail) {
         try {
           const info = await transporter.sendMail({
@@ -402,20 +480,38 @@ export async function sendOrderConfirmationEmails(
         }
       }
 
-      // Send personalized email to each seller
-      for (const [email, items] of sellerItemsMap) {
-        if (email) {
-          try {
-            const info = await transporter.sendMail({
-              from: smtpFrom,
-              to: email.trim(),
-              subject: "🎉 New Order Received - CampusGo",
-              html: buildSellerHtml(items),
-            });
-            console.log(`[EMAIL SUCCESS] New order alert sent to seller (${email}). MessageID: ${info.messageId}`);
-          } catch (sellerErr) {
-            console.error(`[EMAIL ERROR] Failed sending seller order alert to ${email}:`, sellerErr);
-          }
+      // 2. Send personalized email to each seller
+      for (const [email, value] of sellerItemsMap) {
+        if (!email) continue;
+        const items = Array.isArray(value) ? value : value.items;
+        const sellerName = Array.isArray(value) ? undefined : value.sellerName;
+        if (!items || items.length === 0) continue;
+
+        try {
+          const info = await transporter.sendMail({
+            from: smtpFrom,
+            to: email.trim(),
+            subject: "🎉 New Order Received - CampusGo",
+            html: buildSellerHtml(items, sellerName),
+          });
+          console.log(`[EMAIL SUCCESS] New order alert sent to seller (${email}). MessageID: ${info.messageId}`);
+        } catch (sellerErr) {
+          console.error(`[EMAIL ERROR] Failed sending seller order alert to ${email}:`, sellerErr);
+        }
+      }
+
+      // 3. Send notification to admin / dashboard
+      for (const adminEmail of finalAdminEmails) {
+        try {
+          const info = await transporter.sendMail({
+            from: smtpFrom,
+            to: adminEmail,
+            subject: `🔔 [Admin] New Order #${order._id.toString().slice(-8).toUpperCase()} Placed - CampusGo`,
+            html: buildAdminHtml(),
+          });
+          console.log(`[EMAIL SUCCESS] Admin order notification sent to ${adminEmail}. MessageID: ${info.messageId}`);
+        } catch (adminErr) {
+          console.error(`[EMAIL ERROR] Failed sending admin notification to ${adminEmail}:`, adminErr);
         }
       }
     } catch (err) {
@@ -423,8 +519,12 @@ export async function sendOrderConfirmationEmails(
     }
   } else {
     console.log(`[MOCK EMAIL] Order Confirmation to Buyer (${buyerEmail}). PIN: ${order.deliveryPin}`);
-    for (const [email, items] of sellerItemsMap) {
-      console.log(`[MOCK EMAIL] New Order Alert to Seller (${email}): ${items.map((i) => i.title).join(", ")}`);
+    for (const [email, value] of sellerItemsMap) {
+      const items = Array.isArray(value) ? value : value.items;
+      console.log(`[MOCK EMAIL] New Order Alert to Seller (${email}): ${items.map((i: any) => i.title).join(", ")}`);
+    }
+    for (const adminEmail of finalAdminEmails) {
+      console.log(`[MOCK EMAIL] Admin Order Notification to ${adminEmail} for Order #${order._id}`);
     }
   }
 }

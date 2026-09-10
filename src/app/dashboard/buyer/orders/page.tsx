@@ -37,7 +37,7 @@ export default function BuyerOrdersPage() {
   const [loading, setLoading] = useState(true);
 
   const fetchOrders = () => {
-    fetch("/api/orders")
+    fetch("/api/orders?asBuyer=true")
       .then((r) => r.json())
       .then((d) => { setOrders(d.orders ?? []); setLoading(false); });
   };

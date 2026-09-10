@@ -42,6 +42,11 @@ export async function PATCH(_req: NextRequest, { params }: Params) {
     order.deliveryStatus = "shipped";
     await order.save();
 
+    try {
+      const { updateOrderAcrossCampuses } = await import("@/lib/campusModels");
+      await updateOrderAcrossCampuses(id, { deliveryStatus: "shipped" });
+    } catch {}
+
     return NextResponse.json({ message: "Order marked as shipped", order });
   } catch (err) {
     console.error("[ORDER SHIP]", err);

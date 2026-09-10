@@ -26,8 +26,8 @@ export async function PATCH(req: NextRequest, { params }: Params) {
       return NextResponse.json({ error: "Order not found" }, { status: 404 });
     }
 
-    // Only the buyer of this order can confirm delivery
-    if (order.buyer._id.toString() !== session.user.id) {
+    const buyerId = order.buyer?._id ? order.buyer._id.toString() : order.buyer?.toString();
+    if (buyerId !== session.user.id) {
       return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }
 
@@ -69,6 +69,15 @@ export async function PATCH(req: NextRequest, { params }: Params) {
     order.deliveredAt = deliveredAt;
     order.sellerPayoutReleaseAt = sellerPayoutReleaseAt;
     await order.save();
+
+    try {
+      const { updateOrderAcrossCampuses } = await import("@/lib/campusModels");
+      await updateOrderAcrossCampuses(id, {
+        deliveryStatus: "delivered",
+        deliveredAt,
+        sellerPayoutReleaseAt,
+      });
+    } catch {}
 
     const orderId = (order._id as { toString(): string }).toString().slice(-8).toUpperCase();
     const productTitle = order.items[0]?.title || "your item";

@@ -5,6 +5,7 @@ import { Order } from "@/models/Order";
 import { OrderReport } from "@/models/OrderReport";
 import { User } from "@/models/User";
 import { Product } from "@/models/Product";
+import { findOrderByIdAcrossCampuses } from "@/lib/campusModels";
 import Image from "next/image";
 import Link from "next/link";
 import OrderReportButton from "@/components/orders/OrderReportButton";
@@ -18,16 +19,14 @@ async function getOrderData(id: string, userId: string) {
   await connectDB();
   try {
     const [order, report] = await Promise.all([
-      Order.findById(id)
-        .populate("buyer", "name email")
-        .populate("items.product", "title images _id")
-        .lean(),
+      findOrderByIdAcrossCampuses(id),
       OrderReport.findOne({ order: id, reportedBy: userId }).lean(),
     ]);
 
     if (!order) return { order: null, report: null };
     // Only the buyer (or admin) can view this page
-    if ((order.buyer as { _id: { toString(): string } })._id.toString() !== userId) {
+    const buyerId = order.buyer?._id?.toString() || order.buyer?.toString();
+    if (buyerId !== userId) {
       return { order: null, report: null };
     }
     return {

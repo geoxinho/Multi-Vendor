@@ -1,7 +1,7 @@
 import { auth } from "@/lib/auth";
 import { notFound } from "next/navigation";
 import { connectDB } from "@/lib/db";
-import { Order } from "@/models/Order";
+import { findOrdersAcrossCampuses } from "@/lib/campusModels";
 import Link from "next/link";
 import StatCard from "@/components/dashboard/StatCard";
 import type { Metadata } from "next";
@@ -13,9 +13,9 @@ export default async function BuyerDashboardPage() {
   if (!session?.user) notFound();
   await connectDB();
 
-  const orders = await Order.find({ buyer: session!.user.id }).lean();
+  const orders = await findOrdersAcrossCampuses({ buyer: session!.user.id });
   const totalSpent = orders.filter((o) => o.paymentStatus === "paid")
-    .reduce((sum, o) => sum + o.totalAmount, 0);
+    .reduce((sum, o) => sum + (o.totalAmount || 0), 0);
   const delivered = orders.filter((o) => o.deliveryStatus === "delivered").length;
 
   const currentHour = new Date().getHours();

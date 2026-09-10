@@ -5,7 +5,7 @@ import { Product } from "@/models/Product";
 import { Order } from "@/models/Order";
 import { OrderReport } from "@/models/OrderReport";
 import { SupportTicket } from "@/models/SupportTicket";
-import { getAllActiveSchools, getCampusUserModel, getCampusProductModel } from "@/lib/campusModels";
+import { getAllActiveSchools, getCampusUserModel, getCampusProductModel, findOrdersAcrossCampuses } from "@/lib/campusModels";
 import StatCard from "@/components/dashboard/StatCard";
 import Link from "next/link";
 import type { Metadata } from "next";
@@ -129,10 +129,10 @@ export default async function AdminDashboardPage() {
     inactive90dCount += d;
   }
 
-  const [orderCount, orders, lowStockProducts, pendingReportsCount, openTicketsCount, recentTickets] =
+  const [allOrders, orders, lowStockProducts, pendingReportsCount, openTicketsCount, recentTickets] =
     await Promise.all([
-      Order.countDocuments(),
-      Order.find({ paymentStatus: "paid" }).lean(),
+      findOrdersAcrossCampuses({}),
+      findOrdersAcrossCampuses({ paymentStatus: "paid" }),
       Product.find({ status: "active", stock: { $lte: 3 } })
         .populate("seller", "name email storeName")
         .limit(10)
@@ -142,7 +142,8 @@ export default async function AdminDashboardPage() {
       SupportTicket.find().sort("-createdAt").limit(5).lean(),
     ]);
 
-  const totalRevenue = orders.reduce((sum, o) => sum + o.totalAmount, 0);
+  const orderCount = allOrders.length;
+  const totalRevenue = orders.reduce((sum, o) => sum + (o.totalAmount || 0), 0);
   const pendingPayouts = orders.filter(
     (o) => !o.sellerPaid && o.deliveredAt && o.sellerPayoutReleaseAt && o.sellerPayoutReleaseAt <= new Date()
   ).length;
