@@ -5,7 +5,7 @@ import { Product } from "@/models/Product";
 import { User } from "@/models/User";
 import { Message } from "@/models/Message";
 import { auth } from "@/lib/auth";
-import { verifyPayment } from "@/lib/paystack";
+import { verifyTransaction } from "@/lib/flutterwave";
 import { shippingSchema } from "@/utils/validators";
 import { randomUUID } from "crypto";
 import { sendOrderConfirmationEmails } from "@/utils/email";
@@ -27,28 +27,36 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: addressParsed.error.issues[0].message }, { status: 400 });
     }
 
-    const isTestPlaceholder = !process.env.PAYSTACK_SECRET_KEY ||
-      process.env.PAYSTACK_SECRET_KEY.includes("xxx") ||
-      process.env.PAYSTACK_SECRET_KEY.includes("REPLACE") ||
-      process.env.PAYSTACK_SECRET_KEY === "sk_test_";
+    const flwSecret =
+      process.env.FLW_SECRET_KEY ||
+      process.env.Secret_Key ||
+      process.env.FLUTTERWAVE_SECRET_KEY;
+
+    const isTestPlaceholder =
+      !flwSecret ||
+      flwSecret.includes("xxx") ||
+      flwSecret.includes("REPLACE");
 
     if (!isTestPlaceholder) {
-      // Verify Paystack payment (only when a real secret key is configured)
-      const verification = await verifyPayment(paymentRef);
-      if (!verification.data || verification.data.status !== "success") {
-        console.error("[ORDERS] Paystack verification failed:", verification);
+      // Verify Flutterwave payment (only when a real secret key is configured)
+      const verification = await verifyTransaction(paymentRef);
+      if (
+        verification.status !== "success" ||
+        !verification.data ||
+        verification.data.status !== "successful"
+      ) {
+        console.error("[ORDERS] Flutterwave verification failed:", verification);
         return NextResponse.json({ error: "Payment verification failed. Please contact support." }, { status: 400 });
       }
-      // Verify payment amount matches expected total (within ₦10 tolerance for rounding)
-      const paidAmountNGN = verification.data.amount / 100;
+      // Verify payment amount matches expected total (Flutterwave amount is in NGN)
+      const paidAmountNGN = verification.data.amount;
       const { items: bodyItems } = body;
       if (bodyItems && bodyItems.length > 0) {
-        // We'll validate the actual total after fetching products below
         // Store the verified paid amount for cross-checking
         (req as any)._verifiedAmount = paidAmountNGN;
       }
     } else {
-      console.warn("[ORDERS] Skipping Paystack verification — PAYSTACK_SECRET_KEY is a placeholder/test key.");
+      console.warn("[ORDERS] Skipping Flutterwave verification — secret key is not set or placeholder.");
     }
 
 

@@ -24,7 +24,7 @@ const FAQ_ITEMS = [
   },
   {
     q: "How long does seller payout transfer take?",
-    a: "Once the 24-hour post-delivery window completes, funds are transferred directly into your registered bank account via Paystack transfer.",
+    a: "Once the 24-hour post-delivery window completes, funds are transferred directly into your registered bank account via Flutterwave transfer.",
   },
 ];
 

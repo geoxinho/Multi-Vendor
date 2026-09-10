@@ -106,7 +106,7 @@ export default function BankAccountVerifier({
     b.name.toLowerCase().includes(search.toLowerCase())
   );
 
-  // Trigger Paystack verification
+  // Trigger Flutterwave verification
   const verify = useCallback(
     async (acctNum: string, bCode: string, bName: string) => {
       if (acctNum.length !== 10 || !bCode) return;
@@ -145,6 +145,11 @@ export default function BankAccountVerifier({
         };
         setVerifiedAccount(verified);
         onVerified(verified);
+
+        // Store suggestion for future convenience
+        try {
+          localStorage.setItem("cgo_suggested_acct", acctNum);
+        } catch {}
       } catch {
         setVerifyError("Network error. Click below to enter your account name manually.");
         setAllowManual(true);
@@ -162,7 +167,7 @@ export default function BankAccountVerifier({
       setVerifyError("");
       onVerified(null);
       if (acctNum.length === 10 && bCode) {
-        debounceRef.current = setTimeout(() => verify(acctNum, bCode, bName), 600);
+        debounceRef.current = setTimeout(() => verify(acctNum, bCode, bName), 450);
       }
     },
     [verify, onVerified]
@@ -206,6 +211,14 @@ export default function BankAccountVerifier({
     }
   };
 
+  const applySuggestedAccount = (suggested: string) => {
+    const cleaned = suggested.replace(/\D/g, "").slice(0, 10);
+    setAccountNumber(cleaned);
+    if (bankCode) {
+      scheduleVerify(cleaned, bankCode, bankName);
+    }
+  };
+
   const handleManualNameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const val = e.target.value;
     setManualAccountName(val);
@@ -240,6 +253,11 @@ export default function BankAccountVerifier({
       onVerified(verified);
     }
   };
+
+  // Check for saved suggestions
+  const suggestedNumber =
+    (typeof window !== "undefined" && localStorage.getItem("cgo_suggested_acct")) ||
+    (initialAccountNumber && initialAccountNumber !== accountNumber ? initialAccountNumber : "");
 
   return (
     <div className="space-y-5">
@@ -317,22 +335,43 @@ export default function BankAccountVerifier({
 
       {/* ── Account Number ── */}
       <div>
-        <label htmlFor="account-number" className="block text-sm font-semibold text-[#111111] mb-1.5">
-          Account Number <span className="text-red-500">*</span>
-        </label>
+        <div className="flex items-center justify-between mb-1.5">
+          <label htmlFor="account-number" className="block text-sm font-semibold text-[#111111]">
+            Account Number <span className="text-red-500">*</span>
+          </label>
+          {suggestedNumber && suggestedNumber !== accountNumber && (
+            <button
+              type="button"
+              onClick={() => applySuggestedAccount(suggestedNumber)}
+              className="text-xs font-semibold text-[#A4860E] hover:underline flex items-center gap-1 bg-[#fdf8e8] px-2 py-0.5 rounded-md border border-[#e8d48a]"
+            >
+              <i className="fa-solid fa-lightbulb text-[10px]" />
+              Suggest: {suggestedNumber}
+            </button>
+          )}
+        </div>
         <input
           id="account-number"
           type="text"
           inputMode="numeric"
           pattern="\d*"
           maxLength={10}
+          autoComplete="account-number"
+          list="seller-account-suggestions"
           value={accountNumber}
           onChange={handleAccountNumberChange}
           placeholder="Enter 10-digit account number"
           className="w-full px-4 py-2.5 rounded-xl border border-[#E5E5E5] focus:outline-none focus:ring-2 focus:ring-[#A4860E]/40 focus:border-[#A4860E] bg-white text-sm font-mono tracking-widest transition-colors"
         />
+        {suggestedNumber && (
+          <datalist id="seller-account-suggestions">
+            <option value={suggestedNumber} />
+          </datalist>
+        )}
         <div className="flex justify-between mt-1">
-          <p className="text-xs text-[#9B9B9B]">Digits only, exactly 10 characters</p>
+          <p className="text-xs text-[#9B9B9B]">
+            {bankCode ? "Auto-verifies account name on 10 digits" : "Please select your bank first"}
+          </p>
           <p className={`text-xs font-mono ${accountNumber.length === 10 ? "text-[#A4860E]" : "text-[#9B9B9B]"}`}>
             {accountNumber.length}/10
           </p>
@@ -373,7 +412,7 @@ export default function BankAccountVerifier({
           {verifying ? (
             <>
               <i className="fa-solid fa-circle-notch animate-spin text-sm mt-0.5 shrink-0" />
-              <span className="font-medium">Verifying account with Paystack…</span>
+              <span className="font-medium">Verifying account with Flutterwave…</span>
             </>
           ) : verifiedAccount ? (
             <>

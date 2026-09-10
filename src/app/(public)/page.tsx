@@ -481,7 +481,7 @@ export default async function HomePage() {
             {
               icon: "fa-lock",
               title: "Secure Payment",
-              desc: "Paystack-powered safe checkout",
+              desc: "Flutterwave-powered safe checkout",
               iconColor: "text-[#059669]",
               iconBg: "bg-[#ECFDF5] border-[#A7F3D0]/60",
             },

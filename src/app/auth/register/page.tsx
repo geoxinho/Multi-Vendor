@@ -638,10 +638,23 @@ function RegisterForm() {
 
                         {/* Account number */}
                         <div>
-                          <label className={labelClass}>Account Number <span className="text-[#DC2626]">*</span></label>
+                          <div className="flex items-center justify-between mb-1.5">
+                            <label className={labelClass}>Account Number <span className="text-[#DC2626]">*</span></label>
+                            {typeof window !== "undefined" && localStorage.getItem("cgo_suggested_acct") && localStorage.getItem("cgo_suggested_acct") !== form.accountNumber && (
+                              <button
+                                type="button"
+                                onClick={() => setForm((f) => ({ ...f, accountNumber: localStorage.getItem("cgo_suggested_acct") || "" }))}
+                                className="text-[11px] font-semibold text-[#A4860E] hover:underline flex items-center gap-1 bg-[#fdf8e8] px-2 py-0.5 rounded-md border border-[#e8d48a]"
+                              >
+                                <i className="fa-solid fa-lightbulb text-[9px]" />
+                                Suggest: {localStorage.getItem("cgo_suggested_acct")}
+                              </button>
+                            )}
+                          </div>
                           <div className="relative">
                             <i className="fa-solid fa-hashtag absolute left-3.5 top-1/2 -translate-y-1/2 text-[#9B9B9B] text-xs" />
                             <input type="text" required value={form.accountNumber}
+                              autoComplete="account-number"
                               onChange={(e) => setForm((f) => ({ ...f, accountNumber: e.target.value.replace(/\D/g, "") }))}
                               placeholder="10-digit account number" maxLength={10}
                               className={`${inputClass} font-mono tracking-wider`} />

@@ -8,20 +8,33 @@ import Image from "next/image";
 import Link from "next/link";
 import { useCartStore } from "@/store/cartStore";
 
-/* Tell TypeScript about the Paystack global injected by the script tag */
+/* Tell TypeScript about the Flutterwave global injected by the script tag */
 declare global {
   interface Window {
-    PaystackPop: {
-      setup: (opts: {
-        key: string;
+    FlutterwaveCheckout: (options: {
+      public_key: string;
+      tx_ref: string;
+      amount: number;
+      currency: string;
+      payment_options?: string;
+      customer: {
         email: string;
-        amount: number;
-        ref: string;
-        currency?: string;
-        onClose: () => void;
-        callback: (response: { reference: string }) => void;
-      }) => { openIframe: () => void };
-    };
+        phone_number?: string;
+        name: string;
+      };
+      customizations?: {
+        title?: string;
+        description?: string;
+        logo?: string;
+      };
+      callback: (response: {
+        transaction_id: number | string;
+        tx_ref: string;
+        flw_ref?: string;
+        status?: string;
+      }) => void;
+      onclose: () => void;
+    }) => void;
   }
 }
 
@@ -153,36 +166,55 @@ export default function CheckoutPage() {
 
   const handlePay = () => {
     if (!validate()) return;
-    if (!scriptLoaded || !window.PaystackPop) {
-      setServerError("Paystack payment gateway is loading. Please wait a moment and try again.");
+    if (!scriptLoaded || typeof window.FlutterwaveCheckout !== "function") {
+      setServerError("Flutterwave payment gateway is loading. Please wait a moment and try again.");
+      return;
+    }
+
+    const flwKey =
+      process.env.NEXT_PUBLIC_FLW_PUBLIC_KEY ||
+      process.env.NEXT_PUBLIC_FLUTTERWAVE_PUBLIC_KEY ||
+      "";
+
+    if (!flwKey) {
+      setServerError("Flutterwave public key is not configured. Please contact support.");
       return;
     }
 
     setPaying(true);
     setServerError("");
 
-    const ref = `mkt_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
-
+    const ref = `cgo_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
     callbackFired.current = false;
-    const handler = window.PaystackPop.setup({
-      key: process.env.NEXT_PUBLIC_PAYSTACK_PUBLIC_KEY!,
-      email: session!.user.email!,
-      amount: Math.round(totalPrice() * 100),
-      ref,
+
+    window.FlutterwaveCheckout({
+      public_key: flwKey,
+      tx_ref: ref,
+      amount: totalPrice(),
       currency: "NGN",
-      onClose: () => {
+      payment_options: "card,banktransfer,ussd",
+      customer: {
+        email: session!.user.email!,
+        phone_number: address.phone,
+        name: address.fullName,
+      },
+      customizations: {
+        title: "CampusGo Marketplace",
+        description: `Payment for ${items.length} item${items.length > 1 ? "s" : ""}`,
+        logo: typeof window !== "undefined" ? `${window.location.origin}/main_logo.png` : undefined,
+      },
+      callback: (response) => {
+        callbackFired.current = true;
+        const transactionRef = String(response.transaction_id || response.tx_ref || ref);
+        createOrder(transactionRef);
+      },
+      onclose: () => {
         if (!callbackFired.current) {
           setPaying(false);
           setServerError("Payment window closed. Your order was not completed.");
         }
       },
-      callback: (response) => {
-        callbackFired.current = true;
-        createOrder(response.reference);
-      },
     });
-
-    handler.openIframe();
   };
 
   const total = totalPrice();
@@ -198,7 +230,7 @@ export default function CheckoutPage() {
   return (
     <>
       <Script
-        src="https://js.paystack.co/v1/inline.js"
+        src="https://checkout.flutterwave.com/v3.js"
         onReady={() => setScriptLoaded(true)}
       />
 
@@ -377,14 +409,14 @@ export default function CheckoutPage() {
                   ) : (
                     <>
                       <i className="fa-solid fa-lock text-sm" />
-                      Pay ₦{total.toLocaleString()} with Paystack
+                      Pay ₦{total.toLocaleString()} with Flutterwave
                     </>
                   )}
                 </button>
 
                 <p className="text-center text-xs text-gray-400 mt-3 flex items-center justify-center gap-1">
                   <i className="fa-solid fa-shield-halved text-[#A4860E] text-xs" />
-                  Secured & Escrow Protected by CampusGo
+                  Secured &amp; Escrow Protected by CampusGo via Flutterwave
                 </p>
               </div>
             </div>

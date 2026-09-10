@@ -514,7 +514,7 @@ export default function AdminOrderDetailPage({ params }: { params: Promise<{ id:
             <h2 className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">Payment Details</h2>
             <div className="flex justify-between text-gray-500">
               <span>Provider:</span>
-              <span className="font-semibold text-gray-800">Paystack</span>
+              <span className="font-semibold text-gray-800">Flutterwave</span>
             </div>
             <div>
               <span className="text-gray-400 block mb-0.5">Reference:</span>

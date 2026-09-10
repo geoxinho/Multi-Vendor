@@ -48,44 +48,50 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const secret = process.env.PAYSTACK_SECRET_KEY;
+    const secret =
+      process.env.FLW_SECRET_KEY ||
+      process.env.Secret_Key ||
+      process.env.FLUTTERWAVE_SECRET_KEY;
 
-    // ── No Paystack key: return manual-entry signal ──────────────────────
+    // ── No Flutterwave key: return manual-entry signal ──────────────────────
     if (!secret) {
       return NextResponse.json(
-        { manual: true, message: "Paystack not configured — enter account name manually." },
+        { manual: true, message: "Flutterwave not configured — enter account name manually." },
         { status: 200 }
       );
     }
 
-    // ── Live Paystack resolve ─────────────────────────────────────────────
-    let paystackRes: Response;
-    let paystackJson: Record<string, unknown>;
+    // ── Live Flutterwave resolve ─────────────────────────────────────────────
+    let flwRes: Response;
+    let flwJson: Record<string, unknown>;
 
     try {
-      paystackRes = await fetch(
-        `https://api.paystack.co/bank/resolve?account_number=${accountNumber.trim()}&bank_code=${bankCode.trim()}`,
-        {
-          headers: { Authorization: `Bearer ${secret}` },
-          signal: AbortSignal.timeout(8000), // 8 second timeout
-        }
-      );
-      paystackJson = await paystackRes.json();
+      flwRes = await fetch("https://api.flutterwave.com/v3/accounts/resolve", {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${secret.trim()}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          account_number: accountNumber.trim(),
+          account_bank: bankCode.trim(),
+        }),
+        signal: AbortSignal.timeout(10000),
+      });
+      flwJson = await flwRes.json();
     } catch (networkErr) {
       console.error("[VERIFY BANK] Network/timeout error:", networkErr);
-      // Network unavailable — fall back to manual entry
       return NextResponse.json(
         { manual: true, message: "Verification service unreachable — enter account name manually." },
         { status: 200 }
       );
     }
 
-    if (!paystackRes.ok || !paystackJson.status) {
-      const message = (paystackJson?.message as string) ?? "";
-      console.error("[VERIFY BANK] Paystack error:", paystackRes.status, message);
+    if (!flwRes.ok || flwJson.status !== "success" || !flwJson.data) {
+      const message = (flwJson?.message as string) ?? "";
+      console.error("[VERIFY BANK] Flutterwave error:", flwRes.status, message);
 
-      // 401 = bad key, 422 = account not found, others = service issues
-      if (paystackRes.status === 401) {
+      if (flwRes.status === 401) {
         return NextResponse.json(
           { manual: true, message: "Verification service not available — enter account name manually." },
           { status: 200 }
@@ -94,7 +100,10 @@ export async function POST(req: NextRequest) {
       return NextResponse.json(
         {
           error:
-            paystackRes.status === 422 || message.toLowerCase().includes("not found")
+            flwRes.status === 422 ||
+            flwRes.status === 400 ||
+            message.toLowerCase().includes("not found") ||
+            message.toLowerCase().includes("unable to resolve")
               ? "Account not found. Please check the account number and selected bank."
               : "Could not verify account. Please check your details and try again.",
         },
@@ -102,7 +111,7 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const data = paystackJson.data as { account_name: string; account_number: string };
+    const data = flwJson.data as { account_name: string; account_number: string };
     return NextResponse.json({
       accountName: data.account_name,
       accountNumber: data.account_number,

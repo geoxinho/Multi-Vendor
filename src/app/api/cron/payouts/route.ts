@@ -61,10 +61,13 @@ export async function GET(req: NextRequest) {
             continue;
           }
 
-          const paystackSecret = process.env.PAYSTACK_SECRET_KEY;
+          const flwSecret =
+            process.env.FLW_SECRET_KEY ||
+            process.env.Secret_Key ||
+            process.env.FLUTTERWAVE_SECRET_KEY;
 
-          if (!paystackSecret || paystackSecret.includes("xxx") || paystackSecret.trim() === "") {
-            // Mock mode for dev/staging
+          if (!flwSecret || flwSecret.includes("xxx") || flwSecret.trim() === "") {
+            // Mock mode for dev/staging when keys are missing
             console.log(
               `[PAYOUT MOCK] Disbursed ₦${amount} to Seller ${seller.name} (${seller.bankDetails?.accountNumber ?? "no account"})`
             );
@@ -75,7 +78,7 @@ export async function GET(req: NextRequest) {
               continue;
             }
 
-            // Require a valid numeric bank code — bankName is NOT a valid Paystack bank_code
+            // Require a valid bank code
             const bankCode = seller.bankDetails.bankCode?.trim();
             if (!bankCode) {
               console.error(`[PAYOUT CRON] Seller ${sellerId} is missing bankCode — skipping. They must re-save bank details.`);
@@ -84,54 +87,34 @@ export async function GET(req: NextRequest) {
             }
 
             try {
-              // 1. Create Transfer Recipient
-              const recipientRes = await fetch("https://api.paystack.co/transferrecipient", {
+              // Initiate Flutterwave transfer
+              const transferRes = await fetch("https://api.flutterwave.com/v3/transfers", {
                 method: "POST",
                 headers: {
-                  Authorization: `Bearer ${paystackSecret}`,
+                  Authorization: `Bearer ${flwSecret.trim()}`,
                   "Content-Type": "application/json",
                 },
                 body: JSON.stringify({
-                  type: "nuban",
-                  name: seller.bankDetails.accountName,
+                  account_bank: bankCode,
                   account_number: seller.bankDetails.accountNumber,
-                  bank_code: bankCode,
+                  amount: Math.round(amount),
+                  narration: `Payout for order #${order._id.toString().slice(-8).toUpperCase()}`,
                   currency: "NGN",
+                  reference: `cgo_cron_${order._id}_${sellerId}_${Date.now()}`,
+                  debit_currency: "NGN",
                 }),
+                signal: AbortSignal.timeout(12000),
               });
-              const recipientData = await recipientRes.json();
 
-              if (!recipientData.status) {
-                console.error(`[PAYOUT PAYSTACK ERROR] Recipient creation failed:`, recipientData.message);
-                allSucceeded = false;
-                continue;
-              }
-
-              const recipientCode = recipientData.data.recipient_code;
-
-              // 2. Initiate Transfer
-              const transferRes = await fetch("https://api.paystack.co/transfer", {
-                method: "POST",
-                headers: {
-                  Authorization: `Bearer ${paystackSecret}`,
-                  "Content-Type": "application/json",
-                },
-                body: JSON.stringify({
-                  source: "balance",
-                  amount: Math.round(amount * 100), // Convert to kobo
-                  recipient: recipientCode,
-                  reason: `Payout for order ${order._id}`,
-                }),
-              });
               const transferData = await transferRes.json();
 
-              if (!transferData.status) {
-                console.error(`[PAYOUT PAYSTACK ERROR] Transfer failed:`, transferData.message);
+              if (!transferRes.ok || transferData.status !== "success") {
+                console.error(`[PAYOUT FLUTTERWAVE ERROR] Transfer failed:`, transferData.message || transferData);
                 allSucceeded = false;
                 continue;
               }
 
-              console.log(`[PAYOUT SUCCESS] Disbursed ₦${amount} to Seller ${seller.name}`);
+              console.log(`[PAYOUT SUCCESS] Disbursed ₦${amount} to Seller ${seller.name} via Flutterwave`);
             } catch (payoutErr) {
               console.error(`[PAYOUT FAIL] Error paying seller ${sellerId}:`, payoutErr);
               allSucceeded = false;

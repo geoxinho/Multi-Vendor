@@ -52,54 +52,67 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const secret = process.env.PAYSTACK_SECRET_KEY;
+    const secret =
+      process.env.FLW_SECRET_KEY ||
+      process.env.Secret_Key ||
+      process.env.FLUTTERWAVE_SECRET_KEY;
+
     if (!secret || secret.includes("REPLACE_WITH_YOUR")) {
       return NextResponse.json({
         manual: true,
-        message: "Paystack live key is not configured — enter account name manually.",
+        message: "Flutterwave key is not configured — enter account name manually.",
       });
     }
 
     try {
-      const paystackRes = await fetch(
-        `https://api.paystack.co/bank/resolve?account_number=${accountNumber.trim()}&bank_code=${bankCode.trim()}`,
-        {
-          headers: { Authorization: `Bearer ${secret}` },
-          signal: AbortSignal.timeout(8000),
-        }
-      );
+      const flwRes = await fetch("https://api.flutterwave.com/v3/accounts/resolve", {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${secret.trim()}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          account_number: accountNumber.trim(),
+          account_bank: bankCode.trim(),
+        }),
+        signal: AbortSignal.timeout(10000),
+      });
 
-      const paystackJson = await paystackRes.json();
+      const flwJson = await flwRes.json();
 
-      if (paystackRes.ok && paystackJson.status && paystackJson.data) {
-        const { account_name, account_number } = paystackJson.data;
+      if (flwRes.ok && flwJson.status === "success" && flwJson.data) {
+        const { account_name, account_number } = flwJson.data;
         return NextResponse.json({
           accountName: account_name,
           accountNumber: account_number,
-          verifiedByPaystack: true,
+          verifiedByFlutterwave: true,
         });
       }
 
-      if (paystackRes.status === 401) {
+      if (flwRes.status === 401) {
         return NextResponse.json({
           manual: true,
-          message: "Paystack secret key is invalid — enter account name manually.",
+          message: "Flutterwave secret key is invalid — enter account name manually.",
         });
       }
 
-      // Account not found on Paystack
+      // Account not found or could not be resolved
+      const msg = flwJson?.message || "";
       return NextResponse.json(
         {
           error:
-            paystackRes.status === 422 || paystackJson.message?.toLowerCase().includes("not found")
-              ? "Account not found on selected bank. Please check your details."
-              : "Could not auto-verify account.",
+            flwRes.status === 422 ||
+            flwRes.status === 400 ||
+            msg.toLowerCase().includes("not found") ||
+            msg.toLowerCase().includes("unable to resolve")
+              ? "Account not found on selected bank. Please check your account number and bank."
+              : `Could not verify account: ${msg || "Check details"}`,
           allowManual: true,
         },
         { status: 422 }
       );
     } catch (netErr) {
-      console.warn("[VERIFY ACCOUNT] Paystack network/timeout:", netErr);
+      console.warn("[VERIFY ACCOUNT] Flutterwave network/timeout:", netErr);
       return NextResponse.json({
         manual: true,
         message: "Verification service unreachable — enter account name manually.",

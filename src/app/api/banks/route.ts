@@ -46,7 +46,11 @@ export async function GET() {
       return NextResponse.json({ banks: cachedBanks });
     }
 
-    const secret = process.env.PAYSTACK_SECRET_KEY;
+    const secret =
+      process.env.FLW_SECRET_KEY ||
+      process.env.Secret_Key ||
+      process.env.FLUTTERWAVE_SECRET_KEY;
+
     if (!secret || secret.includes("REPLACE_WITH_YOUR")) {
       cachedBanks = FALLBACK_BANKS;
       cacheTimestamp = now;
@@ -54,20 +58,23 @@ export async function GET() {
     }
 
     try {
-      const res = await fetch("https://api.paystack.co/bank?currency=NGN&perPage=100", {
-        headers: { Authorization: `Bearer ${secret}` },
+      const res = await fetch("https://api.flutterwave.com/v3/banks/NG", {
+        headers: {
+          Authorization: `Bearer ${secret.trim()}`,
+          "Content-Type": "application/json",
+        },
         next: { revalidate: 21600 },
-        signal: AbortSignal.timeout(6000),
+        signal: AbortSignal.timeout(8000),
       });
 
       if (res.ok) {
         const json = await res.json();
-        if (json.status && Array.isArray(json.data) && json.data.length > 0) {
+        if (json.status === "success" && Array.isArray(json.data) && json.data.length > 0) {
           const banks = json.data.map(
-            (b: { name: string; code: string; slug: string }) => ({
+            (b: { name: string; code: string; slug?: string }) => ({
               name: b.name,
               code: b.code,
-              slug: b.slug,
+              slug: b.slug || b.name.toLowerCase().replace(/[^a-z0-9]+/g, "-"),
             })
           );
           cachedBanks = banks;
@@ -76,7 +83,7 @@ export async function GET() {
         }
       }
     } catch (err) {
-      console.warn("[BANKS API] Paystack fetch failed, using fallback list:", err);
+      console.warn("[BANKS API] Flutterwave fetch failed, using fallback list:", err);
     }
 
     // Fallback to static bank list on any error or missing data

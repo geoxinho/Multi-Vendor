@@ -154,7 +154,7 @@ export default function Footer() {
           </div>
           <p>
             Payments secured by{" "}
-            <span className="font-semibold text-[#6B6B6B]">Paystack</span>
+            <span className="font-semibold text-[#6B6B6B]">Flutterwave</span>
           </p>
         </div>
       </div>

@@ -102,13 +102,16 @@ export async function POST(req: NextRequest) {
       ordersToMarkPaid.push(order);
     }
 
-    // Paystack Transfer if secret key configured
-    const paystackSecret = process.env.PAYSTACK_SECRET_KEY;
-    let paystackRef = "";
+    // Flutterwave Transfer if secret key configured
+    const flwSecret =
+      process.env.FLW_SECRET_KEY ||
+      process.env.Secret_Key ||
+      process.env.FLUTTERWAVE_SECRET_KEY;
+
+    let flwRef = "";
     let transferSucceeded = false;
 
-    if (paystackSecret && !paystackSecret.includes("xxx") && paystackSecret.trim() !== "") {
-      // Require a valid numeric bank code — bankName is NOT a valid Paystack bank_code
+    if (flwSecret && !flwSecret.includes("xxx") && flwSecret.trim() !== "") {
       const bankCode = seller.bankDetails.bankCode?.trim();
       if (!bankCode) {
         return NextResponse.json(
@@ -121,59 +124,33 @@ export async function POST(req: NextRequest) {
       }
 
       try {
-        // 1. Create / resolve a transfer recipient for the seller's bank account
-        const recipientRes = await fetch("https://api.paystack.co/transferrecipient", {
+        // Initiate transfer via Flutterwave Transfers API
+        const transferRes = await fetch("https://api.flutterwave.com/v3/transfers", {
           method: "POST",
           headers: {
-            Authorization: `Bearer ${paystackSecret}`,
+            Authorization: `Bearer ${flwSecret.trim()}`,
             "Content-Type": "application/json",
           },
           body: JSON.stringify({
-            type: "nuban",
-            name: seller.bankDetails.accountName,
+            account_bank: bankCode,
             account_number: seller.bankDetails.accountNumber,
-            bank_code: bankCode,
+            amount: Math.round(withdrawAmount),
+            narration: `CampusGo Seller Withdrawal for ${seller.name}`,
             currency: "NGN",
+            reference: `cgo_wd_${sellerId}_${Date.now()}`,
+            debit_currency: "NGN",
           }),
+          signal: AbortSignal.timeout(12000),
         });
-        const recipientData = await recipientRes.json();
-        console.log("[WITHDRAW] Recipient response:", JSON.stringify(recipientData));
 
-        if (!recipientData.status) {
-          const msg = recipientData.message || "Failed to create transfer recipient on Paystack.";
-          console.error("[WITHDRAW] Recipient creation failed:", msg);
-          return NextResponse.json(
-            {
-              error: `Could not set up bank transfer: ${msg}. Please verify your bank details in Seller Settings.`,
-            },
-            { status: 502 }
-          );
-        }
-
-        const recipientCode = recipientData.data.recipient_code;
-
-        // 2. Initiate the transfer from Paystack balance → seller's bank account
-        const transferRes = await fetch("https://api.paystack.co/transfer", {
-          method: "POST",
-          headers: {
-            Authorization: `Bearer ${paystackSecret}`,
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            source: "balance",
-            amount: Math.round(withdrawAmount * 100), // kobo
-            recipient: recipientCode,
-            reason: `CampusGo Seller Withdrawal for ${seller.name}`,
-          }),
-        });
         const transferData = await transferRes.json();
-        console.log("[WITHDRAW] Transfer response:", JSON.stringify(transferData));
+        console.log("[WITHDRAW] Flutterwave transfer response:", JSON.stringify(transferData));
 
-        if (transferData.status) {
-          paystackRef = transferData.data.reference || transferData.data.transfer_code || "";
+        if (transferRes.ok && transferData.status === "success") {
+          flwRef = transferData.data?.reference || String(transferData.data?.id || "");
           transferSucceeded = true;
         } else {
-          const msg = transferData.message || "Paystack transfer initiation failed.";
+          const msg = transferData.message || "Flutterwave transfer initiation failed.";
           console.error("[WITHDRAW] Transfer failed:", msg);
           return NextResponse.json(
             {
@@ -182,19 +159,19 @@ export async function POST(req: NextRequest) {
             { status: 502 }
           );
         }
-      } catch (paystackErr) {
-        console.error("[WITHDRAW PAYSTACK ERROR]", paystackErr);
+      } catch (flwErr) {
+        console.error("[WITHDRAW FLUTTERWAVE ERROR]", flwErr);
         return NextResponse.json(
-          { error: "Could not reach Paystack. Please try again in a moment." },
+          { error: "Could not reach Flutterwave. Please try again in a moment." },
           { status: 503 }
         );
       }
     } else {
-      // No live Paystack key — queue for manual processing
+      // No live Flutterwave key — queue for manual processing
       transferSucceeded = false;
     }
 
-    // Record Withdrawal — only "completed" when Paystack confirmed the transfer
+    // Record Withdrawal — only "completed" when Flutterwave confirmed the transfer
     const withdrawal = await Withdrawal.create({
       seller: sellerId,
       amount: withdrawAmount,
@@ -205,11 +182,11 @@ export async function POST(req: NextRequest) {
         accountName: seller.bankDetails.accountName,
       },
       status: transferSucceeded ? "completed" : "pending",
-      reference: paystackRef,
+      reference: flwRef,
       processedAt: transferSucceeded ? new Date() : undefined,
     });
 
-    // Mark orders as paid out only after a confirmed Paystack transfer
+    // Mark orders as paid out only after a confirmed Flutterwave transfer
     for (const order of ordersToMarkPaid) {
       order.sellerPaid = true;
       await order.save();

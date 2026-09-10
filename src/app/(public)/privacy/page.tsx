@@ -58,7 +58,7 @@ export default function PrivacyPage() {
                 <p className="font-semibold text-[#111111] text-xs uppercase tracking-wide mb-1.5">Financial Data — Sellers Only</p>
                 <ul>
                   <li>Bank name and account number</li>
-                  <li>Account name (verified via Paystack)</li>
+                  <li>Account name (verified via Flutterwave)</li>
                   <li>This data is used solely for processing payouts</li>
                 </ul>
               </div>
@@ -78,7 +78,7 @@ export default function PrivacyPage() {
               <li>To create and manage your CampusGo account.</li>
               <li>To process orders and facilitate transactions between buyers and sellers.</li>
               <li>To verify your identity during registration (KYC).</li>
-              <li>To process payouts to seller bank accounts via Paystack.</li>
+              <li>To process payouts to seller bank accounts via Flutterwave.</li>
               <li>To send transactional emails (order updates, verification codes).</li>
               <li>To detect and prevent fraud or prohibited activity.</li>
               <li>To improve platform performance and user experience.</li>
@@ -89,7 +89,7 @@ export default function PrivacyPage() {
           <Section icon="fa-share-nodes" title="Sharing of Information">
             <p className="mb-2">We do <strong>not</strong> sell your personal data. We may share it with:</p>
             <ul>
-              <li><strong>Paystack</strong> — for payment processing and bank account verification.</li>
+              <li><strong>Flutterwave</strong> — for payment processing and bank account verification.</li>
               <li><strong>Cloudinary</strong> — for secure image hosting (profile and product images).</li>
               <li><strong>Email service providers</strong> — for transactional emails only.</li>
               <li><strong>Law enforcement</strong> — where required by law or court order.</li>
