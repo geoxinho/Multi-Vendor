@@ -7,7 +7,7 @@ import Link from "next/link";
 import { loginSchema } from "@/utils/validators";
 
 const ROLE_HOME: Record<string, string> = {
-  buyer: "/",
+  buyer: "/dashboard/buyer",
   seller: "/dashboard/seller",
   admin: "/dashboard/admin",
 };
@@ -75,8 +75,10 @@ function LoginForm() {
           <Link href="/" className="inline-flex items-center justify-center">
             <img src="/main_logo.png" alt="Marketplace Logo" className="h-16 md:h-20 w-auto object-contain hover:scale-105 transition-transform" />
           </Link>
-          <h1 className="text-2xl sm:text-3xl font-extrabold text-[#111111] mt-6 mb-1">Sign in</h1>
-          <p className="text-sm text-[#6B6B6B]">Welcome back to your account.</p>
+          <h1 className="text-2xl sm:text-3xl font-extrabold text-[#111111] mt-6 mb-1">Sign In</h1>
+          <p className="text-sm text-[#6B6B6B] max-w-md mx-auto">
+            One unified sign-in for both Buyers and Sellers. Access your orders, inventory, and account.
+          </p>
         </div>
 
         <div className="border border-[#E5E5E5] rounded-2xl p-7 bg-white shadow-lg shadow-gray-100/50">

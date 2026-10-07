@@ -1,7 +1,9 @@
 "use client";
 
+import { useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import BecomeSellerModal from "@/components/shared/BecomeSellerModal";
 
 interface NavItem {
   href: string;
@@ -16,6 +18,7 @@ interface DashboardSidebarProps {
 
 export default function DashboardSidebar({ title, navItems }: DashboardSidebarProps) {
   const pathname = usePathname();
+  const [openSellerModal, setOpenSellerModal] = useState(false);
 
   const isActive = (href: string) => {
     if (href === "/dashboard/buyer" || href === "/dashboard/seller" || href === "/dashboard/admin") {
@@ -49,8 +52,35 @@ export default function DashboardSidebar({ title, navItems }: DashboardSidebarPr
               );
             })}
           </nav>
+
+          {/* Become a Seller card in sidebar for buyers */}
+          {title === "Buyer Dashboard" && (
+            <div className="mt-8 pt-6 border-t border-gray-100">
+              <div className="p-4 rounded-2xl bg-gradient-to-br from-[#fdf8e8] to-amber-50 border border-[#e8d48a]/80 text-left">
+                <div className="w-8 h-8 rounded-lg bg-[#A4860E] text-white flex items-center justify-center text-xs mb-2.5 shadow-sm">
+                  <i className="fa-solid fa-store" />
+                </div>
+                <h4 className="text-xs font-bold text-gray-900">Want to Sell?</h4>
+                <p className="text-[11px] text-gray-500 mt-0.5 leading-relaxed">
+                  List items and sell to campus students with 24-hr escrow.
+                </p>
+                <button
+                  type="button"
+                  onClick={() => setOpenSellerModal(true)}
+                  className="mt-3 w-full py-2 px-3 rounded-xl bg-[#A4860E] hover:bg-[#8a7009] text-white text-[11px] font-bold transition-all shadow-xs flex items-center justify-center gap-1.5 cursor-pointer"
+                >
+                  <i className="fa-solid fa-plus text-[10px]" />
+                  <span>Become a Seller</span>
+                </button>
+              </div>
+            </div>
+          )}
         </div>
       </aside>
+
+      {openSellerModal && (
+        <BecomeSellerModal onClose={() => setOpenSellerModal(false)} />
+      )}
 
       {/* ── Mobile Tab Bar ── */}
       <div className="md:hidden fixed bottom-0 left-0 right-0 z-50 bg-white border-t border-gray-100 shadow-lg">
