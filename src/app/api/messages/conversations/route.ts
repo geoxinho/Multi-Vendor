@@ -1,11 +1,8 @@
 import { NextResponse } from "next/server";
 import { connectDB } from "@/lib/db";
-import { Order } from "@/models/Order";
 import { Message } from "@/models/Message";
-import { User } from "@/models/User";
-import { Product } from "@/models/Product";
 import { auth } from "@/lib/auth";
-import { Types } from "mongoose";
+import { findOrdersAcrossCampuses, populateOrdersWithUsersAndProducts } from "@/lib/campusModels";
 
 export async function GET(req: Request) {
   try {
@@ -19,27 +16,20 @@ export async function GET(req: Request) {
     const { searchParams } = new URL(req.url);
     const role = searchParams.get("role") || session.user.role; // buyer or seller
 
-    let orders;
+    let rawOrders;
     if (role === "seller") {
       // Find orders where current user is either the seller or the buyer
-      orders = await Order.find({
+      rawOrders = await findOrdersAcrossCampuses({
         $or: [
           { "items.seller": userId },
-          { buyer: userId }
-        ]
-      })
-        .populate("buyer", "name avatar role")
-        .populate("items.seller", "name avatar passport role")
-        .populate("items.product", "title images")
-        .sort({ createdAt: -1 })
-        .lean();
+          { buyer: userId },
+        ],
+      });
     } else {
-      orders = await Order.find({ buyer: userId })
-        .populate("items.seller", "name avatar passport role")
-        .populate("items.product", "title images")
-        .sort({ createdAt: -1 })
-        .lean();
+      rawOrders = await findOrdersAcrossCampuses({ buyer: userId });
     }
+
+    const orders = await populateOrdersWithUsersAndProducts(rawOrders);
 
     // Enhance orders with latest message info
     const conversations = await Promise.all(

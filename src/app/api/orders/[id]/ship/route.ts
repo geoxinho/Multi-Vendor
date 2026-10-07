@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { connectDB } from "@/lib/db";
-import { Order } from "@/models/Order";
 import { auth } from "@/lib/auth";
+import { findMutableOrderById, updateOrderAcrossCampuses } from "@/lib/campusModels";
 
 type Params = { params: Promise<{ id: string }> };
 type OrderItem = { seller?: { toString(): string } };
@@ -17,7 +17,7 @@ export async function PATCH(_req: NextRequest, { params }: Params) {
     await connectDB();
     const { id } = await params;
 
-    const order = await Order.findById(id);
+    const order = await findMutableOrderById(id);
     if (!order) {
       return NextResponse.json({ error: "Order not found" }, { status: 404 });
     }
@@ -43,7 +43,6 @@ export async function PATCH(_req: NextRequest, { params }: Params) {
     await order.save();
 
     try {
-      const { updateOrderAcrossCampuses } = await import("@/lib/campusModels");
       await updateOrderAcrossCampuses(id, { deliveryStatus: "shipped" });
     } catch {}
 

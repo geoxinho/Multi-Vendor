@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
+import { getFlwSecretKey } from "@/lib/flutterwave";
 
 const rateLimitMap = new Map<string, { count: number; resetAt: number }>();
 
@@ -52,10 +53,7 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const secret =
-      process.env.FLW_SECRET_KEY ||
-      process.env.Secret_Key ||
-      process.env.FLUTTERWAVE_SECRET_KEY;
+    const secret = getFlwSecretKey();
 
     if (!secret || secret.includes("REPLACE_WITH_YOUR")) {
       return NextResponse.json({

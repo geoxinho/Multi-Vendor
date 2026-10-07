@@ -1,9 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { connectDB } from "@/lib/db";
 import { Message } from "@/models/Message";
-import { Order } from "@/models/Order";
-import { User } from "@/models/User";
 import { auth } from "@/lib/auth";
+import { findOrderByIdAcrossCampuses, findUsersByIdsAcrossCampuses } from "@/lib/campusModels";
 
 export async function GET(req: NextRequest) {
   try {
@@ -19,13 +18,16 @@ export async function GET(req: NextRequest) {
 
     await connectDB();
 
-    // Ensure user is part of the order
-    const order = await Order.findById(orderId).lean();
+    // Ensure user is part of the order (check across all campus collections)
+    const order = await findOrderByIdAcrossCampuses(orderId);
     if (!order) return NextResponse.json({ error: "Order not found" }, { status: 404 });
 
-    const isBuyer = order.buyer.toString() === session.user.id;
-    // @ts-ignore
-    const isSeller = order.items.some((item: any) => item.seller.toString() === session.user.id);
+    const buyerId = order.buyer?._id ? order.buyer._id.toString() : order.buyer?.toString();
+    const isBuyer = buyerId === session.user.id;
+    const isSeller = (order.items || []).some((item: any) => {
+      const sId = item.seller?._id ? item.seller._id.toString() : item.seller?.toString();
+      return sId === session.user.id;
+    });
 
     if (!isBuyer && !isSeller && session.user.role !== "admin") {
       return NextResponse.json({ error: "Forbidden" }, { status: 403 });
@@ -38,18 +40,23 @@ export async function GET(req: NextRequest) {
     );
 
     const messages = await Message.find({ order: orderId })
-      .populate("sender", "name avatar passport role")
       .sort("createdAt")
       .lean();
 
+    const senderIds = [...new Set(messages.map((m: any) => m.sender?.toString()).filter(Boolean))];
+    const userMap = await findUsersByIdsAcrossCampuses(senderIds);
+
     const mappedMessages = messages.map((m: any) => {
-      const sender = m.sender || {};
-      const isSeller = sender.role === "seller";
+      const sId = m.sender?.toString() || "";
+      const user = userMap.get(sId);
+      const isSellerSender = user?.role === "seller";
       return {
         ...m,
         sender: {
-          ...sender,
-          avatar: isSeller ? (sender.passport || sender.avatar || "") : "",
+          _id: sId,
+          name: user?.name || user?.storeName || (sId === session.user.id ? session.user.name : "User"),
+          avatar: isSellerSender ? (user?.passport || user?.avatar || "") : (user?.avatar || ""),
+          role: user?.role || "buyer",
         },
       };
     });
@@ -75,12 +82,15 @@ export async function POST(req: NextRequest) {
 
     await connectDB();
 
-    const order = await Order.findById(orderId).lean();
+    const order = await findOrderByIdAcrossCampuses(orderId);
     if (!order) return NextResponse.json({ error: "Order not found" }, { status: 404 });
 
-    const isBuyer = order.buyer.toString() === session.user.id;
-    // @ts-ignore
-    const isSeller = order.items.some((item: any) => item.seller.toString() === session.user.id);
+    const buyerId = order.buyer?._id ? order.buyer._id.toString() : order.buyer?.toString();
+    const isBuyer = buyerId === session.user.id;
+    const isSeller = (order.items || []).some((item: any) => {
+      const sId = item.seller?._id ? item.seller._id.toString() : item.seller?.toString();
+      return sId === session.user.id;
+    });
 
     if (!isBuyer && !isSeller) {
       return NextResponse.json({ error: "Forbidden" }, { status: 403 });
@@ -93,7 +103,21 @@ export async function POST(req: NextRequest) {
       text,
     });
 
-    const populated = await Message.findById(message._id).populate("sender", "name avatar role").lean();
+    const userMap = await findUsersByIdsAcrossCampuses([session.user.id]);
+    const senderDoc = userMap.get(session.user.id);
+    const role = senderDoc?.role || session.user.role || "buyer";
+    const isSellerSender = role === "seller";
+    const avatar = isSellerSender ? (senderDoc?.passport || senderDoc?.avatar || "") : (senderDoc?.avatar || "");
+
+    const populated = {
+      ...message.toObject(),
+      sender: {
+        _id: session.user.id,
+        name: senderDoc?.name || senderDoc?.storeName || session.user.name || "User",
+        avatar,
+        role,
+      },
+    };
 
     return NextResponse.json(populated, { status: 201 });
   } catch (err) {

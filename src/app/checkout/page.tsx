@@ -138,6 +138,7 @@ export default function CheckoutPage() {
           paymentRef,
           items: items.map((i) => ({
             productId: i.productId,
+            sellerId: i.sellerId,
             quantity: i.quantity,
             selectedSize: i.selectedSize ?? "",
             selectedColor: i.selectedColor ?? "",
@@ -168,18 +169,40 @@ export default function CheckoutPage() {
 
   const handlePay = () => {
     if (!validate()) return;
+
+    const invalidItems = items.filter((item) => !item.sellerId || !String(item.sellerId).trim());
+    if (invalidItems.length > 0) {
+      useCartStore.setState((state) => ({
+        items: state.items.filter((item) => Boolean(item.sellerId && String(item.sellerId).trim())),
+      }));
+      setServerError("One or more products in your cart are missing seller information. Please remove them and try again.");
+      return;
+    }
+
     if (!scriptLoaded || typeof window.FlutterwaveCheckout !== "function") {
       setServerError("Flutterwave payment gateway is loading. Please wait a moment and try again.");
       return;
     }
 
-    const flwKey =
-      process.env.NEXT_PUBLIC_FLW_PUBLIC_KEY ||
-      process.env.NEXT_PUBLIC_FLUTTERWAVE_PUBLIC_KEY ||
-      "";
+    const isTestMode =
+      process.env.NEXT_PUBLIC_FLW_TEST_MODE === "true" ||
+      (process.env.NODE_ENV === "development" &&
+        Boolean(process.env.NEXT_PUBLIC_FLW_TEST_PUBLIC_KEY));
+
+    const flwKey = (
+      isTestMode && process.env.NEXT_PUBLIC_FLW_TEST_PUBLIC_KEY
+        ? process.env.NEXT_PUBLIC_FLW_TEST_PUBLIC_KEY
+        : process.env.NEXT_PUBLIC_FLW_PUBLIC_KEY ||
+          process.env.NEXT_PUBLIC_FLUTTERWAVE_PUBLIC_KEY ||
+          ""
+    ).trim();
 
     if (!flwKey) {
-      setServerError("Flutterwave public key is not configured. Please contact support.");
+      setServerError(
+        isTestMode
+          ? "Flutterwave Test public key (NEXT_PUBLIC_FLW_TEST_PUBLIC_KEY) is not configured in .env.local."
+          : "Flutterwave public key is not configured. Please contact support."
+      );
       return;
     }
 
@@ -390,6 +413,18 @@ export default function CheckoutPage() {
                   </div>
                 )}
 
+                {/* Test Mode Notification */}
+                {(process.env.NEXT_PUBLIC_FLW_TEST_MODE === "true" ||
+                  (process.env.NODE_ENV === "development" &&
+                    Boolean(process.env.NEXT_PUBLIC_FLW_TEST_PUBLIC_KEY))) && (
+                  <div className="mb-4 p-3 bg-amber-50 border border-amber-200 rounded-xl text-xs text-amber-800 flex items-center gap-2">
+                    <i className="fa-solid fa-flask text-amber-600 shrink-0" />
+                    <span>
+                      <strong>Local Test Mode Active:</strong> Using Flutterwave Test API key. No real money will be charged.
+                    </span>
+                  </div>
+                )}
+
                 {/* Pay button */}
                 <button
                   onClick={handlePay}
@@ -405,6 +440,11 @@ export default function CheckoutPage() {
                     <>
                       <i className="fa-solid fa-lock text-sm" />
                       Pay ₦{total.toLocaleString()} with Flutterwave
+                      {(process.env.NEXT_PUBLIC_FLW_TEST_MODE === "true" ||
+                        (process.env.NODE_ENV === "development" &&
+                          Boolean(process.env.NEXT_PUBLIC_FLW_TEST_PUBLIC_KEY)))
+                        ? " (Test Mode)"
+                        : ""}
                     </>
                   )}
                 </button>

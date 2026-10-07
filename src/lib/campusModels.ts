@@ -65,6 +65,24 @@ export function getCampusOrderModel(school: string): Model<IOrder> {
 let cachedActiveSchools: { data: { name: string; slug: string }[]; expiresAt: number } | null = null;
 let cachedDiscoveredSlugs: { data: string[]; expiresAt: number } | null = null;
 
+async function safeListCollections(): Promise<{ name: string }[]> {
+  try {
+    if (mongoose.connection.readyState !== 1 || !mongoose.connection.db) {
+      const { connectDB } = await import("@/lib/db");
+      await connectDB();
+    }
+
+    if (mongoose.connection.readyState !== 1 || !mongoose.connection.db) {
+      return [];
+    }
+
+    return await mongoose.connection.db.listCollections().toArray();
+  } catch (err) {
+    console.warn("[campusModels] Mongo collection discovery failed; falling back to empty list.", err);
+    return [];
+  }
+}
+
 /**
  * Retrieves all active registered schools from MongoDB (cached for 60s).
  */
@@ -149,8 +167,8 @@ export async function findUsersByIdsAcrossCampuses(
 
   try {
     const db = mongoose.connection.db;
-    if (db) {
-      const allCols = await db.listCollections().toArray();
+    if (db && mongoose.connection.readyState === 1) {
+      const allCols = await safeListCollections();
       const userColNames = allCols
         .map((c) => c.name)
         .filter((n) => n.endsWith("_users") || n === "users");
@@ -212,8 +230,8 @@ export async function findAdminsAcrossCampuses(): Promise<any[]> {
 
   try {
     const db = mongoose.connection.db;
-    if (db) {
-      const allCols = await db.listCollections().toArray();
+    if (db && mongoose.connection.readyState === 1) {
+      const allCols = await safeListCollections();
       const userColNames = allCols
         .map((c) => c.name)
         .filter((n) => n.endsWith("_users") || n === "users" || n === "admins");
@@ -268,9 +286,8 @@ export async function findProductAcrossCampuses(
     }
   } else {
     try {
-      const db = mongoose.connection.db;
-      if (db) {
-        const collections = await db.listCollections().toArray();
+      const collections = await safeListCollections();
+      if (collections.length > 0) {
         const discovered: string[] = [];
         for (const col of collections) {
           if (col.name.endsWith("_products") && col.name !== "products") {
@@ -416,15 +433,16 @@ export async function populateProductsWithSellers(products: any[]): Promise<any[
  */
 export async function findOrdersAcrossCampuses(filter: any = {}): Promise<any[]> {
   try {
-    const db = mongoose.connection.db;
-    if (!db) {
+    const realDb = mongoose.connection.db;
+    if (!realDb || mongoose.connection.readyState !== 1) {
       const { connectDB } = await import("@/lib/db");
       await connectDB();
     }
-    const realDb = mongoose.connection.db;
-    if (!realDb) return [];
 
-    const allCols = await realDb.listCollections().toArray();
+    const realDbAfterConnect = mongoose.connection.db;
+    if (!realDbAfterConnect || mongoose.connection.readyState !== 1) return [];
+
+    const allCols = await safeListCollections();
     const orderColNames = [
       ...new Set(
         allCols
@@ -469,7 +487,7 @@ export async function findOrdersAcrossCampuses(filter: any = {}): Promise<any[]>
     await Promise.all(
       orderColNames.map(async (colName) => {
         try {
-          const col = realDb.collection(colName);
+          const col = realDbAfterConnect.collection(colName);
           const docs = await col.find(normalizedQuery).sort({ createdAt: -1 }).toArray();
           for (const doc of docs) {
             const idStr = doc._id.toString();
@@ -503,8 +521,17 @@ export async function findOrdersAcrossCampuses(filter: any = {}): Promise<any[]>
 export async function populateOrdersWithUsersAndProducts(orders: any[]): Promise<any[]> {
   if (!Array.isArray(orders) || orders.length === 0) return orders;
 
+  if (mongoose.connection.readyState !== 1 || !mongoose.connection.db) {
+    const { connectDB } = await import("@/lib/db");
+    try {
+      await connectDB();
+    } catch {
+      return orders;
+    }
+  }
+
   const db = mongoose.connection.db;
-  if (!db) return orders;
+  if (!db || mongoose.connection.readyState !== 1) return orders;
 
   const allUserIds = new Set<string>();
   const allProductIds = new Set<string>();
@@ -543,7 +570,7 @@ export async function populateOrdersWithUsersAndProducts(orders: any[]): Promise
       .filter((id) => mongoose.Types.ObjectId.isValid(id))
       .map((id) => new mongoose.Types.ObjectId(id));
 
-    const allCols = await db.listCollections().toArray();
+    const allCols = await safeListCollections();
     const userColNames = allCols
       .map((c) => c.name)
       .filter((n) => n.endsWith("_users") || n === "users" || n === "admins");
@@ -584,7 +611,7 @@ export async function populateOrdersWithUsersAndProducts(orders: any[]): Promise
       .filter((id) => mongoose.Types.ObjectId.isValid(id))
       .map((id) => new mongoose.Types.ObjectId(id));
 
-    const allCols = await db.listCollections().toArray();
+    const allCols = await safeListCollections();
     const productColNames = allCols
       .map((c) => c.name)
       .filter((n) => n.endsWith("_products") || n === "products");
@@ -645,14 +672,77 @@ export async function findOrderByIdAcrossCampuses(id: string): Promise<any | nul
 }
 
 /**
+ * Finds a mutable Mongoose document for an order by ID.
+ * Tries the root 'orders' collection first, then searches all campus order collections.
+ * Returns { doc, model } so callers can call doc.save() after mutations.
+ * Also accepts optional populate fields for buyer/seller/product.
+ */
+export async function findMutableOrderById(
+  id: string,
+  populateBuyer?: string,
+  populateSeller?: string
+): Promise<any | null> {
+  // 1. Try the root Order model first
+  try {
+    let q = Order.findById(id);
+    if (populateBuyer) q = q.populate("buyer", populateBuyer) as any;
+    if (populateSeller) q = q.populate("items.seller", populateSeller) as any;
+    const doc = await q;
+    if (doc) return doc;
+  } catch {}
+
+  // 2. Search all campus order collections for the raw document
+  try {
+    const db = mongoose.connection.db;
+    if (!db || mongoose.connection.readyState !== 1) {
+      const { connectDB } = await import("@/lib/db");
+      try { await connectDB(); } catch { return null; }
+    }
+
+    const allCols = await safeListCollections();
+    const orderColNames = allCols
+      .map((c) => c.name)
+      .filter((n) => n.endsWith("_orders") && n !== "orders");
+
+    const conds: any[] = [id];
+    if (mongoose.Types.ObjectId.isValid(id)) {
+      conds.push(new mongoose.Types.ObjectId(id));
+    }
+
+    for (const colName of orderColNames) {
+      try {
+        // Derive the campus slug from the collection name (e.g. "adeleke_university_orders" -> "adeleke_university")
+        const slug = colName.replace(/_orders$/, "");
+        const CampusOrder = getCampusOrderModel(slug);
+
+        let q = CampusOrder.findOne({ _id: { $in: conds } });
+        if (populateBuyer) q = q.populate("buyer", populateBuyer) as any;
+        if (populateSeller) q = q.populate("items.seller", populateSeller) as any;
+        const doc = await q;
+        if (doc) return doc;
+      } catch {}
+    }
+  } catch (err) {
+    console.error("[findMutableOrderById] Campus search error:", err);
+  }
+
+  return null;
+}
+
+/**
  * Updates an order across both the root orders collection and all campus order collections.
  */
 export async function updateOrderAcrossCampuses(id: string, updates: any): Promise<void> {
   try {
-    const db = mongoose.connection.db;
-    if (!db) return;
+    if (mongoose.connection.readyState !== 1 || !mongoose.connection.db) {
+      const { connectDB } = await import("@/lib/db");
+      try { await connectDB(); } catch { return; }
+    }
 
-    const allCols = await db.listCollections().toArray();
+    const activeDb = mongoose.connection.db;
+    if (!activeDb || mongoose.connection.readyState !== 1) return;
+
+    const allCols = await safeListCollections();
     const orderColNames = [
       ...new Set(
         allCols
@@ -669,7 +759,7 @@ export async function updateOrderAcrossCampuses(id: string, updates: any): Promi
     await Promise.all(
       orderColNames.map(async (colName) => {
         try {
-          const col = db.collection(colName);
+          const col = activeDb.collection(colName);
           await col.updateMany({ _id: { $in: conds } }, { $set: updates });
         } catch {}
       })

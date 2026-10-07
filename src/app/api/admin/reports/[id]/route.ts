@@ -41,13 +41,18 @@ export async function PATCH(
 
     // Optionally update order payout hold if requested
     if (togglePayoutHold !== undefined) {
-      const order = await Order.findById(report.order);
+      const { findMutableOrderById, updateOrderAcrossCampuses } = await import("@/lib/campusModels");
+      const order = await findMutableOrderById(report.order.toString());
       if (order && !order.sellerPaid) {
         order.payoutHeld = Boolean(togglePayoutHold);
         if (payoutHoldReason !== undefined) {
           order.payoutHoldReason = payoutHoldReason;
         }
         await order.save();
+        await updateOrderAcrossCampuses(report.order.toString(), {
+          payoutHeld: Boolean(togglePayoutHold),
+          ...(payoutHoldReason !== undefined ? { payoutHoldReason } : {}),
+        });
       }
     }
 

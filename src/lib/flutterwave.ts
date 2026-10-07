@@ -1,6 +1,36 @@
 const BASE_URL = "https://api.flutterwave.com/v3";
 
+/**
+ * Checks whether Flutterwave test mode is active.
+ * Safe for both client-side and server-side evaluation.
+ * Returns true if:
+ * 1. FLW_TEST_MODE is "true" or NEXT_PUBLIC_FLW_TEST_MODE is "true"
+ * 2. In local development (NODE_ENV === "development") AND test keys are provided.
+ */
+export function isFlwTestMode(): boolean {
+  if (
+    process.env.FLW_TEST_MODE === "true" ||
+    process.env.NEXT_PUBLIC_FLW_TEST_MODE === "true"
+  ) {
+    return true;
+  }
+  if (
+    process.env.NODE_ENV === "development" &&
+    Boolean(
+      process.env.FLW_TEST_SECRET_KEY ||
+      process.env.NEXT_PUBLIC_FLW_TEST_PUBLIC_KEY ||
+      process.env.FLW_TEST_PUBLIC_KEY
+    )
+  ) {
+    return true;
+  }
+  return false;
+}
+
 export function getFlwSecretKey(): string {
+  if (isFlwTestMode() && process.env.FLW_TEST_SECRET_KEY) {
+    return process.env.FLW_TEST_SECRET_KEY.trim();
+  }
   return (
     process.env.FLW_SECRET_KEY ||
     process.env.Secret_Key ||
@@ -10,6 +40,12 @@ export function getFlwSecretKey(): string {
 }
 
 export function getFlwPublicKey(): string {
+  if (isFlwTestMode()) {
+    const testKey =
+      process.env.NEXT_PUBLIC_FLW_TEST_PUBLIC_KEY ||
+      process.env.FLW_TEST_PUBLIC_KEY;
+    if (testKey) return testKey.trim();
+  }
   return (
     process.env.NEXT_PUBLIC_FLW_PUBLIC_KEY ||
     process.env.FLW_PUBLIC_KEY ||
@@ -19,6 +55,9 @@ export function getFlwPublicKey(): string {
 }
 
 export function getFlwEncryptionKey(): string {
+  if (isFlwTestMode() && process.env.FLW_TEST_ENCRYPTION_KEY) {
+    return process.env.FLW_TEST_ENCRYPTION_KEY.trim();
+  }
   return (
     process.env.FLW_ENCRYPTION_KEY ||
     process.env.Encryption_Key ||

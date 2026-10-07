@@ -6,6 +6,7 @@ import { Order } from "@/models/Order";
 import { User } from "@/models/User";
 import { Withdrawal } from "@/models/Withdrawal";
 import { sendMail } from "@/lib/email";
+import { getFlwSecretKey } from "@/lib/flutterwave";
 
 export async function POST(req: NextRequest) {
   try {
@@ -103,10 +104,7 @@ export async function POST(req: NextRequest) {
     }
 
     // Flutterwave Transfer if secret key configured
-    const flwSecret =
-      process.env.FLW_SECRET_KEY ||
-      process.env.Secret_Key ||
-      process.env.FLUTTERWAVE_SECRET_KEY;
+    const flwSecret = getFlwSecretKey();
 
     let flwRef = "";
     let transferSucceeded = false;

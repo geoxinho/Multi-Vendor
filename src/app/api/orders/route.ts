@@ -7,7 +7,11 @@ import { User } from "@/models/User";
 import { Message } from "@/models/Message";
 import { AdminUser } from "@/models/AdminUser";
 import { auth } from "@/lib/auth";
-import { verifyTransaction } from "@/lib/flutterwave";
+import {
+  verifyTransaction,
+  getFlwSecretKey,
+  isFlwTestMode,
+} from "@/lib/flutterwave";
 import { shippingSchema } from "@/utils/validators";
 import { randomUUID } from "crypto";
 import { sendOrderConfirmationEmails } from "@/utils/email";
@@ -33,18 +37,16 @@ export async function POST(req: NextRequest) {
 
     const addressParsed = shippingSchema.safeParse(shippingAddress);
     if (!addressParsed.success) {
-      return NextResponse.json({ error: addressParsed.error.issues[0].message }, { status: 400 });
+      return NextResponse.json(
+        { error: addressParsed.error.issues[0].message },
+        { status: 400 },
+      );
     }
 
-    const flwSecret =
-      process.env.FLW_SECRET_KEY ||
-      process.env.Secret_Key ||
-      process.env.FLUTTERWAVE_SECRET_KEY;
+    const flwSecret = getFlwSecretKey();
 
     const isTestPlaceholder =
-      !flwSecret ||
-      flwSecret.includes("xxx") ||
-      flwSecret.includes("REPLACE");
+      !flwSecret || flwSecret.includes("xxx") || flwSecret.includes("REPLACE");
 
     const isMockRef =
       typeof paymentRef === "string" &&
@@ -61,8 +63,14 @@ export async function POST(req: NextRequest) {
         !verification.data ||
         verification.data.status !== "successful"
       ) {
-        console.error("[ORDERS] Flutterwave verification failed:", verification);
-        return NextResponse.json({ error: "Payment verification failed. Please contact support." }, { status: 400 });
+        console.error(
+          "[ORDERS] Flutterwave verification failed:",
+          verification,
+        );
+        return NextResponse.json(
+          { error: "Payment verification failed. Please contact support." },
+          { status: 400 },
+        );
       }
       // Verify payment amount matches expected total (Flutterwave amount is in NGN)
       const paidAmountNGN = verification.data.amount;
@@ -72,9 +80,10 @@ export async function POST(req: NextRequest) {
         (req as any)._verifiedAmount = paidAmountNGN;
       }
     } else {
-      console.warn("[ORDERS] Skipping Flutterwave verification — test/mock mode.");
+      console.warn(
+        "[ORDERS] Skipping Flutterwave verification — test/mock mode.",
+      );
     }
-
 
     await connectDB();
     const buyerSchool = session.user.school || "";
@@ -82,7 +91,10 @@ export async function POST(req: NextRequest) {
     // Check if order already created for this reference
     const existingOrder = await Order.findOne({ paymentRef });
     if (existingOrder) {
-      return NextResponse.json({ error: "Order already created for this payment" }, { status: 409 });
+      return NextResponse.json(
+        { error: "Order already created for this payment" },
+        { status: 409 },
+      );
     }
 
     const { items } = body;
@@ -97,7 +109,10 @@ export async function POST(req: NextRequest) {
     const orderItems = [];
 
     for (const item of items) {
-      let product: any = await Product.findById(item.productId).populate("seller", "_id");
+      let product: any = await Product.findById(item.productId).populate(
+        "seller",
+        "_id",
+      );
       if (!product) {
         const found = await findProductAcrossCampuses(item.productId);
         if (found?.product) {
@@ -106,19 +121,43 @@ export async function POST(req: NextRequest) {
       }
 
       if (!product || product.status !== "active") {
-        return NextResponse.json({ error: `Product ${item.productId} is unavailable` }, { status: 400 });
+        return NextResponse.json(
+          { error: `Product ${item.productId} is unavailable` },
+          { status: 400 },
+        );
       }
 
-      const sellerId = product.seller?._id
-        ? product.seller._id.toString()
-        : (product.seller?.toString() || "");
+      const rawSellerFromProduct =
+        product.seller &&
+        typeof product.seller === "object" &&
+        "_id" in product.seller
+          ? product.seller._id
+          : product.seller;
+      const fallbackSeller = item.sellerId;
+      const rawSeller = rawSellerFromProduct ?? fallbackSeller;
+      const sellerId = rawSeller ? String(rawSeller).trim() : "";
+
+      if (!sellerId || !mongoose.Types.ObjectId.isValid(sellerId)) {
+        return NextResponse.json(
+          {
+            error: `Product ${item.productId} is missing valid seller information and cannot be purchased.`,
+          },
+          { status: 400 },
+        );
+      }
 
       if (sellerId === session.user.id) {
-        return NextResponse.json({ error: "You cannot purchase your own product." }, { status: 400 });
+        return NextResponse.json(
+          { error: "You cannot purchase your own product." },
+          { status: 400 },
+        );
       }
 
       if (product.stock < item.quantity) {
-        return NextResponse.json({ error: `Insufficient stock for ${product.title}` }, { status: 400 });
+        return NextResponse.json(
+          { error: `Insufficient stock for ${product.title}` },
+          { status: 400 },
+        );
       }
 
       const itemTotal = product.price * item.quantity;
@@ -180,12 +219,16 @@ export async function POST(req: NextRequest) {
     if (buyerSchool) schoolsToMirror.add(buyerSchool);
     // Also mirror to seller school collections so orders show for sellers
     for (const item of orderItems) {
-      if ((item as any)._sellerSchool) schoolsToMirror.add((item as any)._sellerSchool);
+      if ((item as any)._sellerSchool)
+        schoolsToMirror.add((item as any)._sellerSchool);
     }
     // Try to resolve seller schools from DB
-    const sellerIdsForSchool = [...new Set(orderItems.map((item) => item.seller.toString()))];
+    const sellerIdsForSchool = [
+      ...new Set(orderItems.map((item) => item.seller.toString())),
+    ];
     try {
-      const sellersForSchool = await findUsersByIdsAcrossCampuses(sellerIdsForSchool);
+      const sellersForSchool =
+        await findUsersByIdsAcrossCampuses(sellerIdsForSchool);
       for (const [, sellerDoc] of sellersForSchool) {
         if (sellerDoc?.school) schoolsToMirror.add(sellerDoc.school);
       }
@@ -201,21 +244,30 @@ export async function POST(req: NextRequest) {
 
     // Send emails & create thank-you chat messages
     try {
-      const sellerIds = [...new Set(orderItems.map((item) => item.seller.toString()))];
-      
+      const sellerIds = [
+        ...new Set(orderItems.map((item) => item.seller.toString())),
+      ];
+
       // Look up sellers across all campus user collections
       const sellersMap = await findUsersByIdsAcrossCampuses(sellerIds);
 
       // Build Map<sellerEmail, { sellerName?: string; items: typeof orderItems }>
-      const sellerItemsMap = new Map<string, { sellerName?: string; items: typeof orderItems }>();
+      const sellerItemsMap = new Map<
+        string,
+        { sellerName?: string; items: typeof orderItems }
+      >();
       for (const sellerId of sellerIds) {
         const seller = sellersMap.get(sellerId);
         const email = seller?.email;
         if (!email) {
-          console.warn(`[ORDERS EMAIL] Seller with ID ${sellerId} has no email or was not found in campus collections.`);
+          console.warn(
+            `[ORDERS EMAIL] Seller with ID ${sellerId} has no email or was not found in campus collections.`,
+          );
           continue;
         }
-        const items = orderItems.filter((i) => i.seller.toString() === sellerId);
+        const items = orderItems.filter(
+          (i) => i.seller.toString() === sellerId,
+        );
         if (items.length > 0) {
           sellerItemsMap.set(email, {
             sellerName: seller.storeName || seller.name || "Seller",
@@ -235,20 +287,35 @@ export async function POST(req: NextRequest) {
       }
 
       // Collect admin emails from AdminUser collection & environment variables
-      const adminUsers = await AdminUser.find({ isBanned: { $ne: true } }).select("email").lean().catch(() => []);
-      const adminEmails: string[] = adminUsers.map((a: any) => a.email).filter(Boolean);
+      const adminUsers = await AdminUser.find({ isBanned: { $ne: true } })
+        .select("email")
+        .lean()
+        .catch(() => []);
+      const adminEmails: string[] = adminUsers
+        .map((a: any) => a.email)
+        .filter(Boolean);
       if (process.env.ADMIN_EMAIL) adminEmails.push(process.env.ADMIN_EMAIL);
       if (process.env.SMTP_USER) adminEmails.push(process.env.SMTP_USER);
 
       if (buyerEmail) {
-        await sendOrderConfirmationEmails(order, buyerEmail, buyerName, sellerItemsMap, adminEmails);
+        await sendOrderConfirmationEmails(
+          order,
+          buyerEmail,
+          buyerName,
+          sellerItemsMap,
+          adminEmails,
+        );
       } else {
-        console.error("[ORDERS EMAIL ERROR] Could not determine buyer email address.");
+        console.error(
+          "[ORDERS EMAIL ERROR] Could not determine buyer email address.",
+        );
       }
 
       // Automated chat thank-you message from each seller to buyer
       for (const sellerId of sellerIds) {
-        const sellerItems = orderItems.filter((i) => i.seller.toString() === sellerId);
+        const sellerItems = orderItems.filter(
+          (i) => i.seller.toString() === sellerId,
+        );
         const itemTitles = sellerItems.map((i) => i.title).join(", ");
         await Message.create({
           order: order._id,
@@ -261,11 +328,13 @@ export async function POST(req: NextRequest) {
       console.error("[ORDERS EMAIL/MESSAGE ERROR]", e);
     }
 
-
     return NextResponse.json(order, { status: 201 });
   } catch (err) {
     console.error("[ORDERS POST]", err);
-    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
+    return NextResponse.json(
+      { error: "Internal server error" },
+      { status: 500 },
+    );
   }
 }
 
@@ -273,7 +342,8 @@ export async function POST(req: NextRequest) {
 export async function GET(req: NextRequest) {
   try {
     const session = await auth();
-    if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    if (!session)
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
     await connectDB();
 
@@ -317,9 +387,17 @@ export async function GET(req: NextRequest) {
     const total = filtered.length;
     const paged = filtered.slice(skip, skip + limit);
 
-    return NextResponse.json({ orders: paged, total, page, pages: Math.ceil(total / limit) || 1 });
+    return NextResponse.json({
+      orders: paged,
+      total,
+      page,
+      pages: Math.ceil(total / limit) || 1,
+    });
   } catch (err) {
     console.error("[ORDERS GET]", err);
-    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
+    return NextResponse.json(
+      { error: "Internal server error" },
+      { status: 500 },
+    );
   }
 }

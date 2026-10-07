@@ -5,10 +5,6 @@ import { auth } from "@/lib/auth";
 import { Analytics } from "@vercel/analytics/next";
 import { SpeedInsights } from "@vercel/speed-insights/next";
 
-export const metadataBase = process.env.NEXT_PUBLIC_SITE_URL
-  ? new URL(process.env.NEXT_PUBLIC_SITE_URL)
-  : new URL("https://campusgo.vercel.app");
-
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://campusgo.vercel.app";
 
 const ROOT_TITLE = "CampusGo — Nigeria's #1 Student Marketplace | Buy & Sell on Campus";
@@ -23,6 +19,7 @@ export const viewport: Viewport = {
 };
 
 export const metadata: Metadata = {
+  metadataBase: new URL(SITE_URL),
   title: {
     default: ROOT_TITLE,
     template: "%s | CampusGo",
@@ -196,7 +193,7 @@ export default async function RootLayout({
   return (
     <html lang="en" className="overflow-x-hidden font-sans" suppressHydrationWarning>
       <head>
-        <link rel="canonical" href={metadataBase.origin} />
+        <link rel="canonical" href={SITE_URL} />
       </head>
       <body className="min-h-screen bg-background text-foreground antialiased overflow-x-hidden" suppressHydrationWarning>
         <script

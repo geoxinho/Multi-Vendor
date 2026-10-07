@@ -1,9 +1,14 @@
 import { NextRequest, NextResponse } from "next/server";
 import { connectDB } from "@/lib/db";
-import { Order } from "@/models/Order";
 import { OrderReport } from "@/models/OrderReport";
-import { User } from "@/models/User";
 import { auth } from "@/lib/auth";
+import {
+  findMutableOrderById,
+  findOrdersAcrossCampuses,
+  findUsersByIdsAcrossCampuses,
+  populateOrdersWithUsersAndProducts,
+  updateOrderAcrossCampuses,
+} from "@/lib/campusModels";
 
 export async function GET(req: NextRequest) {
   try {
@@ -24,26 +29,87 @@ export async function GET(req: NextRequest) {
     if (session.user.role === "admin") {
       if (orderId) query.order = orderId;
       if (status && status !== "all") query.status = status;
-      if (school && school !== "all") {
-        const usersInSchool = await User.find({ school }).distinct("_id");
-        query.reportedBy = { $in: usersInSchool };
-      }
     } else {
       query.reportedBy = session.user.id;
       if (orderId) query.order = orderId;
     }
 
     const reports = await OrderReport.find(query)
-      .populate("reportedBy", "name email phone role storeName school")
-      .populate({
-        path: "order",
-        select: "totalAmount paymentStatus deliveryStatus deliveryPin items buyer createdAt payoutHeld payoutHoldReason",
-        populate: { path: "buyer", select: "name email phone school" },
-      })
       .sort({ createdAt: -1 })
       .lean();
 
-    return NextResponse.json({ reports });
+    if (reports.length === 0) {
+      return NextResponse.json({ reports: [] });
+    }
+
+    // Collect reportedBy user IDs and order IDs to populate across campuses
+    const reporterIds = [...new Set(reports.map((r: any) => r.reportedBy?.toString()).filter(Boolean))];
+    const orderIds = [...new Set(reports.map((r: any) => r.order?.toString()).filter(Boolean))];
+
+    const [usersMap, ordersList] = await Promise.all([
+      findUsersByIdsAcrossCampuses(reporterIds),
+      orderIds.length > 0 ? findOrdersAcrossCampuses({ _id: { $in: orderIds } }) : Promise.resolve([]),
+    ]);
+
+    const populatedOrders = await populateOrdersWithUsersAndProducts(ordersList);
+    const ordersMap = new Map<string, any>();
+    for (const o of populatedOrders) {
+      ordersMap.set(o._id.toString(), o);
+    }
+
+    let mappedReports = reports.map((r: any) => {
+      const repId = r.reportedBy?.toString();
+      const ordId = r.order?.toString();
+      const reportedBy = repId ? usersMap.get(repId) || { _id: repId } : null;
+      const order = ordId ? ordersMap.get(ordId) || { _id: ordId } : null;
+
+      return {
+        ...r,
+        reportedBy: reportedBy
+          ? {
+              _id: reportedBy._id.toString(),
+              name: reportedBy.name || "Unknown",
+              email: reportedBy.email || "",
+              phone: reportedBy.phone || "",
+              role: reportedBy.role || r.reporterRole,
+              storeName: reportedBy.storeName || "",
+              school: reportedBy.school || "",
+            }
+          : { _id: repId, name: "Unknown", email: "", role: r.reporterRole },
+        order: order
+          ? {
+              _id: order._id.toString(),
+              totalAmount: order.totalAmount || 0,
+              paymentStatus: order.paymentStatus || "paid",
+              deliveryStatus: order.deliveryStatus || "processing",
+              deliveryPin: order.deliveryPin || "",
+              payoutHeld: order.payoutHeld || false,
+              payoutHoldReason: order.payoutHoldReason || "",
+              buyer: order.buyer
+                ? {
+                    name: order.buyer.name || "Buyer",
+                    email: order.buyer.email || "",
+                    phone: order.buyer.phone || "",
+                    school: order.buyer.school || "",
+                  }
+                : undefined,
+              items: (order.items || []).map((i: any) => ({
+                title: i.title || "Item",
+                price: i.price || 0,
+                quantity: i.quantity || 1,
+              })),
+            }
+          : { _id: ordId, totalAmount: 0 },
+      };
+    });
+
+    if (school && school !== "all") {
+      mappedReports = mappedReports.filter(
+        (r: any) => r.reportedBy?.school === school || r.order?.buyer?.school === school
+      );
+    }
+
+    return NextResponse.json({ reports: mappedReports });
   } catch (err) {
     console.error("[REPORTS GET]", err);
     return NextResponse.json({ error: "Failed to fetch reports" }, { status: 500 });
@@ -69,17 +135,18 @@ export async function POST(req: NextRequest) {
 
     await connectDB();
 
-    const order = await Order.findById(orderId).populate("items.seller", "_id");
+    const order = await findMutableOrderById(orderId);
     if (!order) {
       return NextResponse.json({ error: "Order not found" }, { status: 404 });
     }
 
     const userId = session.user.id;
-    const isBuyer = order.buyer.toString() === userId;
-    const isSeller = order.items.some(
-      (item: any) =>
-        item.seller?._id?.toString() === userId || item.seller?.toString() === userId
-    );
+    const buyerId = order.buyer?._id ? order.buyer._id.toString() : order.buyer?.toString();
+    const isBuyer = buyerId === userId;
+    const isSeller = (order.items || []).some((item: any) => {
+      const sId = item.seller?._id ? item.seller._id.toString() : item.seller?.toString();
+      return sId === userId;
+    });
     const isAdmin = session.user.role === "admin";
 
     if (!isBuyer && !isSeller && !isAdmin) {
@@ -104,9 +171,17 @@ export async function POST(req: NextRequest) {
 
     // If buyer reports a serious issue, auto-flag payout hold to protect buyer escrow
     if (isBuyer && !order.sellerPaid) {
+      const reasonText = `Complaint lodged by buyer: ${reason} - ${subject.trim()}`;
       order.payoutHeld = true;
-      order.payoutHoldReason = `Complaint lodged by buyer: ${reason} - ${subject.trim()}`;
+      order.payoutHoldReason = reasonText;
       await order.save();
+
+      try {
+        await updateOrderAcrossCampuses(orderId, {
+          payoutHeld: true,
+          payoutHoldReason: reasonText,
+        });
+      } catch {}
     }
 
     return NextResponse.json(

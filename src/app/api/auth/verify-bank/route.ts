@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { getFlwSecretKey } from "@/lib/flutterwave";
 
 /**
  * POST /api/auth/verify-bank
@@ -48,10 +49,7 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const secret =
-      process.env.FLW_SECRET_KEY ||
-      process.env.Secret_Key ||
-      process.env.FLUTTERWAVE_SECRET_KEY;
+    const secret = getFlwSecretKey();
 
     // ── No Flutterwave key: return manual-entry signal ──────────────────────
     if (!secret) {

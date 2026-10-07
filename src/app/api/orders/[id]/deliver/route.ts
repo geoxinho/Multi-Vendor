@@ -1,9 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { connectDB } from "@/lib/db";
-import { Order } from "@/models/Order";
-import { User } from "@/models/User";
 import { auth } from "@/lib/auth";
 import { sendMail } from "@/lib/email";
+import { findMutableOrderById, findUsersByIdsAcrossCampuses, updateOrderAcrossCampuses } from "@/lib/campusModels";
 
 type Params = { params: Promise<{ id: string }> };
 type OrderItem = { seller?: { toString(): string; email?: string; name?: string; storeName?: string }; title?: string; product?: unknown };
@@ -19,9 +18,7 @@ export async function PATCH(req: NextRequest, { params }: Params) {
     await connectDB();
     const { id } = await params;
 
-    const order = await Order.findById(id)
-      .populate("buyer", "name email")
-      .populate("items.seller", "name email storeName");
+    const order = await findMutableOrderById(id, "name email", "name email storeName");
 
     if (!order)
       return NextResponse.json({ error: "Order not found" }, { status: 404 });
@@ -79,7 +76,6 @@ export async function PATCH(req: NextRequest, { params }: Params) {
     await order.save();
 
     try {
-      const { updateOrderAcrossCampuses } = await import("@/lib/campusModels");
       await updateOrderAcrossCampuses(id, {
         deliveryStatus: "delivered",
         deliveredAt,
@@ -192,12 +188,13 @@ export async function PATCH(req: NextRequest, { params }: Params) {
     // Send emails (resolve emails reliably from DB if needed)
     const hasSMTP = process.env.SMTP_USER && process.env.SMTP_PASS;
     if (hasSMTP) {
-      // 1. Resolve Buyer Email
+      // 1. Resolve Buyer Email (try populated first, then campus-aware lookup)
       let toBuyerEmail = (order.buyer as any)?.email;
       if (!toBuyerEmail && order.buyer) {
-        const bId = (order.buyer as any)._id || order.buyer;
-        const bUser = await User.findById(bId).select("email").lean();
-        if (bUser) toBuyerEmail = bUser.email;
+        const bId = ((order.buyer as any)._id || order.buyer).toString();
+        const { findUsersByIdsAcrossCampuses: findByIds } = await import("@/lib/campusModels");
+        const buyerMap = await findByIds([bId]);
+        toBuyerEmail = buyerMap.get(bId)?.email;
       }
 
       if (toBuyerEmail) {
@@ -215,14 +212,14 @@ export async function PATCH(req: NextRequest, { params }: Params) {
         console.error("[EMAIL BUYER DELIVERY ERROR] Could not determine buyer email.");
       }
 
-      // 2. Resolve Seller Emails
+      // 2. Resolve Seller Emails via campus-aware lookup
       const sellerIds = [...new Set(order.items.map((item: any) => {
         return item.seller?._id ? item.seller._id.toString() : item.seller?.toString();
-      }).filter(Boolean))];
+      }).filter(Boolean))] as string[];
 
       if (sellerIds.length > 0) {
-        const sellerUsers = await User.find({ _id: { $in: sellerIds } }).select("email").lean();
-        for (const sUser of sellerUsers) {
+        const sellerMap = await findUsersByIdsAcrossCampuses(sellerIds);
+        for (const sUser of sellerMap.values()) {
           if (sUser.email) {
             try {
               await sendMail({

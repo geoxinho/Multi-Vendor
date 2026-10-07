@@ -42,6 +42,10 @@ export default function BuyNowButton({ product }: { product: ProductSummary }) {
 
   const handleAddToCart = () => {
     if (isOwnProduct) return;
+    if (!sellerIdStr) {
+      setVariantError("This product is temporarily unavailable for purchase. Please refresh the page and try again.");
+      return;
+    }
     if (!validateVariants("adding to cart")) return;
 
     addItem({
@@ -63,6 +67,10 @@ export default function BuyNowButton({ product }: { product: ProductSummary }) {
 
   const handleBuyNow = () => {
     if (isOwnProduct) return;
+    if (!sellerIdStr) {
+      setVariantError("This product is temporarily unavailable for purchase. Please refresh the page and try again.");
+      return;
+    }
     if (!validateVariants("purchasing")) return;
 
     clearCart();

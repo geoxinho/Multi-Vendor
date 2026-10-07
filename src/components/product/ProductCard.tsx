@@ -41,6 +41,10 @@ export default function ProductCard({
     e.preventDefault();
     e.stopPropagation();
     if (product.stock === 0) return;
+    if (!sellerIdStr) {
+      console.warn("Blocked add-to-cart: product is missing seller information.", product._id);
+      return;
+    }
     addItem({
       productId: product._id,
       title: product.title,
