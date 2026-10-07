@@ -43,7 +43,9 @@ export default function CheckoutPage() {
   const router = useRouter();
   const { items, totalPrice, clearCart } = useCartStore();
 
-  const [schools, setSchools] = useState<{ _id: string; name: string; city?: string; state?: string }[]>([
+  const [schools, setSchools] = useState<
+    { _id: string; name: string; city?: string; state?: string }[]
+  >([
     { _id: "1", name: "Adeleke University", city: "Ede", state: "Osun" },
     { _id: "2", name: "Federal Polytechnic Ede", city: "Ede", state: "Osun" },
   ]);
@@ -86,9 +88,14 @@ export default function CheckoutPage() {
       return;
     }
 
-    const isOwnProduct = items.some((item) => item.sellerId === session.user.id);
+    const isOwnProduct = items.some(
+      (item) => item.sellerId === session.user.id,
+    );
     if (isOwnProduct) {
-      const target = session.user.role === "admin" ? "/dashboard/admin" : "/dashboard/seller";
+      const target =
+        session.user.role === "admin"
+          ? "/dashboard/admin"
+          : "/dashboard/seller";
       router.replace(target);
       return;
     }
@@ -97,7 +104,8 @@ export default function CheckoutPage() {
   /* Pre-fill name & registered school from session */
   useEffect(() => {
     if (session?.user) {
-      const userSchool = session.user.school || (session.user as any).school || "";
+      const userSchool =
+        session.user.school || (session.user as any).school || "";
       setAddress((a) => ({
         ...a,
         fullName: a.fullName || session.user.name || "",
@@ -108,11 +116,14 @@ export default function CheckoutPage() {
 
   const validate = () => {
     const e: Record<string, string> = {};
-    if (!address.fullName.trim() || address.fullName.length < 2) e.fullName = "Enter your full name";
-    if (!address.phone.trim() || address.phone.length < 10) e.phone = "Enter a valid 10-digit phone number";
+    if (!address.fullName.trim() || address.fullName.length < 2)
+      e.fullName = "Enter your full name";
+    if (!address.phone.trim() || address.phone.length < 10)
+      e.phone = "Enter a valid 10-digit phone number";
     const currentSchool = address.school || session?.user?.school || "";
     if (!currentSchool) e.school = "Registered campus is required";
-    if (!address.hostel.trim() || address.hostel.length < 2) e.hostel = "Enter your hostel/hall or campus location";
+    if (!address.hostel.trim() || address.hostel.length < 2)
+      e.hostel = "Enter your hostel/hall or campus location";
     setErrors(e);
     return Object.keys(e).length === 0;
   };
@@ -121,10 +132,11 @@ export default function CheckoutPage() {
     setServerError("");
     setPaying(true);
     try {
+      const streetAddress = `${(address.hostel || "").trim()}, ${address.school || "Campus"}`.trim();
       const shippingData = {
         fullName: address.fullName,
         phone: address.phone,
-        address: `${address.hostel.trim()}, ${address.school}`,
+        address: streetAddress.length >= 5 ? streetAddress : `${streetAddress} Campus Residence`,
         city: "Ede",
         state: "Osun",
         postalCode: "232101",
@@ -135,6 +147,8 @@ export default function CheckoutPage() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           shippingAddress: shippingData,
+          buyerEmail: session?.user?.email,
+          buyerName: address.fullName || session?.user?.name,
           paymentRef,
           items: items.map((i) => ({
             productId: i.productId,
@@ -148,7 +162,14 @@ export default function CheckoutPage() {
       const data = await res.json();
       setPaying(false);
       if (!res.ok) {
-        setServerError(data.error ?? "Order creation failed. Please contact support.");
+        if (res.status === 409) {
+          clearCart();
+          window.location.href = `/dashboard/buyer/orders`;
+          return;
+        }
+        setServerError(
+          data.error ?? "Order creation failed. Please contact support.",
+        );
         return;
       }
       clearCart();
@@ -170,17 +191,25 @@ export default function CheckoutPage() {
   const handlePay = () => {
     if (!validate()) return;
 
-    const invalidItems = items.filter((item) => !item.sellerId || !String(item.sellerId).trim());
+    const invalidItems = items.filter(
+      (item) => !item.sellerId || !String(item.sellerId).trim(),
+    );
     if (invalidItems.length > 0) {
       useCartStore.setState((state) => ({
-        items: state.items.filter((item) => Boolean(item.sellerId && String(item.sellerId).trim())),
+        items: state.items.filter((item) =>
+          Boolean(item.sellerId && String(item.sellerId).trim()),
+        ),
       }));
-      setServerError("One or more products in your cart are missing seller information. Please remove them and try again.");
+      setServerError(
+        "One or more products in your cart are missing seller information. Please remove them and try again.",
+      );
       return;
     }
 
     if (!scriptLoaded || typeof window.FlutterwaveCheckout !== "function") {
-      setServerError("Flutterwave payment gateway is loading. Please wait a moment and try again.");
+      setServerError(
+        "Flutterwave payment gateway is loading. Please wait a moment and try again.",
+      );
       return;
     }
 
@@ -201,7 +230,7 @@ export default function CheckoutPage() {
       setServerError(
         isTestMode
           ? "Flutterwave Test public key (NEXT_PUBLIC_FLW_TEST_PUBLIC_KEY) is not configured in .env.local."
-          : "Flutterwave public key is not configured. Please contact support."
+          : "Flutterwave public key is not configured. Please contact support.",
       );
       return;
     }
@@ -226,17 +255,24 @@ export default function CheckoutPage() {
       customizations: {
         title: "CampusGo Marketplace",
         description: `Payment for ${items.length} item${items.length > 1 ? "s" : ""}`,
-        logo: typeof window !== "undefined" ? `${window.location.origin}/main_logo.png` : undefined,
+        logo:
+          typeof window !== "undefined"
+            ? `${window.location.origin}/main_logo.png`
+            : undefined,
       },
       callback: (response) => {
         callbackFired.current = true;
-        const transactionRef = String(response.transaction_id || response.tx_ref || ref);
+        const transactionRef = String(
+          response.transaction_id || response.tx_ref || ref,
+        );
         createOrder(transactionRef);
       },
       onclose: () => {
         if (!callbackFired.current) {
           setPaying(false);
-          setServerError("Payment window closed. Your order was not completed.");
+          setServerError(
+            "Payment window closed. Your order was not completed.",
+          );
         }
       },
     });
@@ -263,7 +299,10 @@ export default function CheckoutPage() {
         {/* Header */}
         <div className="bg-white border-b border-gray-100 px-4 py-4">
           <div className="max-w-6xl mx-auto flex items-center justify-between">
-            <Link href="/products" className="flex items-center gap-2 text-gray-600 hover:text-gray-900 transition-colors">
+            <Link
+              href="/products"
+              className="flex items-center gap-2 text-gray-600 hover:text-gray-900 transition-colors"
+            >
               <i className="fa-solid fa-chevron-left text-sm" />
               <span className="text-sm font-medium">Back to shopping</span>
             </Link>
@@ -274,7 +313,6 @@ export default function CheckoutPage() {
 
         <div className="max-w-6xl mx-auto px-4 py-8">
           <div className="grid grid-cols-1 lg:grid-cols-5 gap-8">
-
             {/* ── Left: Campus Delivery Form ── */}
             <div className="lg:col-span-3 space-y-6">
               <div className="bg-white rounded-2xl border border-[#E5E5E5] p-6 shadow-sm">
@@ -284,8 +322,12 @@ export default function CheckoutPage() {
                     <i className="fa-solid fa-graduation-cap text-base" />
                   </div>
                   <div>
-                    <h2 className="font-bold text-gray-900 text-lg">Campus Delivery Details</h2>
-                    <p className="text-xs text-gray-500">Order pickup & campus hall delivery details</p>
+                    <h2 className="font-bold text-gray-900 text-lg">
+                      Campus Delivery Details
+                    </h2>
+                    <p className="text-xs text-gray-500">
+                      Order pickup & campus hall delivery details
+                    </p>
                   </div>
                 </div>
 
@@ -298,13 +340,21 @@ export default function CheckoutPage() {
                     <input
                       type="text"
                       value={address.fullName}
-                      onChange={(e) => setAddress((a) => ({ ...a, fullName: e.target.value }))}
+                      onChange={(e) =>
+                        setAddress((a) => ({ ...a, fullName: e.target.value }))
+                      }
                       placeholder="e.g. John Doe"
                       className={`w-full px-4 py-3 rounded-xl border text-sm focus:outline-none focus:ring-2 focus:ring-[#A4860E]/30 focus:border-[#A4860E] transition-colors ${
-                        errors.fullName ? "border-red-500 bg-red-50" : "border-[#E5E5E5] bg-white"
+                        errors.fullName
+                          ? "border-red-500 bg-red-50"
+                          : "border-[#E5E5E5] bg-white"
                       }`}
                     />
-                    {errors.fullName && <p className="text-xs text-red-500 mt-1">{errors.fullName}</p>}
+                    {errors.fullName && (
+                      <p className="text-xs text-red-500 mt-1">
+                        {errors.fullName}
+                      </p>
+                    )}
                   </div>
 
                   {/* Phone */}
@@ -315,47 +365,74 @@ export default function CheckoutPage() {
                     <input
                       type="tel"
                       value={address.phone}
-                      onChange={(e) => setAddress((a) => ({ ...a, phone: e.target.value }))}
+                      onChange={(e) =>
+                        setAddress((a) => ({ ...a, phone: e.target.value }))
+                      }
                       placeholder="e.g. 08012345678"
                       className={`w-full px-4 py-3 rounded-xl border text-sm focus:outline-none focus:ring-2 focus:ring-[#A4860E]/30 focus:border-[#A4860E] transition-colors ${
-                        errors.phone ? "border-red-500 bg-red-50" : "border-[#E5E5E5] bg-white"
+                        errors.phone
+                          ? "border-red-500 bg-red-50"
+                          : "border-[#E5E5E5] bg-white"
                       }`}
                     />
-                    {errors.phone && <p className="text-xs text-red-500 mt-1">{errors.phone}</p>}
-                    <p className="text-xs text-gray-400 mt-1">For delivery updates & seller calls</p>
+                    {errors.phone && (
+                      <p className="text-xs text-red-500 mt-1">
+                        {errors.phone}
+                      </p>
+                    )}
+                    <p className="text-xs text-gray-400 mt-1">
+                      For delivery updates & seller calls
+                    </p>
                   </div>
 
                   {/* Registered University Campus */}
                   <div>
                     <label className="block text-sm font-semibold text-gray-700 mb-1.5 flex items-center justify-between">
-                      <span>University Campus <span className="text-red-500">*</span></span>
+                      <span>
+                        University Campus{" "}
+                        <span className="text-red-500">*</span>
+                      </span>
                       <span className="text-[11px] font-normal text-gray-400 flex items-center gap-1">
-                        <i className="fa-solid fa-lock text-[10px]" /> Registered campus
+                        <i className="fa-solid fa-lock text-[10px]" />{" "}
+                        Registered campus
                       </span>
                     </label>
                     <div className="w-full px-4 py-3 rounded-xl border border-[#E5E5E5] bg-gray-50 text-gray-800 text-sm font-semibold flex items-center gap-2.5">
                       <div className="w-7 h-7 rounded-lg bg-[#fdf8e8] border border-[#e8d48a] flex items-center justify-center text-[#A4860E] shrink-0">
                         <i className="fa-solid fa-graduation-cap text-xs" />
                       </div>
-                      <span className="truncate">{address.school || session?.user?.school || "Adeleke University"}</span>
+                      <span className="truncate">
+                        {address.school ||
+                          session?.user?.school ||
+                          "Adeleke University"}
+                      </span>
                     </div>
                   </div>
 
                   {/* Hostel / Hall of Residence / Pickup Point */}
                   <div>
                     <label className="block text-sm font-semibold text-gray-700 mb-1.5">
-                      Hostel / Hall of Residence / Pickup Point <span className="text-red-500">*</span>
+                      Hostel / Hall of Residence / Pickup Point{" "}
+                      <span className="text-red-500">*</span>
                     </label>
                     <input
                       type="text"
                       value={address.hostel}
-                      onChange={(e) => setAddress((a) => ({ ...a, hostel: e.target.value }))}
+                      onChange={(e) =>
+                        setAddress((a) => ({ ...a, hostel: e.target.value }))
+                      }
                       placeholder="e.g. Hall A, Room 204 or Main Gate Pickup"
                       className={`w-full px-4 py-3 rounded-xl border text-sm focus:outline-none focus:ring-2 focus:ring-[#A4860E]/30 focus:border-[#A4860E] transition-colors ${
-                        errors.hostel ? "border-red-500 bg-red-50" : "border-[#E5E5E5] bg-white"
+                        errors.hostel
+                          ? "border-red-500 bg-red-50"
+                          : "border-[#E5E5E5] bg-white"
                       }`}
                     />
-                    {errors.hostel && <p className="text-xs text-red-500 mt-1">{errors.hostel}</p>}
+                    {errors.hostel && (
+                      <p className="text-xs text-red-500 mt-1">
+                        {errors.hostel}
+                      </p>
+                    )}
                   </div>
                 </div>
               </div>
@@ -364,15 +441,26 @@ export default function CheckoutPage() {
             {/* ── Right: Order Summary ── */}
             <div className="lg:col-span-2">
               <div className="bg-white rounded-2xl border border-[#E5E5E5] p-6 sticky top-6 shadow-sm">
-                <h2 className="font-bold text-gray-900 text-lg mb-4">Order Summary</h2>
+                <h2 className="font-bold text-gray-900 text-lg mb-4">
+                  Order Summary
+                </h2>
 
                 {/* Items */}
                 <div className="space-y-3 mb-6 max-h-64 overflow-y-auto pr-1">
                   {items.map((item) => (
-                    <div key={item.productId} className="flex items-center gap-3 py-2 border-b border-gray-100 last:border-0">
+                    <div
+                      key={item.productId}
+                      className="flex items-center gap-3 py-2 border-b border-gray-100 last:border-0"
+                    >
                       <div className="relative w-12 h-12 rounded-lg overflow-hidden shrink-0 bg-gray-50 border border-gray-200">
                         {item.image ? (
-                          <Image src={item.image} alt={item.title} fill className="object-cover" sizes="48px" />
+                          <Image
+                            src={item.image}
+                            alt={item.title}
+                            fill
+                            className="object-cover"
+                            sizes="48px"
+                          />
                         ) : (
                           <div className="w-full h-full flex items-center justify-center text-gray-400 bg-gray-50">
                             <i className="fa-solid fa-image text-lg" />
@@ -380,8 +468,12 @@ export default function CheckoutPage() {
                         )}
                       </div>
                       <div className="flex-1 min-w-0">
-                        <p className="text-sm font-medium text-gray-900 truncate">{item.title}</p>
-                        <p className="text-xs text-gray-400 mt-0.5">Qty: {item.quantity}</p>
+                        <p className="text-sm font-medium text-gray-900 truncate">
+                          {item.title}
+                        </p>
+                        <p className="text-xs text-gray-400 mt-0.5">
+                          Qty: {item.quantity}
+                        </p>
                       </div>
                       <p className="text-sm font-semibold text-[#111111] shrink-0">
                         ₦{(item.price * item.quantity).toLocaleString()}
@@ -402,7 +494,9 @@ export default function CheckoutPage() {
                   </div>
                   <div className="flex justify-between font-bold text-gray-900 text-base pt-2 border-t border-gray-100">
                     <span>Total</span>
-                    <span className="text-[#111111] font-bold">₦{total.toLocaleString()}</span>
+                    <span className="text-[#111111] font-bold">
+                      ₦{total.toLocaleString()}
+                    </span>
                   </div>
                 </div>
 
@@ -420,7 +514,8 @@ export default function CheckoutPage() {
                   <div className="mb-4 p-3 bg-amber-50 border border-amber-200 rounded-xl text-xs text-amber-800 flex items-center gap-2">
                     <i className="fa-solid fa-flask text-amber-600 shrink-0" />
                     <span>
-                      <strong>Local Test Mode Active:</strong> Using Flutterwave Test API key. No real money will be charged.
+                      <strong>Local Test Mode Active:</strong> Using Flutterwave
+                      Test API key. No real money will be charged.
                     </span>
                   </div>
                 )}
@@ -440,9 +535,9 @@ export default function CheckoutPage() {
                     <>
                       <i className="fa-solid fa-lock text-sm" />
                       Pay ₦{total.toLocaleString()} with Flutterwave
-                      {(process.env.NEXT_PUBLIC_FLW_TEST_MODE === "true" ||
-                        (process.env.NODE_ENV === "development" &&
-                          Boolean(process.env.NEXT_PUBLIC_FLW_TEST_PUBLIC_KEY)))
+                      {process.env.NEXT_PUBLIC_FLW_TEST_MODE === "true" ||
+                      (process.env.NODE_ENV === "development" &&
+                        Boolean(process.env.NEXT_PUBLIC_FLW_TEST_PUBLIC_KEY))
                         ? " (Test Mode)"
                         : ""}
                     </>
@@ -455,7 +550,6 @@ export default function CheckoutPage() {
                 </p>
               </div>
             </div>
-
           </div>
         </div>
       </div>

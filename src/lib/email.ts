@@ -1,5 +1,8 @@
 import nodemailer from "nodemailer";
 
+let cachedTransporter: nodemailer.Transporter | null = null;
+let lastTransporterConfig = "";
+
 export function getTransporter() {
   const rawHost = process.env.SMTP_HOST;
   const rawUser = process.env.SMTP_USER;
@@ -18,22 +21,28 @@ export function getTransporter() {
   }
 
   const isPort465 = port === 465;
+  const configKey = `${host}:${port}:${user}:${pass}`;
 
-  const transporter = nodemailer.createTransport({
-    host,
-    port,
-    secure: isPort465, // true for 465, false for 587 or other ports
-    auth: { user, pass },
-    // Essential for Vercel Serverless Functions:
-    connectionTimeout: 10000,
-    greetingTimeout: 10000,
-    socketTimeout: 15000,
-    tls: {
-      rejectUnauthorized: false, // Prevents Vercel cloud container SSL handshake drops
-    },
-  });
+  if (!cachedTransporter || lastTransporterConfig !== configKey) {
+    cachedTransporter = nodemailer.createTransport({
+      host,
+      port,
+      secure: isPort465, // true for 465, false for 587 or other ports
+      auth: { user, pass },
+      pool: true,
+      maxConnections: 5,
+      maxMessages: 100,
+      connectionTimeout: 10000,
+      greetingTimeout: 10000,
+      socketTimeout: 15000,
+      tls: {
+        rejectUnauthorized: false, // Prevents cloud SSL handshake drops
+      },
+    });
+    lastTransporterConfig = configKey;
+  }
 
-  return { transporter, hasSMTP: true, user, host, port };
+  return { transporter: cachedTransporter, hasSMTP: true, user, host, port };
 }
 
 export async function sendMail({

@@ -17,11 +17,22 @@ export default function BuyNowButton({ product }: { product: ProductSummary }) {
   const [addedToCart, setAddedToCart] = useState(false);
   const router = useRouter();
 
-  const sellerIdStr = (product.seller?._id || (typeof product.seller === "string" ? product.seller : ""))?.toString();
+  const sellerIdStr = (() => {
+    const s = product.seller;
+    if (!s) return "";
+    if (typeof s === "string") return s;
+    if (typeof s === "object") {
+      const id = (s as any)._id ?? (s as any).id;
+      if (id) return String(id);
+    }
+    return "";
+  })();
+  const effectiveSellerId = sellerIdStr || (product as any).school || "platform";
+
   const isOwnProduct = Boolean(
     session?.user?.id &&
     sellerIdStr &&
-    session.user.id.toString() === sellerIdStr
+    session.user.id.toString() === sellerIdStr,
   );
 
   const hasSizes = (product.variants?.sizes?.length ?? 0) > 0;
@@ -42,19 +53,15 @@ export default function BuyNowButton({ product }: { product: ProductSummary }) {
 
   const handleAddToCart = () => {
     if (isOwnProduct) return;
-    if (!sellerIdStr) {
-      setVariantError("This product is temporarily unavailable for purchase. Please refresh the page and try again.");
-      return;
-    }
     if (!validateVariants("adding to cart")) return;
 
     addItem({
-      productId: product._id,
+      productId: String(product._id),
       title: product.title,
       price: product.price,
       image: product.images?.[0] ?? "/placeholder.png",
       condition: product.condition,
-      sellerId: sellerIdStr,
+      sellerId: effectiveSellerId,
       quantity: qty,
       stock: product.stock,
       selectedSize: selectedSize || undefined,
@@ -67,20 +74,16 @@ export default function BuyNowButton({ product }: { product: ProductSummary }) {
 
   const handleBuyNow = () => {
     if (isOwnProduct) return;
-    if (!sellerIdStr) {
-      setVariantError("This product is temporarily unavailable for purchase. Please refresh the page and try again.");
-      return;
-    }
     if (!validateVariants("purchasing")) return;
 
     clearCart();
     addItem({
-      productId: product._id,
+      productId: String(product._id),
       title: product.title,
       price: product.price,
       image: product.images?.[0] ?? "/placeholder.png",
       condition: product.condition,
-      sellerId: sellerIdStr,
+      sellerId: effectiveSellerId,
       quantity: qty,
       stock: product.stock,
       selectedSize: selectedSize || undefined,
@@ -98,10 +101,37 @@ export default function BuyNowButton({ product }: { product: ProductSummary }) {
   }
 
   const KNOWN_CSS_COLORS = new Set([
-    "black","white","red","blue","green","yellow","orange","purple","pink","gray",
-    "grey","brown","navy","beige","ivory","gold","silver","cyan","teal","maroon",
-    "lime","indigo","violet","coral","salmon","khaki","turquoise","magenta","olive",
-    "charcoal","crimson",
+    "black",
+    "white",
+    "red",
+    "blue",
+    "green",
+    "yellow",
+    "orange",
+    "purple",
+    "pink",
+    "gray",
+    "grey",
+    "brown",
+    "navy",
+    "beige",
+    "ivory",
+    "gold",
+    "silver",
+    "cyan",
+    "teal",
+    "maroon",
+    "lime",
+    "indigo",
+    "violet",
+    "coral",
+    "salmon",
+    "khaki",
+    "turquoise",
+    "magenta",
+    "olive",
+    "charcoal",
+    "crimson",
   ]);
 
   return (
@@ -109,7 +139,10 @@ export default function BuyNowButton({ product }: { product: ProductSummary }) {
       {isOwnProduct && (
         <div className="mb-4 px-4 py-3 bg-amber-50 border border-amber-200 rounded-xl flex items-center gap-2.5 text-amber-900 text-sm font-semibold">
           <i className="fa-solid fa-circle-exclamation text-amber-600 text-base" />
-          <span>This is your own product. You cannot purchase products you have listed.</span>
+          <span>
+            This is your own product. You cannot purchase products you have
+            listed.
+          </span>
         </div>
       )}
 
@@ -148,7 +181,12 @@ export default function BuyNowButton({ product }: { product: ProductSummary }) {
       {!isOwnProduct && hasColors && (
         <div className="mb-5">
           <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">
-            Colour {selectedColor && <span className="text-[#111111] font-bold">— {selectedColor}</span>}
+            Colour{" "}
+            {selectedColor && (
+              <span className="text-[#111111] font-bold">
+                — {selectedColor}
+              </span>
+            )}
           </p>
           <div className="flex flex-wrap gap-2 items-center">
             {product.variants!.colors.map((color) => {
@@ -192,7 +230,9 @@ export default function BuyNowButton({ product }: { product: ProductSummary }) {
                       : "border border-gray-300 hover:scale-105"
                   } ${normalized === "white" ? "border-gray-300" : ""}`}
                 >
-                  {active && <i className="fa-solid fa-check text-[10px] text-[#A4860E]" />}
+                  {active && (
+                    <i className="fa-solid fa-check text-[10px] text-[#A4860E]" />
+                  )}
                 </button>
               );
             })}
@@ -223,13 +263,19 @@ export default function BuyNowButton({ product }: { product: ProductSummary }) {
                 type="button"
                 onClick={() => setQty((q) => Math.max(1, q - 1))}
                 className="px-3 py-0 text-[#111111] hover:bg-[#F5F5F5] transition-colors font-bold cursor-pointer h-full flex items-center text-sm"
-              >-</button>
-              <span className="px-2 py-0 font-semibold text-[#111111] min-w-[2.5rem] text-center text-sm h-full flex items-center justify-center">{qty}</span>
+              >
+                -
+              </button>
+              <span className="px-2 py-0 font-semibold text-[#111111] min-w-[2.5rem] text-center text-sm h-full flex items-center justify-center">
+                {qty}
+              </span>
               <button
                 type="button"
                 onClick={() => setQty((q) => Math.min(product.stock, q + 1))}
                 className="px-3 py-0 text-[#111111] hover:bg-[#F5F5F5] transition-colors font-bold cursor-pointer h-full flex items-center text-sm"
-              >+</button>
+              >
+                +
+              </button>
             </div>
           </div>
         </div>
@@ -245,8 +291,8 @@ export default function BuyNowButton({ product }: { product: ProductSummary }) {
             isOwnProduct
               ? "bg-gray-100 border-gray-200 text-gray-400 cursor-not-allowed shadow-none"
               : addedToCart
-              ? "bg-[#F0FDF4] text-[#A4860E] border-[#A4860E]"
-              : "bg-white hover:bg-amber-50/50 text-[#A4860E] border-[#A4860E] cursor-pointer"
+                ? "bg-[#F0FDF4] text-[#A4860E] border-[#A4860E]"
+                : "bg-white hover:bg-amber-50/50 text-[#A4860E] border-[#A4860E] cursor-pointer"
           }`}
         >
           <i className="fa-solid fa-cart-shopping" />
@@ -264,7 +310,9 @@ export default function BuyNowButton({ product }: { product: ProductSummary }) {
           }`}
         >
           <i className="fa-solid fa-bolt" />
-          <span>{isOwnProduct ? "Cannot Purchase Own Product" : "Buy Now"}</span>
+          <span>
+            {isOwnProduct ? "Cannot Purchase Own Product" : "Buy Now"}
+          </span>
         </button>
       </div>
     </div>

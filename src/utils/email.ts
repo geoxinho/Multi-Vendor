@@ -463,21 +463,48 @@ export async function sendOrderConfirmationEmails(
   if (process.env.ADMIN_EMAIL) finalAdminEmails.add(process.env.ADMIN_EMAIL.trim().toLowerCase());
   if (process.env.SMTP_USER) finalAdminEmails.add(process.env.SMTP_USER.trim().toLowerCase());
 
+  const orderShortId = (order._id ? order._id.toString() : "ORDER").slice(-8).toUpperCase();
+  const buyerText = `Hi ${buyerName},\n\nYour order #${orderShortId} has been confirmed.\n\nYour Delivery Verification PIN is: ${order.deliveryPin}\n\nKeep this PIN safe. Share it with the seller ONLY after physically inspecting your package.\n\nTotal Paid: ₦${order.totalAmount ? order.totalAmount.toLocaleString() : ""}\n\nView your orders at: ${siteUrl}/dashboard/buyer/orders\n\n© ${new Date().getFullYear()} CampusGo`;
+
+  function buildSellerText(items: any[], sellerName?: string) {
+    const lines = items.map((i) => `- ${i.title} (Qty: ${i.quantity}) - ₦${((i.price || 0) * (i.quantity || 1)).toLocaleString()}`).join("\n");
+    const total = items.reduce((acc, curr) => acc + ((curr.price || 0) * (curr.quantity || 1)), 0);
+    return `Hello ${sellerName || "Partner"},\n\nGreat news! A new order #${orderShortId} has been received for items in your store:\n\n${lines}\n\nOrder Value: ₦${total.toLocaleString()}\n\nDelivery PIN Required: After safely delivering the order to the buyer, ask for their 6-digit Delivery PIN and enter it in your seller dashboard to confirm delivery.\n\nView orders at: ${siteUrl}/dashboard/seller/orders\n\n© ${new Date().getFullYear()} CampusGo`;
+  }
+
+  function buildAdminText() {
+    return `[Admin Dashboard Alert] New Order #${orderShortId} Placed\n\nBuyer: ${buyerName} (${buyerEmail})\nTotal Paid: ₦${order.totalAmount ? order.totalAmount.toLocaleString() : ""}\nDelivery PIN: ${order.deliveryPin}\n\nOpen admin orders: ${siteUrl}/dashboard/admin/orders`;
+  }
+
   if (hasSMTP && transporter) {
     try {
+      const emailTasks: Promise<any>[] = [];
+
       // 1. Send to buyer
       if (buyerEmail) {
-        try {
-          const info = await transporter.sendMail({
-            from: smtpFrom,
-            to: buyerEmail.trim(),
-            subject: "Order Confirmation & Delivery PIN - CampusGo",
-            html: buyerHtml,
-          });
-          console.log(`[EMAIL SUCCESS] Order confirmation sent to buyer (${buyerEmail}). MessageID: ${info.messageId}`);
-        } catch (buyerErr) {
-          console.error(`[EMAIL ERROR] Failed sending buyer confirmation to ${buyerEmail}:`, buyerErr);
-        }
+        emailTasks.push(
+          transporter
+            .sendMail({
+              from: smtpFrom,
+              to: buyerEmail.trim(),
+              subject: `Order Confirmed #${orderShortId} & Delivery PIN - CampusGo`,
+              text: buyerText,
+              html: buyerHtml,
+            })
+            .then((info) => {
+              console.log(
+                `[EMAIL SUCCESS] Order confirmation sent to buyer (${buyerEmail}). MessageID: ${info.messageId}`,
+              );
+              return { type: "buyer", email: buyerEmail, messageId: info.messageId };
+            })
+            .catch((buyerErr) => {
+              console.error(
+                `[EMAIL ERROR] Failed sending buyer confirmation to ${buyerEmail}:`,
+                buyerErr?.message || buyerErr,
+              );
+              return { type: "buyer", email: buyerEmail, error: buyerErr };
+            }),
+        );
       }
 
       // 2. Send personalized email to each seller
@@ -487,35 +514,61 @@ export async function sendOrderConfirmationEmails(
         const sellerName = Array.isArray(value) ? undefined : value.sellerName;
         if (!items || items.length === 0) continue;
 
-        try {
-          const info = await transporter.sendMail({
-            from: smtpFrom,
-            to: email.trim(),
-            subject: "🎉 New Order Received - CampusGo",
-            html: buildSellerHtml(items, sellerName),
-          });
-          console.log(`[EMAIL SUCCESS] New order alert sent to seller (${email}). MessageID: ${info.messageId}`);
-        } catch (sellerErr) {
-          console.error(`[EMAIL ERROR] Failed sending seller order alert to ${email}:`, sellerErr);
-        }
+        emailTasks.push(
+          transporter
+            .sendMail({
+              from: smtpFrom,
+              to: email.trim(),
+              subject: `🎉 New Order Received #${orderShortId} - CampusGo`,
+              text: buildSellerText(items, sellerName),
+              html: buildSellerHtml(items, sellerName),
+            })
+            .then((info) => {
+              console.log(
+                `[EMAIL SUCCESS] New order alert sent to seller (${email}). MessageID: ${info.messageId}`,
+              );
+              return { type: "seller", email, messageId: info.messageId };
+            })
+            .catch((sellerErr) => {
+              console.error(
+                `[EMAIL ERROR] Failed sending seller order alert to ${email}:`,
+                sellerErr?.message || sellerErr,
+              );
+              return { type: "seller", email, error: sellerErr };
+            }),
+        );
       }
 
       // 3. Send notification to admin / dashboard
       for (const adminEmail of finalAdminEmails) {
-        try {
-          const info = await transporter.sendMail({
-            from: smtpFrom,
-            to: adminEmail,
-            subject: `🔔 [Admin] New Order #${order._id.toString().slice(-8).toUpperCase()} Placed - CampusGo`,
-            html: buildAdminHtml(),
-          });
-          console.log(`[EMAIL SUCCESS] Admin order notification sent to ${adminEmail}. MessageID: ${info.messageId}`);
-        } catch (adminErr) {
-          console.error(`[EMAIL ERROR] Failed sending admin notification to ${adminEmail}:`, adminErr);
-        }
+        emailTasks.push(
+          transporter
+            .sendMail({
+              from: smtpFrom,
+              to: adminEmail,
+              subject: `🔔 [Admin] New Order #${orderShortId} Placed - CampusGo`,
+              text: buildAdminText(),
+              html: buildAdminHtml(),
+            })
+            .then((info) => {
+              console.log(
+                `[EMAIL SUCCESS] Admin order notification sent to ${adminEmail}. MessageID: ${info.messageId}`,
+              );
+              return { type: "admin", email: adminEmail, messageId: info.messageId };
+            })
+            .catch((adminErr) => {
+              console.error(
+                `[EMAIL ERROR] Failed sending admin notification to ${adminEmail}:`,
+                adminErr?.message || adminErr,
+              );
+              return { type: "admin", email: adminEmail, error: adminErr };
+            }),
+        );
       }
-    } catch (err) {
-      console.error("[EMAIL ERROR] Transporter error sending order confirmation emails:", err);
+
+      await Promise.allSettled(emailTasks);
+    } catch (err: any) {
+      console.error("[EMAIL ERROR] Transporter error sending order confirmation emails:", err?.message || err);
     }
   } else {
     console.log(`[MOCK EMAIL] Order Confirmation to Buyer (${buyerEmail}). PIN: ${order.deliveryPin}`);

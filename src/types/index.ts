@@ -19,7 +19,7 @@ export interface ProductSummary {
   condition: "new" | "used";
   rating: number;
   numReviews: number;
-  seller: { _id: string; name: string; storeName: string };
+  seller: { _id: string; name: string; storeName: string } | string;
   category: { _id: string; name: string; slug: string };
   stock: number;
   sold: number;

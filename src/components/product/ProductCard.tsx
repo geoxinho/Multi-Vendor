@@ -35,23 +35,35 @@ export default function ProductCard({
     setWishlisted(initialWishlisted);
   }, [initialWishlisted]);
 
-  const sellerIdStr = (product.seller?._id || (typeof product.seller === "string" ? product.seller : ""))?.toString();
+  // Robustly extract seller ID regardless of whether it's:
+  // - a populated object  { _id: "abc123", name: "...", ... }
+  // - a plain ObjectId    "abc123"
+  // - a string            "abc123"
+  // - a Mongo ObjectId obj (unlikely after JSON.parse, but handled)
+  const sellerIdStr = (() => {
+    const s = product.seller;
+    if (!s) return "";
+    if (typeof s === "string") return s;
+    if (typeof s === "object") {
+      const id = (s as any)._id ?? (s as any).id;
+      if (id) return String(id);
+    }
+    return "";
+  })();
 
   const handleAddToCart = (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
     if (product.stock === 0) return;
-    if (!sellerIdStr) {
-      console.warn("Blocked add-to-cart: product is missing seller information.", product._id);
-      return;
-    }
+    const effectiveSellerId = sellerIdStr || (product as any).school || "platform";
+
     addItem({
-      productId: product._id,
+      productId: String(product._id),
       title: product.title,
       price: product.price,
       image: product.images?.[0] ?? "/placeholder.png",
       condition: product.condition,
-      sellerId: sellerIdStr,
+      sellerId: effectiveSellerId,
       quantity: 1,
       stock: product.stock,
     });
@@ -72,7 +84,9 @@ export default function ProductCard({
       });
 
       if (res.status === 401) {
-        router.push(`/auth/login?callbackUrl=${encodeURIComponent(window.location.pathname)}`);
+        router.push(
+          `/auth/login?callbackUrl=${encodeURIComponent(window.location.pathname)}`,
+        );
         return;
       }
 
@@ -95,21 +109,26 @@ export default function ProductCard({
   };
 
   return (
-    <Link href={`/products/${product._id}`} className="group block h-full">
+    <div className="group block h-full">
       <div className="bg-white border border-[#E5E5E5]/60 rounded-xl overflow-hidden shadow-[0_2px_8px_rgba(0,0,0,0.04)] hover:shadow-[0_12px_24px_rgba(0,0,0,0.08)] hover:-translate-y-1 transition-all duration-300 flex flex-col h-full">
         {/* Image Wrapper */}
         <div className="relative aspect-square bg-[#F5F5F5] overflow-hidden shrink-0">
-          <Image
-            src={product.images[0] ?? "/placeholder.png"}
-            alt={product.title}
-            fill
-            className="object-cover group-hover:scale-105 transition-transform duration-500"
-            sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
-            priority={priority}
-          />
+          <Link
+            href={`/products/${product._id}`}
+            className="block w-full h-full relative"
+          >
+            <Image
+              src={product.images[0] ?? "/placeholder.png"}
+              alt={product.title}
+              fill
+              className="object-cover group-hover:scale-105 transition-transform duration-500"
+              sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
+              priority={priority}
+            />
+          </Link>
 
           {/* Condition Badge - Golden/Amber variant for NEW for contrast */}
-          <div className="absolute top-3 left-3 z-10 flex flex-col gap-1.5">
+          <div className="absolute top-3 left-3 z-10 flex flex-col gap-1.5 pointer-events-none">
             <Badge variant={product.condition === "new" ? "gold" : "neutral"}>
               {product.condition === "new" ? "New" : "Used"}
             </Badge>
@@ -122,6 +141,7 @@ export default function ProductCard({
 
           {/* Wishlist Button */}
           <button
+            type="button"
             onClick={handleWishlist}
             disabled={wishlistLoading}
             className={`absolute top-3 right-3 z-10 w-8 h-8 rounded-full flex items-center justify-center transition-all cursor-pointer ${
@@ -131,7 +151,9 @@ export default function ProductCard({
             }`}
             title={wishlisted ? "Remove from wishlist" : "Add to wishlist"}
           >
-            <i className={`fa-heart text-xs ${wishlisted ? "fa-solid" : "fa-regular"}`} />
+            <i
+              className={`fa-heart text-xs ${wishlisted ? "fa-solid" : "fa-regular"}`}
+            />
           </button>
         </div>
 
@@ -145,9 +167,11 @@ export default function ProductCard({
           )}
 
           {/* Title */}
-          <h3 className="font-bold text-gray-900 text-sm line-clamp-2 mb-1 group-hover:text-[#A4860E] transition-colors leading-snug">
-            {product.title}
-          </h3>
+          <Link href={`/products/${product._id}`} className="block">
+            <h3 className="font-bold text-gray-900 text-sm line-clamp-2 mb-1 group-hover:text-[#A4860E] transition-colors leading-snug">
+              {product.title}
+            </h3>
+          </Link>
 
           {/* Rating */}
           <div className="flex items-center gap-1 mb-2">
@@ -179,8 +203,8 @@ export default function ProductCard({
                 product.stock === 0
                   ? "bg-gray-100 text-gray-400 cursor-not-allowed border border-gray-200"
                   : added
-                  ? "bg-[#F0FDF4] text-[#8a6f0b] border border-[#BBF7D0]"
-                  : "bg-[#A4860E] hover:bg-[#8a6f0b] active:scale-[0.98] text-white cursor-pointer hover:shadow-sm"
+                    ? "bg-[#F0FDF4] text-[#8a6f0b] border border-[#BBF7D0]"
+                    : "bg-[#A4860E] hover:bg-[#8a6f0b] active:scale-[0.98] text-white cursor-pointer hover:shadow-sm"
               }`}
               title={product.stock === 0 ? "Out of stock" : "Add to Cart"}
             >
@@ -192,13 +216,15 @@ export default function ProductCard({
               ) : (
                 <>
                   <i className="fa-solid fa-cart-shopping text-xs" />
-                  <span>{product.stock === 0 ? "Out of Stock" : "Add to Cart"}</span>
+                  <span>
+                    {product.stock === 0 ? "Out of Stock" : "Add to Cart"}
+                  </span>
                 </>
               )}
             </button>
           </div>
         </div>
       </div>
-    </Link>
+    </div>
   );
 }

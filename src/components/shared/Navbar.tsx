@@ -61,8 +61,9 @@ function NavbarInner() {
 
   const cartCount = useCartStore((s) => s.items.reduce((sum, i) => sum + i.quantity, 0));
   const wishlistCount = useWishlistStore((s) => s.count);
-
-  const [cartOpen, setCartOpen] = useState(false);
+  const isCartOpen = useCartStore((s) => s.isOpen);
+  const openCart = useCartStore((s) => s.openCart);
+  const closeCart = useCartStore((s) => s.closeCart);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [mobileSearchOpen, setMobileSearchOpen] = useState(false);
   const [userMenuOpen, setUserMenuOpen] = useState(false);
@@ -300,7 +301,7 @@ function NavbarInner() {
 
               {/* Cart — always visible */}
               <button
-                onClick={() => setCartOpen(true)}
+                onClick={openCart}
                 className="flex items-center gap-2 px-3 sm:px-4 py-2 rounded-xl bg-white hover:bg-gray-50 text-gray-900 border border-gray-200 hover:border-gray-300 transition-all shadow-xs shrink-0"
                 aria-label="Open shopping cart"
               >
@@ -585,7 +586,7 @@ function NavbarInner() {
         </div>
       </div>
 
-      <CartDrawer open={cartOpen} onClose={() => setCartOpen(false)} />
+      <CartDrawer open={isCartOpen} onClose={closeCart} />
 
       {becomeSellerOpen && (
         <BecomeSellerModal onClose={() => setBecomeSellerOpen(false)} />

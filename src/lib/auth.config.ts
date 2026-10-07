@@ -12,6 +12,8 @@ export const authConfig = {
     async jwt({ token, user, trigger, session }) {
       if (user) {
         token.id = user.id;
+        if (user.email) token.email = user.email;
+        if (user.name) token.name = user.name;
         token.role = (user as { role?: string }).role ?? "";
         token.roles = (user as { roles?: string[] }).roles ?? [
           token.role as string,
@@ -24,6 +26,8 @@ export const authConfig = {
         token.image = (user as { image?: string }).image ?? "";
       }
       if (trigger === "update" && session) {
+        if (session.email) token.email = session.email;
+        if (session.name) token.name = session.name;
         if (session.role) token.role = session.role;
         if (session.roles) token.roles = session.roles;
         if (session.storeName !== undefined) token.storeName = session.storeName;
@@ -38,6 +42,8 @@ export const authConfig = {
     async session({ session, token }) {
       if (session.user) {
         session.user.id = token.id as string;
+        if (token.email) session.user.email = token.email as string;
+        if (token.name) session.user.name = token.name as string;
         session.user.role = token.role as string;
         session.user.roles = (token.roles as string[]) ?? [
           token.role as string,

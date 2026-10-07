@@ -12,7 +12,8 @@ import { Category } from "@/models/Category";
  *      "Federal Polytechnic Ede" -> "federal_polytechnic_ede"
  */
 export function getCampusSlug(schoolNameOrSlug: string): string {
-  if (!schoolNameOrSlug || typeof schoolNameOrSlug !== "string") return "general";
+  if (!schoolNameOrSlug || typeof schoolNameOrSlug !== "string")
+    return "general";
   const cleaned = schoolNameOrSlug
     .trim()
     .toLowerCase()
@@ -33,7 +34,7 @@ export function getCampusModel<T>(
   schoolNameOrSlug: string,
   modelBaseName: string,
   schema: mongoose.Schema<T>,
-  collectionSuffix: string
+  collectionSuffix: string,
 ): Model<T> {
   const slug = getCampusSlug(schoolNameOrSlug);
   const modelName = `${slug}_${modelBaseName}`;
@@ -62,7 +63,10 @@ export function getCampusOrderModel(school: string): Model<IOrder> {
 }
 
 // In-memory micro-caches for database rendering speed
-let cachedActiveSchools: { data: { name: string; slug: string }[]; expiresAt: number } | null = null;
+let cachedActiveSchools: {
+  data: { name: string; slug: string }[];
+  expiresAt: number;
+} | null = null;
 let cachedDiscoveredSlugs: { data: string[]; expiresAt: number } | null = null;
 
 async function safeListCollections(): Promise<{ name: string }[]> {
@@ -78,7 +82,10 @@ async function safeListCollections(): Promise<{ name: string }[]> {
 
     return await mongoose.connection.db.listCollections().toArray();
   } catch (err) {
-    console.warn("[campusModels] Mongo collection discovery failed; falling back to empty list.", err);
+    console.warn(
+      "[campusModels] Mongo collection discovery failed; falling back to empty list.",
+      err,
+    );
     return [];
   }
 }
@@ -86,16 +93,23 @@ async function safeListCollections(): Promise<{ name: string }[]> {
 /**
  * Retrieves all active registered schools from MongoDB (cached for 60s).
  */
-export async function getAllActiveSchools(): Promise<{ name: string; slug: string }[]> {
+export async function getAllActiveSchools(): Promise<
+  { name: string; slug: string }[]
+> {
   const now = Date.now();
   if (cachedActiveSchools && cachedActiveSchools.expiresAt > now) {
     return cachedActiveSchools.data;
   }
 
   try {
-    const schools = await School.find({ isActive: true }).select("name slug").lean();
+    const schools = await School.find({ isActive: true })
+      .select("name slug")
+      .lean();
     if (schools && schools.length > 0) {
-      const data = schools.map((s: any) => ({ name: s.name, slug: s.slug || s.name }));
+      const data = schools.map((s: any) => ({
+        name: s.name,
+        slug: s.slug || s.name,
+      }));
       cachedActiveSchools = { data, expiresAt: now + 60_000 };
       return data;
     }
@@ -112,7 +126,7 @@ export async function getAllActiveSchools(): Promise<{ name: string; slug: strin
  * Searches in parallel across all active campus user collections for a user matching the query.
  */
 export async function findUserAcrossCampuses(
-  filter: Record<string, any>
+  filter: Record<string, any>,
 ): Promise<{ user: IUser; campusSlug: string; school: string } | null> {
   const schools = await getAllActiveSchools();
   const queries = schools.map(async (s) => {
@@ -155,7 +169,7 @@ export async function findUserAcrossCampuses(
  * Returns a Map keyed by the string user ID.
  */
 export async function findUsersByIdsAcrossCampuses(
-  ids: (string | mongoose.Types.ObjectId)[]
+  ids: (string | mongoose.Types.ObjectId)[],
 ): Promise<Map<string, any>> {
   const result = new Map<string, any>();
   if (!ids || ids.length === 0) return result;
@@ -179,18 +193,26 @@ export async function findUsersByIdsAcrossCampuses(
             const col = db.collection(colName);
             const filterQuery: any =
               objectIds.length > 0
-                ? { $or: [{ _id: { $in: objectIds } }, { _id: { $in: stringIds } }] }
+                ? {
+                    $or: [
+                      { _id: { $in: objectIds } },
+                      { _id: { $in: stringIds } },
+                    ],
+                  }
                 : { _id: { $in: stringIds } };
             const found = await col.find(filterQuery).toArray();
             for (const u of found) {
               result.set(u._id.toString(), u);
             }
           } catch {}
-        })
+        }),
       );
     }
   } catch (err) {
-    console.error("[findUsersByIdsAcrossCampuses] Direct collection search error:", err);
+    console.error(
+      "[findUsersByIdsAcrossCampuses] Direct collection search error:",
+      err,
+    );
   }
 
   // Fallback: Check via active registered school models if any IDs were not found
@@ -198,7 +220,9 @@ export async function findUsersByIdsAcrossCampuses(
   if (missingIds.length > 0) {
     try {
       const schools = await getAllActiveSchools();
-      const userModels: Model<any>[] = schools.map((s) => getCampusUserModel(s.slug));
+      const userModels: Model<any>[] = schools.map((s) =>
+        getCampusUserModel(s.slug),
+      );
       userModels.push(User);
 
       await Promise.all(
@@ -206,14 +230,17 @@ export async function findUsersByIdsAcrossCampuses(
           try {
             const docs = await m
               .find({
-                $or: [{ _id: { $in: objectIds } }, { _id: { $in: missingIds } }],
+                $or: [
+                  { _id: { $in: objectIds } },
+                  { _id: { $in: missingIds } },
+                ],
               })
               .lean();
             for (const d of docs) {
               result.set((d as any)._id.toString(), d);
             }
           } catch {}
-        })
+        }),
       );
     } catch {}
   }
@@ -248,7 +275,7 @@ export async function findAdminsAcrossCampuses(): Promise<any[]> {
               }
             }
           } catch {}
-        })
+        }),
       );
     }
   } catch (err) {
@@ -262,24 +289,38 @@ export async function findAdminsAcrossCampuses(): Promise<any[]> {
  * Searches across all campus product collections in parallel for blazing-fast product rendering.
  */
 export async function findProductAcrossCampuses(
-  idOrFilter: string | Record<string, any>
-): Promise<{ product: any; campusSlug: string; model: Model<IProduct> } | null> {
+  idOrFilter: string | Record<string, any>,
+): Promise<{
+  product: any;
+  campusSlug: string;
+  model: Model<IProduct>;
+} | null> {
   const schools = await getAllActiveSchools();
-  const filter = typeof idOrFilter === "string" ? { _id: idOrFilter } : idOrFilter;
+  const filter =
+    typeof idOrFilter === "string" ? { _id: idOrFilter } : idOrFilter;
 
-  const targets: { model: Model<IProduct>; slug: string }[] = schools.map((s) => ({
-    model: getCampusProductModel(s.slug),
-    slug: s.slug,
-  }));
+  const targets: { model: Model<IProduct>; slug: string }[] = schools.map(
+    (s) => ({
+      model: getCampusProductModel(s.slug),
+      slug: s.slug,
+    }),
+  );
   targets.push({ model: Product, slug: "general" });
 
   // Discover and cache any other collection ending with _products (cached for 60s)
   const now = Date.now();
   if (cachedDiscoveredSlugs && cachedDiscoveredSlugs.expiresAt > now) {
     for (const slug of cachedDiscoveredSlugs.data) {
-      if (!targets.some((t) => t.slug === slug || getCampusSlug(t.slug) === slug)) {
+      if (
+        !targets.some((t) => t.slug === slug || getCampusSlug(t.slug) === slug)
+      ) {
         targets.push({
-          model: getCampusModel<IProduct>(slug, "Product", ProductSchema, "products"),
+          model: getCampusModel<IProduct>(
+            slug,
+            "Product",
+            ProductSchema,
+            "products",
+          ),
           slug,
         });
       }
@@ -293,9 +334,18 @@ export async function findProductAcrossCampuses(
           if (col.name.endsWith("_products") && col.name !== "products") {
             const slug = col.name.replace(/_products$/, "");
             discovered.push(slug);
-            if (!targets.some((t) => t.slug === slug || getCampusSlug(t.slug) === slug)) {
+            if (
+              !targets.some(
+                (t) => t.slug === slug || getCampusSlug(t.slug) === slug,
+              )
+            ) {
               targets.push({
-                model: getCampusModel<IProduct>(slug, "Product", ProductSchema, "products"),
+                model: getCampusModel<IProduct>(
+                  slug,
+                  "Product",
+                  ProductSchema,
+                  "products",
+                ),
                 slug,
               });
             }
@@ -304,7 +354,10 @@ export async function findProductAcrossCampuses(
         cachedDiscoveredSlugs = { data: discovered, expiresAt: now + 60_000 };
       }
     } catch (err) {
-      console.warn("[findProductAcrossCampuses] dynamic collections discovery warning:", err);
+      console.warn(
+        "[findProductAcrossCampuses] dynamic collections discovery warning:",
+        err,
+      );
     }
   }
 
@@ -326,7 +379,10 @@ export async function findProductAcrossCampuses(
         return { product: enriched, campusSlug: slug, model };
       }
     } catch (err) {
-      console.error(`[findProductAcrossCampuses] Error searching campus "${slug}":`, err);
+      console.error(
+        `[findProductAcrossCampuses] Error searching campus "${slug}":`,
+        err,
+      );
     }
     return null;
   });
@@ -339,15 +395,21 @@ export async function findProductAcrossCampuses(
   return null;
 }
 
-
 /**
  * Helper to ensure a product's seller is populated from campus user models
  */
-export async function populateSingleProductSeller(product: any, schoolHint?: string): Promise<any> {
+export async function populateSingleProductSeller(
+  product: any,
+  schoolHint?: string,
+): Promise<any> {
   if (!product) return product;
 
   // If seller is already populated with a valid name/storeName, return
-  if (product.seller && typeof product.seller === "object" && (product.seller.name || product.seller.storeName)) {
+  if (
+    product.seller &&
+    typeof product.seller === "object" &&
+    (product.seller.name || product.seller.storeName)
+  ) {
     return product;
   }
 
@@ -380,13 +442,19 @@ export async function populateSingleProductSeller(product: any, schoolHint?: str
 /**
  * Batch populates seller objects for an array of products across campus user models
  */
-export async function populateProductsWithSellers(products: any[]): Promise<any[]> {
+export async function populateProductsWithSellers(
+  products: any[],
+): Promise<any[]> {
   if (!Array.isArray(products) || products.length === 0) return products;
 
   // Find all seller IDs that need population
   const neededSellerIds = new Set<string>();
   for (const p of products) {
-    if (!p.seller || typeof p.seller !== "object" || (!p.seller.name && !p.seller.storeName)) {
+    if (
+      !p.seller ||
+      typeof p.seller !== "object" ||
+      (!p.seller.name && !p.seller.storeName)
+    ) {
       const sId = p.seller?._id || p.seller;
       if (sId) neededSellerIds.add(sId.toString());
     }
@@ -415,7 +483,7 @@ export async function populateProductsWithSellers(products: any[]): Promise<any[
           sellerMap.set(u._id.toString(), u);
         }
       } catch {}
-    })
+    }),
   );
 
   return products.map((p) => {
@@ -431,7 +499,9 @@ export async function populateProductsWithSellers(products: any[]): Promise<any[
  * Finds all orders across all campus order collections and the root orders collection.
  * Normalizes string and ObjectId queries for buyer, items.seller, and _id.
  */
-export async function findOrdersAcrossCampuses(filter: any = {}): Promise<any[]> {
+export async function findOrdersAcrossCampuses(
+  filter: any = {},
+): Promise<any[]> {
   try {
     const realDb = mongoose.connection.db;
     if (!realDb || mongoose.connection.readyState !== 1) {
@@ -447,7 +517,7 @@ export async function findOrdersAcrossCampuses(filter: any = {}): Promise<any[]>
       ...new Set(
         allCols
           .map((c) => c.name)
-          .filter((n) => n.endsWith("_orders") || n === "orders")
+          .filter((n) => n.endsWith("_orders") || n === "orders"),
       ),
     ];
 
@@ -488,7 +558,10 @@ export async function findOrdersAcrossCampuses(filter: any = {}): Promise<any[]>
       orderColNames.map(async (colName) => {
         try {
           const col = realDbAfterConnect.collection(colName);
-          const docs = await col.find(normalizedQuery).sort({ createdAt: -1 }).toArray();
+          const docs = await col
+            .find(normalizedQuery)
+            .sort({ createdAt: -1 })
+            .toArray();
           for (const doc of docs) {
             const idStr = doc._id.toString();
             if (!seenIds.has(idStr)) {
@@ -497,9 +570,12 @@ export async function findOrdersAcrossCampuses(filter: any = {}): Promise<any[]>
             }
           }
         } catch (err) {
-          console.warn(`[findOrdersAcrossCampuses] Error querying ${colName}:`, err);
+          console.warn(
+            `[findOrdersAcrossCampuses] Error querying ${colName}:`,
+            err,
+          );
         }
-      })
+      }),
     );
 
     orders.sort((a, b) => {
@@ -518,7 +594,9 @@ export async function findOrdersAcrossCampuses(filter: any = {}): Promise<any[]>
 /**
  * Populates buyer, seller, and product data for orders from campus collections.
  */
-export async function populateOrdersWithUsersAndProducts(orders: any[]): Promise<any[]> {
+export async function populateOrdersWithUsersAndProducts(
+  orders: any[],
+): Promise<any[]> {
   if (!Array.isArray(orders) || orders.length === 0) return orders;
 
   if (mongoose.connection.readyState !== 1 || !mongoose.connection.db) {
@@ -547,7 +625,11 @@ export async function populateOrdersWithUsersAndProducts(orders: any[]): Promise
       for (const item of o.items) {
         if (item.seller && typeof item.seller !== "object") {
           allUserIds.add(item.seller.toString());
-        } else if (item.seller?._id && !item.seller.name && !item.seller.storeName) {
+        } else if (
+          item.seller?._id &&
+          !item.seller.name &&
+          !item.seller.storeName
+        ) {
           allUserIds.add(item.seller._id.toString());
         }
 
@@ -581,11 +663,24 @@ export async function populateOrdersWithUsersAndProducts(orders: any[]): Promise
           const col = db.collection(colName);
           const filterQ: any =
             userObjIds.length > 0
-              ? { $or: [{ _id: { $in: userObjIds } }, { _id: { $in: userIdsArray } }] }
+              ? {
+                  $or: [
+                    { _id: { $in: userObjIds } },
+                    { _id: { $in: userIdsArray } },
+                  ],
+                }
               : { _id: { $in: userIdsArray } };
           const found = await col
             .find(filterQ)
-            .project({ name: 1, storeName: 1, email: 1, phone: 1, school: 1, avatar: 1, bankDetails: 1 })
+            .project({
+              name: 1,
+              storeName: 1,
+              email: 1,
+              phone: 1,
+              school: 1,
+              avatar: 1,
+              bankDetails: 1,
+            })
             .toArray();
           for (const u of found) {
             userMap.set(u._id.toString(), {
@@ -600,7 +695,7 @@ export async function populateOrdersWithUsersAndProducts(orders: any[]): Promise
             });
           }
         } catch {}
-      })
+      }),
     );
   }
 
@@ -622,9 +717,17 @@ export async function populateOrdersWithUsersAndProducts(orders: any[]): Promise
           const col = db.collection(colName);
           const filterQ: any =
             prodObjIds.length > 0
-              ? { $or: [{ _id: { $in: prodObjIds } }, { _id: { $in: prodIdsArray } }] }
+              ? {
+                  $or: [
+                    { _id: { $in: prodObjIds } },
+                    { _id: { $in: prodIdsArray } },
+                  ],
+                }
               : { _id: { $in: prodIdsArray } };
-          const found = await col.find(filterQ).project({ title: 1, images: 1, price: 1 }).toArray();
+          const found = await col
+            .find(filterQ)
+            .project({ title: 1, images: 1, price: 1 })
+            .toArray();
           for (const p of found) {
             productMap.set(p._id.toString(), {
               _id: p._id.toString(),
@@ -634,7 +737,7 @@ export async function populateOrdersWithUsersAndProducts(orders: any[]): Promise
             });
           }
         } catch {}
-      })
+      }),
     );
   }
 
@@ -647,8 +750,12 @@ export async function populateOrdersWithUsersAndProducts(orders: any[]): Promise
       const pId = (item.product?._id || item.product)?.toString();
       return {
         ...item,
-        seller: sId ? userMap.get(sId) || item.seller || { _id: sId } : item.seller,
-        product: pId ? productMap.get(pId) || item.product || { _id: pId } : item.product,
+        seller: sId
+          ? userMap.get(sId) || item.seller || { _id: sId }
+          : item.seller,
+        product: pId
+          ? productMap.get(pId) || item.product || { _id: pId }
+          : item.product,
       };
     });
 
@@ -664,7 +771,9 @@ export async function populateOrdersWithUsersAndProducts(orders: any[]): Promise
 /**
  * Finds a single order by ID across all collections and populates its buyer, seller, and product.
  */
-export async function findOrderByIdAcrossCampuses(id: string): Promise<any | null> {
+export async function findOrderByIdAcrossCampuses(
+  id: string,
+): Promise<any | null> {
   const orders = await findOrdersAcrossCampuses({ _id: id });
   if (orders.length === 0) return null;
   const populated = await populateOrdersWithUsersAndProducts(orders);
@@ -680,7 +789,7 @@ export async function findOrderByIdAcrossCampuses(id: string): Promise<any | nul
 export async function findMutableOrderById(
   id: string,
   populateBuyer?: string,
-  populateSeller?: string
+  populateSeller?: string,
 ): Promise<any | null> {
   // 1. Try the root Order model first
   try {
@@ -696,7 +805,11 @@ export async function findMutableOrderById(
     const db = mongoose.connection.db;
     if (!db || mongoose.connection.readyState !== 1) {
       const { connectDB } = await import("@/lib/db");
-      try { await connectDB(); } catch { return null; }
+      try {
+        await connectDB();
+      } catch {
+        return null;
+      }
     }
 
     const allCols = await safeListCollections();
@@ -717,7 +830,8 @@ export async function findMutableOrderById(
 
         let q = CampusOrder.findOne({ _id: { $in: conds } });
         if (populateBuyer) q = q.populate("buyer", populateBuyer) as any;
-        if (populateSeller) q = q.populate("items.seller", populateSeller) as any;
+        if (populateSeller)
+          q = q.populate("items.seller", populateSeller) as any;
         const doc = await q;
         if (doc) return doc;
       } catch {}
@@ -732,11 +846,18 @@ export async function findMutableOrderById(
 /**
  * Updates an order across both the root orders collection and all campus order collections.
  */
-export async function updateOrderAcrossCampuses(id: string, updates: any): Promise<void> {
+export async function updateOrderAcrossCampuses(
+  id: string,
+  updates: any,
+): Promise<void> {
   try {
     if (mongoose.connection.readyState !== 1 || !mongoose.connection.db) {
       const { connectDB } = await import("@/lib/db");
-      try { await connectDB(); } catch { return; }
+      try {
+        await connectDB();
+      } catch {
+        return;
+      }
     }
 
     const activeDb = mongoose.connection.db;
@@ -747,7 +868,7 @@ export async function updateOrderAcrossCampuses(id: string, updates: any): Promi
       ...new Set(
         allCols
           .map((c) => c.name)
-          .filter((n) => n.endsWith("_orders") || n === "orders")
+          .filter((n) => n.endsWith("_orders") || n === "orders"),
       ),
     ];
 
@@ -762,7 +883,7 @@ export async function updateOrderAcrossCampuses(id: string, updates: any): Promi
           const col = activeDb.collection(colName);
           await col.updateMany({ _id: { $in: conds } }, { $set: updates });
         } catch {}
-      })
+      }),
     );
   } catch (err) {
     console.error("[updateOrderAcrossCampuses] Error:", err);

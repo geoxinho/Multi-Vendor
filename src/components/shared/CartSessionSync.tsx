@@ -19,8 +19,13 @@ export function CartSessionSync() {
 
     const currentUserId = session?.user?.id ?? null;
 
-    // Skip the very first render (prevUserId is undefined)
-    if (prevUserId.current !== undefined && prevUserId.current !== currentUserId) {
+    // Only clear if transitioning from an existing logged-in user to another user or logout
+    // Preserves guest cart items when a user logs in
+    if (
+      prevUserId.current !== undefined &&
+      prevUserId.current !== null &&
+      prevUserId.current !== currentUserId
+    ) {
       clearCart();
     }
 

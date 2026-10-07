@@ -56,28 +56,50 @@ export async function POST(req: NextRequest) {
         paymentRef.startsWith("cgo_mock_"));
 
     if (!isTestPlaceholder && !isMockRef) {
-      // Verify Flutterwave payment (only when a real secret key is configured and not a test/mock ref)
-      const verification = await verifyTransaction(paymentRef);
-      if (
-        verification.status !== "success" ||
-        !verification.data ||
-        verification.data.status !== "successful"
-      ) {
-        console.error(
-          "[ORDERS] Flutterwave verification failed:",
-          verification,
-        );
-        return NextResponse.json(
-          { error: "Payment verification failed. Please contact support." },
-          { status: 400 },
-        );
-      }
-      // Verify payment amount matches expected total (Flutterwave amount is in NGN)
-      const paidAmountNGN = verification.data.amount;
-      const { items: bodyItems } = body;
-      if (bodyItems && bodyItems.length > 0) {
-        // Store the verified paid amount for cross-checking
-        (req as any)._verifiedAmount = paidAmountNGN;
+      try {
+        // Verify Flutterwave payment (only when a real secret key is configured and not a test/mock ref)
+        const verification = await verifyTransaction(paymentRef);
+        if (
+          verification.status !== "success" ||
+          !verification.data ||
+          verification.data.status !== "successful"
+        ) {
+          console.error(
+            "[ORDERS] Flutterwave verification failed:",
+            verification,
+          );
+          return NextResponse.json(
+            {
+              error:
+                verification.message ||
+                "Payment verification failed. Please contact support.",
+            },
+            { status: 400 },
+          );
+        }
+        // Verify payment amount matches expected total (Flutterwave amount is in NGN)
+        const paidAmountNGN = verification.data.amount;
+        const { items: bodyItems } = body;
+        if (bodyItems && bodyItems.length > 0) {
+          // Store the verified paid amount for cross-checking
+          (req as any)._verifiedAmount = paidAmountNGN;
+        }
+      } catch (verifyErr: any) {
+        console.error("[ORDERS] Flutterwave verify exception:", verifyErr);
+        if (isFlwTestMode()) {
+          console.warn(
+            "[ORDERS] In Flutterwave test mode, bypassing verification exception to allow seamless testing.",
+          );
+        } else {
+          return NextResponse.json(
+            {
+              error:
+                verifyErr?.message ||
+                "Could not verify payment with Flutterwave.",
+            },
+            { status: 400 },
+          );
+        }
       }
     } else {
       console.warn(
@@ -257,11 +279,14 @@ export async function POST(req: NextRequest) {
         { sellerName?: string; items: typeof orderItems }
       >();
       for (const sellerId of sellerIds) {
-        const seller = sellersMap.get(sellerId);
-        const email = seller?.email;
+        let seller = sellersMap.get(sellerId);
+        if (!seller) {
+          seller = await User.findById(sellerId).lean().catch(() => null);
+        }
+        const email = seller?.email ? String(seller.email).trim() : "";
         if (!email) {
           console.warn(
-            `[ORDERS EMAIL] Seller with ID ${sellerId} has no email or was not found in campus collections.`,
+            `[ORDERS EMAIL] Seller with ID ${sellerId} has no email or was not found.`,
           );
           continue;
         }
@@ -276,14 +301,27 @@ export async function POST(req: NextRequest) {
         }
       }
 
-      // Fetch buyer details from session and multi-campus user lookup
-      let buyerEmail = session.user.email;
-      let buyerName = session.user.name || "Buyer";
-      const buyerDocMap = await findUsersByIdsAcrossCampuses([session.user.id]);
-      const buyerUser = buyerDocMap.get(session.user.id);
-      if (buyerUser) {
-        buyerEmail = buyerUser.email || buyerEmail;
-        buyerName = buyerUser.name || buyerName;
+      // Fetch buyer details from request body, session, and multi-campus user lookup
+      let buyerEmail = (body.buyerEmail || session.user.email || "").trim();
+      let buyerName = (body.buyerName || session.user.name || addressParsed.data.fullName || "Buyer").trim();
+
+      if (!buyerEmail) {
+        const buyerDocMap = await findUsersByIdsAcrossCampuses([session.user.id]);
+        const buyerUser =
+          buyerDocMap.get(session.user.id) ||
+          buyerDocMap.get(String(session.user.id));
+        if (buyerUser?.email) {
+          buyerEmail = String(buyerUser.email).trim();
+          buyerName = buyerUser.name || buyerName;
+        }
+      }
+
+      if (!buyerEmail) {
+        const fallbackUser = await User.findById(session.user.id).select("email name").lean().catch(() => null);
+        if (fallbackUser?.email) {
+          buyerEmail = String(fallbackUser.email).trim();
+          buyerName = fallbackUser.name || buyerName;
+        }
       }
 
       // Collect admin emails from AdminUser collection & environment variables
@@ -291,11 +329,22 @@ export async function POST(req: NextRequest) {
         .select("email")
         .lean()
         .catch(() => []);
-      const adminEmails: string[] = adminUsers
-        .map((a: any) => a.email)
-        .filter(Boolean);
-      if (process.env.ADMIN_EMAIL) adminEmails.push(process.env.ADMIN_EMAIL);
-      if (process.env.SMTP_USER) adminEmails.push(process.env.SMTP_USER);
+      const adminEmails: string[] = [
+        ...new Set(
+          adminUsers
+            .map((a: any) => a.email)
+            .filter(Boolean)
+            .map((email: string) => email.trim())
+            .concat(
+              process.env.ADMIN_EMAIL ? [process.env.ADMIN_EMAIL.trim()] : [],
+            )
+            .concat(process.env.SMTP_USER ? [process.env.SMTP_USER.trim()] : [])
+            .filter(Boolean)
+            .map((email) => email.toLowerCase()),
+        ),
+      ];
+
+      console.log(`[ORDERS EMAIL] Dispatching order emails: Buyer=${buyerEmail || "UNKNOWN"}, Sellers=${Array.from(sellerItemsMap.keys()).join(", ") || "NONE"}, Admins=${adminEmails.join(", ")}`);
 
       if (buyerEmail) {
         await sendOrderConfirmationEmails(
@@ -328,11 +377,12 @@ export async function POST(req: NextRequest) {
       console.error("[ORDERS EMAIL/MESSAGE ERROR]", e);
     }
 
-    return NextResponse.json(order, { status: 201 });
-  } catch (err) {
+    const safeOrder = order && typeof (order as any).toObject === "function" ? (order as any).toObject() : order;
+    return NextResponse.json(safeOrder, { status: 201 });
+  } catch (err: any) {
     console.error("[ORDERS POST]", err);
     return NextResponse.json(
-      { error: "Internal server error" },
+      { error: err?.message || "Internal server error" },
       { status: 500 },
     );
   }
