@@ -195,13 +195,11 @@ export default function CheckoutPage() {
       (item) => !item.sellerId || !String(item.sellerId).trim(),
     );
     if (invalidItems.length > 0) {
-      useCartStore.setState((state) => ({
-        items: state.items.filter((item) =>
-          Boolean(item.sellerId && String(item.sellerId).trim()),
-        ),
-      }));
+      // Do NOT mutate the cart here — removing items would empty the cart
+      // and trigger the /products redirect via the useEffect guard.
+      // Just show a user-friendly error and let them remove items manually.
       setServerError(
-        "One or more products in your cart are missing seller information. Please remove them and try again.",
+        `One or more products in your cart are missing seller information (${invalidItems.map((i) => i.title).join(", ")}). Please remove them from your cart and try again.`,
       );
       return;
     }
