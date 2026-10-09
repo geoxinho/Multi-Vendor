@@ -27,7 +27,7 @@ export default function BuyNowButton({ product }: { product: ProductSummary }) {
     }
     return "";
   })();
-  const effectiveSellerId = sellerIdStr || (product as any).school || "platform";
+  const effectiveSellerId = sellerIdStr || "";
 
   const isOwnProduct = Boolean(
     session?.user?.id &&

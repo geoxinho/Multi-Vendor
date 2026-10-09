@@ -11,10 +11,10 @@ const ROLE_DASHBOARD: Record<string, string> = {
   admin: "/dashboard/admin",
 };
 
-// After login redirect (buyers go to homepage)
+// After login redirect (buyers and sellers go to homepage)
 const ROLE_HOME: Record<string, string> = {
   buyer: "/",
-  seller: "/dashboard/seller",
+  seller: "/",
   admin: "/dashboard/admin",
 };
 

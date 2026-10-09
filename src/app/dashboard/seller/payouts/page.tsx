@@ -127,9 +127,19 @@ export default function SellerPayoutsPage() {
                         })}
                       </td>
                       <td className="px-4 py-3">
-                        <span className="inline-flex items-center gap-1 bg-emerald-100 text-emerald-700 text-xs font-semibold px-2.5 py-1 rounded-full">
-                          <i className="fa-solid fa-check text-[10px]" /> Disbursed
-                        </span>
+                        {w.status === "completed" ? (
+                          <span className="inline-flex items-center gap-1 bg-emerald-100 text-emerald-700 text-xs font-semibold px-2.5 py-1 rounded-full">
+                            <i className="fa-solid fa-check text-[10px]" /> Disbursed
+                          </span>
+                        ) : w.status === "failed" ? (
+                          <span className="inline-flex items-center gap-1 bg-red-100 text-red-700 text-xs font-semibold px-2.5 py-1 rounded-full">
+                            <i className="fa-solid fa-xmark text-[10px]" /> Failed
+                          </span>
+                        ) : (
+                          <span className="inline-flex items-center gap-1 bg-amber-100 text-amber-700 text-xs font-semibold px-2.5 py-1 rounded-full">
+                            <i className="fa-solid fa-clock text-[10px]" /> Processing
+                          </span>
+                        )}
                       </td>
                     </tr>
                   ))}

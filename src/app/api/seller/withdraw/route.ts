@@ -150,19 +150,30 @@ export async function POST(req: NextRequest) {
         } else {
           const msg = transferData.message || "Flutterwave transfer initiation failed.";
           console.error("[WITHDRAW] Transfer failed:", msg);
-          return NextResponse.json(
-            {
-              error: `Transfer failed: ${msg}. Please try again or contact support.`,
-            },
-            { status: 502 }
-          );
+
+          const isIpWhitelistError =
+            msg.toLowerCase().includes("ip whitelist") ||
+            msg.toLowerCase().includes("whitelisting");
+
+          if (isIpWhitelistError) {
+            console.warn(
+              "[WITHDRAW] Flutterwave IP Whitelisting is active or required. Queuing withdrawal for processing. " +
+              "Tip: To enable instant automated transfers, whitelist your server IP in Flutterwave Dashboard > Settings > Whitelisted IP addresses."
+            );
+            transferSucceeded = false;
+          } else {
+            return NextResponse.json(
+              {
+                error: `Transfer failed: ${msg}. Please try again or contact support.`,
+              },
+              { status: 502 }
+            );
+          }
         }
       } catch (flwErr) {
         console.error("[WITHDRAW FLUTTERWAVE ERROR]", flwErr);
-        return NextResponse.json(
-          { error: "Could not reach Flutterwave. Please try again in a moment." },
-          { status: 503 }
-        );
+        // Fall back to queueing as pending rather than hard failing if network timed out
+        transferSucceeded = false;
       }
     } else {
       // No live Flutterwave key — queue for manual processing
@@ -180,11 +191,11 @@ export async function POST(req: NextRequest) {
         accountName: seller.bankDetails.accountName,
       },
       status: transferSucceeded ? "completed" : "pending",
-      reference: flwRef,
+      reference: flwRef || `wd_${Date.now()}`,
       processedAt: transferSucceeded ? new Date() : undefined,
     });
 
-    // Mark orders as paid out only after a confirmed Flutterwave transfer
+    // Mark orders as paid out so the seller cannot double-withdraw
     for (const order of ordersToMarkPaid) {
       order.sellerPaid = true;
       await order.save();
@@ -194,28 +205,41 @@ export async function POST(req: NextRequest) {
     try {
       await sendMail({
         to: seller.email,
-        subject: "💰 Withdrawal Successful – CampusGo Wallet",
+        subject: transferSucceeded
+          ? "💰 Withdrawal Successful – CampusGo Wallet"
+          : "⏳ Withdrawal Request Received – CampusGo Wallet",
         html: `
           <div style="font-family: Arial, sans-serif; max-width: 560px; margin: 0 auto; background: #ffffff; border-radius: 16px; overflow: hidden; border: 1px solid #e5e7eb;">
             <div style="background: linear-gradient(135deg, #A4860E, #c9a72a); padding: 32px 40px; text-align: center;">
-              <h1 style="color: white; margin: 0; font-size: 24px; font-weight: 900;">💰 Withdrawal Disbursed!</h1>
-              <p style="color: rgba(255,255,255,0.85); margin: 6px 0 0; font-size: 13px;">Funds sent to your bank account</p>
+              <h1 style="color: white; margin: 0; font-size: 24px; font-weight: 900;">${
+                transferSucceeded ? "💰 Withdrawal Disbursed!" : "⏳ Withdrawal Queued"
+              }</h1>
+              <p style="color: rgba(255,255,255,0.85); margin: 6px 0 0; font-size: 13px;">${
+                transferSucceeded ? "Funds sent to your bank account" : "Your withdrawal request is being processed"
+              }</p>
             </div>
             <div style="padding: 32px;">
               <p style="color: #111827; font-size: 15px; margin: 0 0 16px;">Hi <strong>${seller.storeName || seller.name}</strong> 👋,</p>
               <p style="color: #4b5563; font-size: 14px; line-height: 1.6; margin: 0 0 24px;">
-                Your withdrawal request of <strong>₦${withdrawAmount.toLocaleString()}</strong> from your CampusGo Seller Wallet has been processed and sent to your bank account!
+                Your withdrawal request of <strong>₦${withdrawAmount.toLocaleString()}</strong> from your CampusGo Seller Wallet ${
+                  transferSucceeded ? "has been processed and sent to your bank account!" : "has been received and is being processed for bank transfer."
+                }
               </p>
               <div style="background: #fdf8e8; border: 1px solid #e8d48a; border-radius: 12px; padding: 20px; margin-bottom: 24px;">
                 <p style="font-size: 11px; font-weight: 700; color: #92400e; text-transform: uppercase; margin: 0 0 10px;">Withdrawal Details</p>
                 <p style="font-size: 26px; font-weight: 800; color: #111827; margin: 0 0 6px;">₦${withdrawAmount.toLocaleString()}</p>
                 <p style="font-size: 13px; color: #6b7280; margin: 0;">Bank: <strong>${seller.bankDetails.bankName}</strong></p>
                 <p style="font-size: 13px; color: #6b7280; margin: 2px 0 0;">Account: <strong>${seller.bankDetails.accountName} (${seller.bankDetails.accountNumber})</strong></p>
+                <p style="font-size: 13px; color: #6b7280; margin: 2px 0 0;">Status: <strong>${transferSucceeded ? "Disbursed" : "Processing"}</strong></p>
               </div>
-              <p style="color: #6b7280; font-size: 13px; line-height: 1.6; margin: 0 0 24px;">
-                Depending on your bank, funds will reflect in your account shortly. Thank you for selling on CampusGo!
+              <p style="color: #6b7280; font-size: 13px; line-height: 1.6; margin: 0 24px;">
+                ${
+                  transferSucceeded
+                    ? "Depending on your bank, funds will reflect in your account shortly."
+                    : "Funds will reflect in your bank account shortly once transfer processing is complete."
+                } Thank you for selling on CampusGo!
               </p>
-              <div style="text-align: center;">
+              <div style="text-align: center; margin-top: 24px;">
                 <a href="${process.env.NEXT_PUBLIC_APP_URL || "https://campusgo.vercel.app"}/dashboard/seller/payouts"
                   style="display: inline-block; background: #A4860E; color: white; padding: 12px 28px; border-radius: 8px; text-decoration: none; font-weight: 700; font-size: 14px;">
                   View Wallet &amp; Payouts
@@ -233,7 +257,9 @@ export async function POST(req: NextRequest) {
     }
 
     return NextResponse.json({
-      message: `Successfully withdrew ₦${withdrawAmount.toLocaleString()} to your bank account!`,
+      message: transferSucceeded
+        ? `Successfully withdrew ₦${withdrawAmount.toLocaleString()} to your bank account!`
+        : `Withdrawal request of ₦${withdrawAmount.toLocaleString()} submitted successfully! Your bank transfer is being processed.`,
       withdrawal,
       availableBalance: Math.max(0, wallet.availableBalance - withdrawAmount),
     });

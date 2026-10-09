@@ -109,7 +109,11 @@ export async function GET(req: NextRequest) {
               const transferData = await transferRes.json();
 
               if (!transferRes.ok || transferData.status !== "success") {
-                console.error(`[PAYOUT FLUTTERWAVE ERROR] Transfer failed:`, transferData.message || transferData);
+                const flwMsg = transferData.message || JSON.stringify(transferData);
+                console.error(`[PAYOUT FLUTTERWAVE ERROR] Transfer failed:`, flwMsg);
+                if (String(flwMsg).toLowerCase().includes("whitelisting") || String(flwMsg).toLowerCase().includes("ip whitelist")) {
+                  console.warn("[PAYOUT FLUTTERWAVE NOTE] IP Whitelisting required. Whitelist your server IP in Flutterwave Dashboard > Settings > Whitelisted IP addresses.");
+                }
                 allSucceeded = false;
                 continue;
               }

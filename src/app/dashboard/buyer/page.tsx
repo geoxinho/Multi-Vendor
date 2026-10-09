@@ -4,7 +4,6 @@ import { connectDB } from "@/lib/db";
 import { findOrdersAcrossCampuses } from "@/lib/campusModels";
 import Link from "next/link";
 import StatCard from "@/components/dashboard/StatCard";
-import BecomeSellerBanner from "@/components/dashboard/BecomeSellerBanner";
 import type { Metadata } from "next";
 
 export const metadata: Metadata = { title: "Buyer Dashboard" };
@@ -30,9 +29,6 @@ export default async function BuyerDashboardPage() {
         </h1>
         <p className="text-gray-500 mt-1 text-sm">Here&apos;s an overview of your account and orders.</p>
       </div>
-
-      {/* Become a Seller Banner */}
-      <BecomeSellerBanner />
 
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-8">
         <StatCard

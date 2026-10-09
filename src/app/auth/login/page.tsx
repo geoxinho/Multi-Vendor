@@ -7,8 +7,8 @@ import Link from "next/link";
 import { loginSchema } from "@/utils/validators";
 
 const ROLE_HOME: Record<string, string> = {
-  buyer: "/dashboard/buyer",
-  seller: "/dashboard/seller",
+  buyer: "/",
+  seller: "/",
   admin: "/dashboard/admin",
 };
 
@@ -54,14 +54,19 @@ function LoginForm() {
         setError("Invalid email or password. Please try again.");
       }
     } else {
-      if (callbackUrl) {
+      // Check session to determine user role
+      const sessionRes = await fetch("/api/auth/session");
+      const session = await sessionRes.json();
+      const role = session?.user?.role ?? "buyer";
+
+      // If callbackUrl is set and is not the seller dashboard, follow it
+      if (callbackUrl && callbackUrl !== "/dashboard/seller") {
         router.push(callbackUrl);
         router.refresh();
         return;
       }
-      const sessionRes = await fetch("/api/auth/session");
-      const session = await sessionRes.json();
-      const role = session?.user?.role ?? "buyer";
+
+      // Sellers and buyers land on the home page
       router.push(ROLE_HOME[role] ?? "/");
       router.refresh();
     }

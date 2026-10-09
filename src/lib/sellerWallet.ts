@@ -30,13 +30,14 @@ export async function getSellerWalletData(sellerId: string): Promise<SellerWalle
     return User.findById(sellerId).select("name email storeName bankDetails").lean();
   })();
 
-  const [seller, orders, withdrawals] = await Promise.all([
+  const [seller, orders, completedWithdrawals, pendingWithdrawals] = await Promise.all([
     sellerPromise,
     findOrdersAcrossCampuses({
       "items.seller": sellerId,
       paymentStatus: "paid",
     }),
     Withdrawal.find({ seller: sellerId, status: "completed" }).lean(),
+    Withdrawal.find({ seller: sellerId, status: "pending" }).lean(),
   ]);
 
   const now = new Date();
@@ -78,7 +79,8 @@ export async function getSellerWalletData(sellerId: string): Promise<SellerWalle
     }
   }
 
-  const totalWithdrawn = withdrawals.reduce((sum, w) => sum + (w.amount || 0), 0);
+  const totalWithdrawn = completedWithdrawals.reduce((sum, w) => sum + (w.amount || 0), 0);
+  const totalPendingWithdrawn = pendingWithdrawals.reduce((sum, w) => sum + (w.amount || 0), 0);
 
   const bankDetails = seller?.bankDetails;
   const hasBankDetails = Boolean(
@@ -86,7 +88,7 @@ export async function getSellerWalletData(sellerId: string): Promise<SellerWalle
   );
 
   return {
-    availableBalance: Math.max(0, Math.round(availableBalance)),
+    availableBalance: Math.max(0, Math.round(availableBalance) - totalPendingWithdrawn),
     pendingBalance: Math.max(0, Math.round(pendingBalance)),
     heldBalance: Math.max(0, Math.round(heldBalance)),
     totalEarned: Math.round(totalEarned),

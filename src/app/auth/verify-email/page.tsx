@@ -40,22 +40,23 @@ function VerifyEmailContent() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-green-50 to-yellow-50 flex items-center justify-center px-4 py-12">
+    <div className="min-h-screen bg-gradient-to-br from-[#fdf8e8]/40 via-white to-amber-50/30 flex items-center justify-center px-4 py-12">
       <div className="w-full max-w-md">
         <div className="bg-white rounded-3xl shadow-xl p-8 border border-gray-100 text-center">
           {/* Logo */}
           <div className="text-center mb-8">
-            <Link href="/" className="inline-flex items-center gap-2">
-              <div className="w-10 h-10 rounded-xl bg-green-600 flex items-center justify-center">
-                <span className="text-white font-black">M</span>
-              </div>
-              <span className="font-bold text-2xl text-gray-900">Market<span className="text-green-600">Hub</span></span>
+            <Link href="/" className="inline-flex items-center justify-center">
+              <img
+                src="/main_logo.png"
+                alt="CampusGo Logo"
+                className="h-16 w-auto object-contain hover:scale-105 transition-transform"
+              />
             </Link>
           </div>
 
           {success ? (
             <div>
-              <div className="w-16 h-16 bg-green-100 text-green-600 rounded-full flex items-center justify-center mx-auto mb-6 text-3xl">
+              <div className="w-16 h-16 bg-emerald-100 text-emerald-600 rounded-full flex items-center justify-center mx-auto mb-6 text-3xl">
                 ✓
               </div>
               <h2 className="text-2xl font-bold text-gray-900 mb-2">Email Verified!</h2>
@@ -64,7 +65,7 @@ function VerifyEmailContent() {
               </p>
               <Link
                 href="/auth/login"
-                className="inline-block w-full py-3 bg-green-600 hover:bg-green-700 text-white font-semibold rounded-xl transition-colors shadow-sm"
+                className="inline-block w-full py-3 bg-[#A4860E] hover:bg-[#8a6f0b] text-white font-bold rounded-xl transition-colors shadow-md text-sm"
               >
                 Sign In to Your Account
               </Link>
@@ -75,21 +76,21 @@ function VerifyEmailContent() {
               <p className="text-sm text-gray-500 mb-8">
                 Enter the 6-digit verification code sent to your email.
               </p>
-              
+
               <form onSubmit={handleSubmit} className="space-y-4">
                 <div>
                   <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1.5 text-left ml-1">Email Address</label>
                   <input type="email" required value={email}
                     onChange={(e) => setEmail(e.target.value)}
                     placeholder="you@example.com"
-                    className="w-full px-4 py-3 rounded-xl border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-green-500 bg-gray-50 focus:bg-white transition" />
+                    className="w-full px-4 py-3 rounded-xl border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-[#A4860E] bg-gray-50 focus:bg-white transition" />
                 </div>
                 <div>
                   <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1.5 text-left ml-1">Verification Code</label>
                   <input type="text" required value={token}
                     onChange={(e) => setToken(e.target.value.replace(/\D/g, "").slice(0, 6))}
                     placeholder="123456"
-                    className="w-full px-4 py-3 rounded-xl border border-gray-200 text-center tracking-[0.5em] text-lg font-mono focus:outline-none focus:ring-2 focus:ring-green-500 bg-gray-50 focus:bg-white transition" />
+                    className="w-full px-4 py-3 rounded-xl border border-gray-200 text-center tracking-[0.5em] text-lg font-mono focus:outline-none focus:ring-2 focus:ring-[#A4860E] bg-gray-50 focus:bg-white transition" />
                 </div>
 
                 {error && (
@@ -99,7 +100,7 @@ function VerifyEmailContent() {
                 )}
 
                 <button type="submit" disabled={loading}
-                  className="w-full py-3.5 bg-green-600 hover:bg-green-700 text-white font-bold rounded-xl transition-all duration-200 disabled:opacity-60 disabled:cursor-not-allowed shadow-md cursor-pointer">
+                  className="w-full py-3.5 bg-[#A4860E] hover:bg-[#8a6f0b] text-white font-bold rounded-xl transition-all duration-200 disabled:opacity-60 disabled:cursor-not-allowed shadow-md cursor-pointer">
                   {loading ? "Verifying..." : "Verify Account"}
                 </button>
               </form>

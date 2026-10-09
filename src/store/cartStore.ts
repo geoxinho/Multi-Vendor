@@ -47,7 +47,6 @@ export const useCartStore = create<CartStore>()(
 
         if (existing) {
           set((state) => ({
-            isOpen: true,
             items: state.items.map((i) =>
               i.productId === item.productId &&
               (i.selectedSize ?? "") === (item.selectedSize ?? "") &&
@@ -62,7 +61,6 @@ export const useCartStore = create<CartStore>()(
           }));
         } else {
           set((state) => ({
-            isOpen: true,
             items: [
               ...state.items,
               { ...item, quantity: itemQty, stock: itemStock },

@@ -20,6 +20,7 @@ import {
   getCampusProductModel,
   findUsersByIdsAcrossCampuses,
   findProductAcrossCampuses,
+  populateSingleProductSeller,
   findOrdersAcrossCampuses,
   populateOrdersWithUsersAndProducts,
 } from "@/lib/campusModels";
@@ -131,14 +132,19 @@ export async function POST(req: NextRequest) {
     const orderItems = [];
 
     for (const item of items) {
-      let product: any = await Product.findById(item.productId).populate(
-        "seller",
-        "_id",
-      );
-      if (!product) {
-        const found = await findProductAcrossCampuses(item.productId);
-        if (found?.product) {
-          product = found.product;
+      let product: any = null;
+      let campusSlug = "";
+      const found = await findProductAcrossCampuses(item.productId);
+      if (found?.product) {
+        product = found.product;
+        campusSlug = found.campusSlug;
+      } else {
+        const rawDoc = await Product.findById(item.productId).lean();
+        if (rawDoc) {
+          product = await populateSingleProductSeller(
+            rawDoc,
+            (rawDoc as any).school,
+          );
         }
       }
 
@@ -155,9 +161,22 @@ export async function POST(req: NextRequest) {
         "_id" in product.seller
           ? product.seller._id
           : product.seller;
-      const fallbackSeller = item.sellerId;
+      const fallbackSeller =
+        item.sellerId && mongoose.Types.ObjectId.isValid(String(item.sellerId).trim())
+          ? String(item.sellerId).trim()
+          : null;
       const rawSeller = rawSellerFromProduct ?? fallbackSeller;
-      const sellerId = rawSeller ? String(rawSeller).trim() : "";
+      let sellerId = rawSeller ? String(rawSeller).trim() : "";
+
+      if (!sellerId || !mongoose.Types.ObjectId.isValid(sellerId)) {
+        if (product.school) {
+          const enriched = await populateSingleProductSeller(product, product.school);
+          const enrichedId = enriched?.seller?._id || enriched?.seller;
+          if (enrichedId && mongoose.Types.ObjectId.isValid(String(enrichedId).trim())) {
+            sellerId = String(enrichedId).trim();
+          }
+        }
+      }
 
       if (!sellerId || !mongoose.Types.ObjectId.isValid(sellerId)) {
         return NextResponse.json(
@@ -190,6 +209,12 @@ export async function POST(req: NextRequest) {
       totalPlatformFee += itemPlatformFee;
       totalNetPayout += itemNetPayout;
 
+      const sellerSchool =
+        (product.seller && typeof product.seller === "object" && product.seller.school) ||
+        product.school ||
+        campusSlug ||
+        "";
+
       orderItems.push({
         product: product._id,
         title: product.title,
@@ -201,21 +226,18 @@ export async function POST(req: NextRequest) {
         netPayout: itemNetPayout,
         selectedSize: item.selectedSize ?? "",
         selectedColor: item.selectedColor ?? "",
+        _sellerSchool: sellerSchool,
       });
 
       // Decrement stock in DB across both Product and Campus collections
       try {
-        if (typeof product.save === "function") {
-          product.stock -= item.quantity;
-          product.sold = (product.sold || 0) + item.quantity;
-          await product.save();
-        } else {
-          await Product.findByIdAndUpdate(product._id, {
-            $inc: { stock: -item.quantity, sold: item.quantity },
-          });
-        }
-        if (product.school) {
-          const CampusProduct = getCampusProductModel(product.school);
+        await Product.findByIdAndUpdate(product._id, {
+          $inc: { stock: -item.quantity, sold: item.quantity },
+        }).catch(() => {});
+
+        const schoolTarget = product.school || campusSlug;
+        if (schoolTarget) {
+          const CampusProduct = getCampusProductModel(schoolTarget);
           await CampusProduct.findByIdAndUpdate(product._id, {
             $inc: { stock: -item.quantity, sold: item.quantity },
           }).catch(() => {});

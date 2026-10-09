@@ -55,7 +55,7 @@ export default function ProductCard({
     e.preventDefault();
     e.stopPropagation();
     if (product.stock === 0) return;
-    const effectiveSellerId = sellerIdStr || (product as any).school || "platform";
+    const effectiveSellerId = sellerIdStr || "";
 
     addItem({
       productId: String(product._id),

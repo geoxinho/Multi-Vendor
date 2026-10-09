@@ -973,30 +973,8 @@ function RegisterForm() {
                   </div>
                 )}
 
-                {/* ── Terms & Conditions Summary ── */}
+                {/* ── Terms & Conditions ── */}
                 <div className="pt-3 border-t border-[#E5E5E5]">
-                  <div className="p-4 bg-gray-50 rounded-2xl border border-[#E5E5E5] text-xs text-[#6B6B6B] leading-relaxed max-h-36 overflow-y-auto mb-3">
-                    <p className="font-semibold text-[#111111] mb-2">Terms &amp; Conditions Summary</p>
-                    <p className="mb-2">By creating an account on CampusGo, you agree to the following:</p>
-                    <ul className="space-y-1.5 list-disc list-inside">
-                      <li>You must be a student or verified affiliate of your selected institution.</li>
-                      <li>All personal, store, and payment information provided must be truthful and accurate.</li>
-                      {form.role === "buyer" ? (
-                        <li>
-                          <strong className="text-[#111111]">No Return Policy:</strong> Orders are final once delivered and confirmed with your 6-digit delivery PIN.
-                        </li>
-                      ) : (
-                        <>
-                          <li>
-                            <strong className="text-[#111111]">Seller Payouts:</strong> Earnings are released 24 hours after a buyer confirms delivery with their PIN.
-                          </li>
-                          <li>Sellers are solely responsible for genuine product representation and honest listings.</li>
-                        </>
-                      )}
-                      <li>Your information is protected and stored under our Privacy Policy.</li>
-                    </ul>
-                  </div>
-
                   <label className="flex items-start gap-2.5 cursor-pointer select-none">
                     <input
                       type="checkbox"
