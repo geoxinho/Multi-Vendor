@@ -5,9 +5,11 @@ import { sendMail } from "@/lib/email";
 import {
   findMutableOrderById,
   findUsersByIdsAcrossCampuses,
+  findUserAcrossCampuses,
   updateOrderAcrossCampuses,
+  findProductAcrossCampuses,
 } from "@/lib/campusModels";
-import { findProductAcrossCampuses } from "@/lib/campusModels";
+import { User } from "@/models/User";
 import { AdminUser } from "@/models/AdminUser";
 
 type Params = { params: Promise<{ id: string }> };
@@ -333,6 +335,22 @@ export async function PATCH(req: NextRequest, { params }: Params) {
           if (u && u.email) buyerEmail = u.email.trim();
           if (!buyerName && u && (u.name || u.storeName))
             buyerName = u.name || u.storeName;
+
+          if (!buyerEmail) {
+            const found = await findUserAcrossCampuses({ _id: buyerId });
+            if (found?.user?.email) {
+              buyerEmail = String(found.user.email).trim();
+              if (!buyerName) buyerName = found.user.name || found.user.storeName;
+            }
+          }
+
+          if (!buyerEmail) {
+            const legacy = await User.findById(buyerId).select("email name").lean().catch(() => null);
+            if (legacy?.email) {
+              buyerEmail = String(legacy.email).trim();
+              if (!buyerName) buyerName = legacy.name;
+            }
+          }
         }
       } catch {
         // ignore
@@ -384,12 +402,23 @@ export async function PATCH(req: NextRequest, { params }: Params) {
       }
     }
 
-    // Fetch seller emails in batch
+    // Fetch seller emails in batch across all campus collections with full fallbacks
     let sellerEmailList: (string | null)[] = [];
     if (sellerIds.length > 0) {
       const sellersMap = await findUsersByIdsAcrossCampuses(sellerIds);
-      sellerEmailList = sellerIds.map(
-        (sid) => sellersMap.get(sid)?.email?.trim() || null,
+      sellerEmailList = await Promise.all(
+        sellerIds.map(async (sid) => {
+          let email = sellersMap.get(sid)?.email?.trim() || null;
+          if (!email) {
+            const found = await findUserAcrossCampuses({ _id: sid });
+            if (found?.user?.email) email = String(found.user.email).trim();
+          }
+          if (!email) {
+            const legacy = await User.findById(sid).select("email").lean().catch(() => null);
+            if (legacy?.email) email = String(legacy.email).trim();
+          }
+          return email;
+        })
       );
     }
 

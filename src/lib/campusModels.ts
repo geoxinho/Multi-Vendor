@@ -422,7 +422,7 @@ export async function populateSingleProductSeller(
     try {
       const CampusUser = getCampusUserModel(school);
       const sellerDoc = await CampusUser.findById(sellerId)
-        .select("name storeName email phone avatar school nin bankDetails")
+        .select("_id name storeName email phone avatar school nin bankDetails")
         .lean();
       if (sellerDoc) {
         return { ...product, seller: sellerDoc };
@@ -477,7 +477,7 @@ export async function populateProductsWithSellers(
       try {
         const users = await m
           .find({ _id: { $in: idsArray } })
-          .select("name storeName avatar school email phone")
+          .select("_id name storeName avatar school email phone")
           .lean();
         for (const u of users) {
           sellerMap.set(u._id.toString(), u);

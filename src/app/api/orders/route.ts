@@ -288,6 +288,7 @@ export async function POST(req: NextRequest) {
 
     // Send emails & create thank-you chat messages
     try {
+      const { findUserAcrossCampuses } = await import("@/lib/campusModels");
       const sellerIds = [
         ...new Set(orderItems.map((item) => item.seller.toString())),
       ];
@@ -302,13 +303,17 @@ export async function POST(req: NextRequest) {
       >();
       for (const sellerId of sellerIds) {
         let seller = sellersMap.get(sellerId);
-        if (!seller) {
+        if (!seller || !seller.email) {
+          const found = await findUserAcrossCampuses({ _id: sellerId });
+          if (found?.user) seller = found.user;
+        }
+        if (!seller || !seller.email) {
           seller = await User.findById(sellerId).lean().catch(() => null);
         }
         const email = seller?.email ? String(seller.email).trim() : "";
         if (!email) {
           console.warn(
-            `[ORDERS EMAIL] Seller with ID ${sellerId} has no email or was not found.`,
+            `[ORDERS EMAIL] Seller with ID ${sellerId} has no email or was not found across campus collections.`,
           );
           continue;
         }
@@ -335,6 +340,14 @@ export async function POST(req: NextRequest) {
         if (buyerUser?.email) {
           buyerEmail = String(buyerUser.email).trim();
           buyerName = buyerUser.name || buyerName;
+        }
+      }
+
+      if (!buyerEmail) {
+        const foundBuyer = await findUserAcrossCampuses({ _id: session.user.id });
+        if (foundBuyer?.user?.email) {
+          buyerEmail = String(foundBuyer.user.email).trim();
+          buyerName = foundBuyer.user.name || buyerName;
         }
       }
 
@@ -368,19 +381,14 @@ export async function POST(req: NextRequest) {
 
       console.log(`[ORDERS EMAIL] Dispatching order emails: Buyer=${buyerEmail || "UNKNOWN"}, Sellers=${Array.from(sellerItemsMap.keys()).join(", ") || "NONE"}, Admins=${adminEmails.join(", ")}`);
 
-      if (buyerEmail) {
-        await sendOrderConfirmationEmails(
-          order,
-          buyerEmail,
-          buyerName,
-          sellerItemsMap,
-          adminEmails,
-        );
-      } else {
-        console.error(
-          "[ORDERS EMAIL ERROR] Could not determine buyer email address.",
-        );
-      }
+      // Always send order confirmation emails (handles buyer, sellers, and admin)
+      await sendOrderConfirmationEmails(
+        order,
+        buyerEmail,
+        buyerName,
+        sellerItemsMap,
+        adminEmails,
+      );
 
       // Automated chat thank-you message from each seller to buyer
       for (const sellerId of sellerIds) {

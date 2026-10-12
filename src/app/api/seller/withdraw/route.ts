@@ -15,11 +15,15 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Unauthorized. Only sellers can withdraw from their wallet." }, { status: 401 });
     }
 
-    const { amount } = await req.json();
+    const { amount, password } = await req.json();
     const withdrawAmount = Number(amount);
 
     if (!withdrawAmount || isNaN(withdrawAmount) || withdrawAmount <= 0) {
       return NextResponse.json({ error: "Invalid withdrawal amount" }, { status: 400 });
+    }
+
+    if (!password || typeof password !== "string" || !password.trim()) {
+      return NextResponse.json({ error: "Please enter your account password to authorize this withdrawal." }, { status: 400 });
     }
 
     await connectDB();
@@ -46,6 +50,16 @@ export async function POST(req: NextRequest) {
 
     if (!seller) {
       return NextResponse.json({ error: "Seller account not found" }, { status: 404 });
+    }
+
+    // Verify seller's password
+    const bcrypt = (await import("bcryptjs")).default;
+    const isPasswordValid = await bcrypt.compare(password.trim(), seller.password || "");
+    if (!isPasswordValid) {
+      return NextResponse.json(
+        { error: "Incorrect password. Please enter your valid account password to authorize this withdrawal." },
+        { status: 401 }
+      );
     }
 
     if (
@@ -75,10 +89,11 @@ export async function POST(req: NextRequest) {
       );
     }
 
+    const { findOrdersAcrossCampuses } = await import("@/lib/campusModels");
     const now = new Date();
 
-    // Find eligible released & unheld orders for this seller to mark as paid out
-    const eligibleOrders = await Order.find({
+    // Find eligible released & unheld orders for this seller across ALL campus collections
+    const allEligibleOrders = await findOrdersAcrossCampuses({
       "items.seller": sellerId,
       deliveryStatus: "delivered",
       paymentStatus: "paid",
@@ -88,9 +103,9 @@ export async function POST(req: NextRequest) {
     });
 
     let accumulatedNet = 0;
-    const ordersToMarkPaid = [];
+    const ordersToMarkPaid: any[] = [];
 
-    for (const order of eligibleOrders) {
+    for (const order of allEligibleOrders) {
       if (accumulatedNet >= withdrawAmount) break;
 
       const sellerItems = order.items.filter((i: any) => i.seller?.toString() === sellerId);
@@ -195,63 +210,100 @@ export async function POST(req: NextRequest) {
       processedAt: transferSucceeded ? new Date() : undefined,
     });
 
-    // Mark orders as paid out so the seller cannot double-withdraw
-    for (const order of ordersToMarkPaid) {
-      order.sellerPaid = true;
-      await order.save();
-    }
+    // Mark orders as paid out so the seller cannot double-withdraw.
+    // findOrdersAcrossCampuses returns lean docs — we must update directly
+    // in the DB using both the campus model and the global Order collection.
+    const { getAllActiveSchools, getCampusOrderModel: getOrderModel } = await import("@/lib/campusModels");
+    const activeSchools = await getAllActiveSchools();
 
-    // Send confirmation email to seller
+    await Promise.all(
+      ordersToMarkPaid.map(async (order) => {
+        const oid = order._id;
+        // Update in global Order collection (fallback / mirror)
+        await Order.findByIdAndUpdate(oid, { sellerPaid: true }).catch(() => {});
+        // Update in each campus order collection
+        await Promise.all(
+          activeSchools.map(async (s) => {
+            try {
+              const CampusOrder = getOrderModel(s.slug);
+              await CampusOrder.findByIdAndUpdate(oid, { sellerPaid: true });
+            } catch {}
+          })
+        );
+      })
+    );
+
+    // Send confirmation email to seller & alert admin
     try {
-      await sendMail({
-        to: seller.email,
-        subject: transferSucceeded
-          ? "💰 Withdrawal Successful – CampusGo Wallet"
-          : "⏳ Withdrawal Request Received – CampusGo Wallet",
-        html: `
-          <div style="font-family: Arial, sans-serif; max-width: 560px; margin: 0 auto; background: #ffffff; border-radius: 16px; overflow: hidden; border: 1px solid #e5e7eb;">
-            <div style="background: linear-gradient(135deg, #A4860E, #c9a72a); padding: 32px 40px; text-align: center;">
-              <h1 style="color: white; margin: 0; font-size: 24px; font-weight: 900;">${
-                transferSucceeded ? "💰 Withdrawal Disbursed!" : "⏳ Withdrawal Queued"
-              }</h1>
-              <p style="color: rgba(255,255,255,0.85); margin: 6px 0 0; font-size: 13px;">${
-                transferSucceeded ? "Funds sent to your bank account" : "Your withdrawal request is being processed"
-              }</p>
-            </div>
-            <div style="padding: 32px;">
-              <p style="color: #111827; font-size: 15px; margin: 0 0 16px;">Hi <strong>${seller.storeName || seller.name}</strong> 👋,</p>
-              <p style="color: #4b5563; font-size: 14px; line-height: 1.6; margin: 0 0 24px;">
-                Your withdrawal request of <strong>₦${withdrawAmount.toLocaleString()}</strong> from your CampusGo Seller Wallet ${
-                  transferSucceeded ? "has been processed and sent to your bank account!" : "has been received and is being processed for bank transfer."
-                }
-              </p>
-              <div style="background: #fdf8e8; border: 1px solid #e8d48a; border-radius: 12px; padding: 20px; margin-bottom: 24px;">
-                <p style="font-size: 11px; font-weight: 700; color: #92400e; text-transform: uppercase; margin: 0 0 10px;">Withdrawal Details</p>
-                <p style="font-size: 26px; font-weight: 800; color: #111827; margin: 0 0 6px;">₦${withdrawAmount.toLocaleString()}</p>
-                <p style="font-size: 13px; color: #6b7280; margin: 0;">Bank: <strong>${seller.bankDetails.bankName}</strong></p>
-                <p style="font-size: 13px; color: #6b7280; margin: 2px 0 0;">Account: <strong>${seller.bankDetails.accountName} (${seller.bankDetails.accountNumber})</strong></p>
-                <p style="font-size: 13px; color: #6b7280; margin: 2px 0 0;">Status: <strong>${transferSucceeded ? "Disbursed" : "Processing"}</strong></p>
+      const sellerEmail = (seller.email || session.user.email || "").trim();
+      if (sellerEmail) {
+        await sendMail({
+          to: sellerEmail,
+          subject: transferSucceeded
+            ? "💰 Withdrawal Successful – CampusGo Wallet"
+            : "⏳ Withdrawal Request Received – CampusGo Wallet",
+          html: `
+            <div style="font-family: Arial, sans-serif; max-width: 560px; margin: 0 auto; background: #ffffff; border-radius: 16px; overflow: hidden; border: 1px solid #e5e7eb;">
+              <div style="background: linear-gradient(135deg, #A4860E, #c9a72a); padding: 32px 40px; text-align: center;">
+                <h1 style="color: white; margin: 0; font-size: 24px; font-weight: 900;">${
+                  transferSucceeded ? "💰 Withdrawal Disbursed!" : "⏳ Withdrawal Queued"
+                }</h1>
+                <p style="color: rgba(255,255,255,0.85); margin: 6px 0 0; font-size: 13px;">${
+                  transferSucceeded ? "Funds sent to your bank account" : "Your withdrawal request is being processed"
+                }</p>
               </div>
-              <p style="color: #6b7280; font-size: 13px; line-height: 1.6; margin: 0 24px;">
-                ${
-                  transferSucceeded
-                    ? "Depending on your bank, funds will reflect in your account shortly."
-                    : "Funds will reflect in your bank account shortly once transfer processing is complete."
-                } Thank you for selling on CampusGo!
-              </p>
-              <div style="text-align: center; margin-top: 24px;">
-                <a href="${process.env.NEXT_PUBLIC_APP_URL || "https://campusgo.vercel.app"}/dashboard/seller/payouts"
-                  style="display: inline-block; background: #A4860E; color: white; padding: 12px 28px; border-radius: 8px; text-decoration: none; font-weight: 700; font-size: 14px;">
-                  View Wallet &amp; Payouts
-                </a>
+              <div style="padding: 32px;">
+                <p style="color: #111827; font-size: 15px; margin: 0 0 16px;">Hi <strong>${seller.storeName || seller.name}</strong> 👋,</p>
+                <p style="color: #4b5563; font-size: 14px; line-height: 1.6; margin: 0 0 24px;">
+                  Your withdrawal request of <strong>₦${withdrawAmount.toLocaleString()}</strong> from your CampusGo Seller Wallet ${
+                    transferSucceeded ? "has been processed and sent to your bank account!" : "has been received and is being processed for bank transfer."
+                  }
+                </p>
+                <div style="background: #fdf8e8; border: 1px solid #e8d48a; border-radius: 12px; padding: 20px; margin-bottom: 24px;">
+                  <p style="font-size: 11px; font-weight: 700; color: #92400e; text-transform: uppercase; margin: 0 0 10px;">Withdrawal Details</p>
+                  <p style="font-size: 26px; font-weight: 800; color: #111827; margin: 0 0 6px;">₦${withdrawAmount.toLocaleString()}</p>
+                  <p style="font-size: 13px; color: #6b7280; margin: 0;">Bank: <strong>${seller.bankDetails.bankName}</strong></p>
+                  <p style="font-size: 13px; color: #6b7280; margin: 2px 0 0;">Account: <strong>${seller.bankDetails.accountName} (${seller.bankDetails.accountNumber})</strong></p>
+                  <p style="font-size: 13px; color: #6b7280; margin: 2px 0 0;">Status: <strong>${transferSucceeded ? "Disbursed" : "Processing"}</strong></p>
+                </div>
+                <p style="color: #6b7280; font-size: 13px; line-height: 1.6; margin: 0 24px;">
+                  ${
+                    transferSucceeded
+                      ? "Depending on your bank, funds will reflect in your account shortly."
+                      : "Funds will reflect in your bank account shortly once transfer processing is complete."
+                  } Thank you for selling on CampusGo!
+                </p>
+                <div style="text-align: center; margin-top: 24px;">
+                  <a href="${process.env.NEXT_PUBLIC_APP_URL || "https://campusgo.vercel.app"}/dashboard/seller/payouts"
+                    style="display: inline-block; background: #A4860E; color: white; padding: 12px 28px; border-radius: 8px; text-decoration: none; font-weight: 700; font-size: 14px;">
+                    View Wallet &amp; Payouts
+                  </a>
+                </div>
+              </div>
+              <div style="background: #f9fafb; padding: 16px 32px; text-align: center; border-top: 1px solid #e5e7eb;">
+                <p style="color: #9ca3af; font-size: 12px; margin: 0;">CampusGo · Nigeria's Campus Marketplace</p>
               </div>
             </div>
-            <div style="background: #f9fafb; padding: 16px 32px; text-align: center; border-top: 1px solid #e5e7eb;">
-              <p style="color: #9ca3af; font-size: 12px; margin: 0;">CampusGo · Nigeria's Campus Marketplace</p>
+          `,
+        });
+      }
+
+      // Also alert Admin
+      const adminEmail = (process.env.ADMIN_EMAIL || process.env.SMTP_USER || "").trim();
+      if (adminEmail && adminEmail.toLowerCase() !== sellerEmail.toLowerCase()) {
+        await sendMail({
+          to: adminEmail,
+          subject: `🏦 [Admin Alert] Seller Withdrawal of ₦${withdrawAmount.toLocaleString()} (${seller.storeName || seller.name})`,
+          html: `
+            <div style="font-family: Arial, sans-serif; max-width: 560px; margin: 0 auto; background: #ffffff; border-radius: 16px; overflow: hidden; border: 1px solid #e5e7eb; padding: 24px;">
+              <h2 style="color: #111827; margin: 0 0 12px;">Seller Withdrawal Requested</h2>
+              <p style="color: #4b5563; font-size: 14px;">Seller <strong>${seller.storeName || seller.name}</strong> (${sellerEmail}) requested a payout of <strong>₦${withdrawAmount.toLocaleString()}</strong>.</p>
+              <p style="color: #4b5563; font-size: 13px;">Bank: ${seller.bankDetails.bankName} | ${seller.bankDetails.accountName} (${seller.bankDetails.accountNumber})</p>
+              <p style="color: #4b5563; font-size: 13px;">Status: <strong>${transferSucceeded ? "Disbursed" : "Queued / Pending"}</strong></p>
             </div>
-          </div>
-        `,
-      });
+          `,
+        }).catch((e) => console.error("[WITHDRAW ADMIN EMAIL ERROR]", e));
+      }
     } catch (emailErr) {
       console.error("[WITHDRAW EMAIL ERROR]", emailErr);
     }

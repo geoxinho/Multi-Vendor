@@ -33,6 +33,8 @@ export default function SellerWalletCard({
 }: SellerWalletCardProps) {
   const [showWithdrawModal, setShowWithdrawModal] = useState(false);
   const [amount, setAmount] = useState<string>(availableBalance.toString());
+  const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [successMsg, setSuccessMsg] = useState("");
@@ -56,12 +58,17 @@ export default function SellerWalletCard({
       return;
     }
 
+    if (!password.trim()) {
+      setError("Please enter your account password to authorize withdrawal.");
+      return;
+    }
+
     setLoading(true);
     try {
       const res = await fetch("/api/seller/withdraw", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ amount: val }),
+        body: JSON.stringify({ amount: val, password: password.trim() }),
       });
 
       const data = await res.json();
@@ -75,6 +82,7 @@ export default function SellerWalletCard({
       setLoading(false);
       setTimeout(() => {
         setShowWithdrawModal(false);
+        setPassword("");
         setSuccessMsg("");
         if (onWithdrawSuccess) onWithdrawSuccess();
         window.location.reload();
@@ -133,14 +141,15 @@ export default function SellerWalletCard({
           <button
             onClick={() => {
               setAmount(availableBalance.toString());
+              setPassword("");
               setError("");
               setShowWithdrawModal(true);
             }}
             disabled={availableBalance <= 0}
-            className="px-6 py-3 bg-[#A4860E] hover:bg-[#b59510] active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed text-white font-extrabold rounded-2xl transition-all shadow-lg shadow-[#A4860E]/30 text-sm flex items-center justify-center gap-2.5 shrink-0"
+            className="px-6 py-3 bg-[#A4860E] hover:bg-[#b59510] active:scale-95 disabled:opacity-40 disabled:cursor-not-allowed text-white font-extrabold rounded-2xl transition-all shadow-lg shadow-[#A4860E]/30 text-sm flex items-center justify-center gap-2.5 shrink-0"
           >
             <i className="fa-solid fa-building-columns" />
-            Withdraw Earnings
+            {availableBalance <= 0 ? "No Funds Available" : "Withdraw Earnings"}
           </button>
         ) : (
           <Link
@@ -219,8 +228,11 @@ export default function SellerWalletCard({
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm p-4 text-gray-900">
           <div className="bg-white rounded-3xl shadow-2xl max-w-md w-full p-6 sm:p-8 animate-fade-in relative">
             <button
-              onClick={() => setShowWithdrawModal(false)}
-              className="absolute top-5 right-5 text-gray-400 hover:text-gray-600 p-1"
+              onClick={() => {
+                setShowWithdrawModal(false);
+                setPassword("");
+              }}
+              className="absolute top-5 right-5 text-gray-400 hover:text-gray-600 p-1 cursor-pointer"
             >
               <i className="fa-solid fa-xmark text-lg" />
             </button>
@@ -265,17 +277,20 @@ export default function SellerWalletCard({
 
             <form onSubmit={handleWithdraw} className="space-y-4">
               <div>
+                {/* Quick-action: Withdraw All */}
+                <button
+                  type="button"
+                  onClick={() => setAmount(availableBalance.toString())}
+                  className="w-full mb-3 py-2.5 px-4 bg-emerald-50 hover:bg-emerald-100 border border-emerald-200 text-emerald-700 font-extrabold rounded-xl transition-all text-sm flex items-center justify-center gap-2"
+                >
+                  <i className="fa-solid fa-circle-check" />
+                  Withdraw All — ₦{availableBalance.toLocaleString()}
+                </button>
+
                 <div className="flex justify-between items-center mb-1">
                   <label className="text-xs font-bold text-gray-700 uppercase">
-                    Withdrawal Amount (₦)
+                    Or enter custom amount (₦)
                   </label>
-                  <button
-                    type="button"
-                    onClick={() => setAmount(availableBalance.toString())}
-                    className="text-[11px] font-bold text-[#A4860E] hover:underline"
-                  >
-                    Max (₦{availableBalance.toLocaleString()})
-                  </button>
                 </div>
                 <div className="relative">
                   <span className="absolute left-4 top-1/2 -translate-y-1/2 font-bold text-gray-400 text-sm">
@@ -300,9 +315,39 @@ export default function SellerWalletCard({
                 </p>
               </div>
 
+              {/* Password Authorization Field */}
+              <div>
+                <label className="text-xs font-bold text-gray-700 uppercase mb-1 block">
+                  Account Password (Authorization)
+                </label>
+                <div className="relative">
+                  <span className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 text-sm">
+                    <i className="fa-solid fa-lock" />
+                  </span>
+                  <input
+                    type={showPassword ? "text" : "password"}
+                    required
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    placeholder="Enter your account password"
+                    className="w-full pl-10 pr-11 py-3 rounded-xl border border-gray-200 text-sm font-medium text-gray-900 focus:ring-2 focus:ring-[#A4860E] outline-none"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword(!showPassword)}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 p-1 text-sm cursor-pointer"
+                  >
+                    <i className={`fa-solid ${showPassword ? "fa-eye-slash" : "fa-eye"}`} />
+                  </button>
+                </div>
+                <p className="text-[11px] text-gray-400 mt-1">
+                  Required for security before releasing funds to your bank.
+                </p>
+              </div>
+
               <button
                 type="submit"
-                disabled={loading || availableBalance <= 0}
+                disabled={loading || availableBalance <= 0 || !password.trim()}
                 className="w-full py-3.5 bg-[#A4860E] hover:bg-[#8a7009] text-white font-extrabold rounded-xl transition-all shadow-md disabled:opacity-50 disabled:cursor-not-allowed text-sm flex items-center justify-center gap-2"
               >
                 {loading ? (

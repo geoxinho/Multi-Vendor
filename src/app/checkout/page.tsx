@@ -188,20 +188,62 @@ export default function CheckoutPage() {
     }
   };
 
-  const handlePay = () => {
+  const handlePay = async () => {
     if (!validate()) return;
 
+    // Auto-resolve any cart items that are missing a seller ID by fetching
+    // fresh product data. This handles stale items added before the seller
+    // population fix, or race conditions at add-to-cart time.
     const invalidItems = items.filter(
       (item) => !item.sellerId || !String(item.sellerId).trim(),
     );
     if (invalidItems.length > 0) {
-      // Do NOT mutate the cart here — removing items would empty the cart
-      // and trigger the /products redirect via the useEffect guard.
-      // Just show a user-friendly error and let them remove items manually.
-      setServerError(
-        `One or more products in your cart are missing seller information (${invalidItems.map((i) => i.title).join(", ")}). Please remove them from your cart and try again.`,
-      );
-      return;
+      setPaying(true);
+      setServerError("");
+      try {
+        const resolved = await Promise.all(
+          invalidItems.map(async (item) => {
+            try {
+              const res = await fetch(`/api/products/${item.productId}`);
+              if (!res.ok) return { productId: item.productId, sellerId: "" };
+              const prod = await res.json();
+              const sid =
+                (prod.seller as any)?._id?.toString?.() ||
+                (typeof prod.seller === "string" ? prod.seller : "") ||
+                prod.sellerId ||
+                "";
+              return { productId: item.productId, sellerId: String(sid) };
+            } catch {
+              return { productId: item.productId, sellerId: "" };
+            }
+          }),
+        );
+
+        // Patch the cart items with freshly-fetched seller IDs
+        const patchMap = new Map(resolved.map((r) => [r.productId, r.sellerId]));
+        useCartStore.setState((state) => ({
+          items: state.items.map((item) =>
+            patchMap.has(item.productId) && patchMap.get(item.productId)
+              ? { ...item, sellerId: patchMap.get(item.productId)! }
+              : item,
+          ),
+        }));
+
+        // Re-check: if any seller ID still couldn't be resolved, block checkout
+        const stillInvalid = resolved.filter((r) => !r.sellerId);
+        if (stillInvalid.length > 0) {
+          setPaying(false);
+          setServerError(
+            "Some products in your cart could not be verified. Please remove them and try again.",
+          );
+          return;
+        }
+      } catch {
+        setPaying(false);
+        setServerError("Could not verify cart items. Please try again.");
+        return;
+      }
+      setPaying(false);
     }
 
     if (!scriptLoaded || typeof window.FlutterwaveCheckout !== "function") {

@@ -22,14 +22,14 @@ export async function GET(req: NextRequest) {
       .sort("-createdAt")
       .lean();
 
-    // Get all delivered orders for this seller — both pending, held and paid
-    const orders = await Order.find({
+    const { findOrdersAcrossCampuses } = await import("@/lib/campusModels");
+
+    // Get all delivered orders for this seller across ALL campus collections
+    const orders = await findOrdersAcrossCampuses({
       "items.seller": sellerId,
       deliveryStatus: "delivered",
       paymentStatus: "paid",
-    })
-      .sort("-deliveredAt")
-      .lean();
+    });
 
     const now = new Date();
 

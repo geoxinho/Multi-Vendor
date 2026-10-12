@@ -1,4 +1,4 @@
-import { getTransporter } from "@/lib/email";
+import { getTransporter, sendMail } from "@/lib/email";
 
 /**
  * Sends a verification email to the user.
@@ -481,21 +481,18 @@ export async function sendOrderConfirmationEmails(
       const emailTasks: Promise<any>[] = [];
 
       // 1. Send to buyer
-      if (buyerEmail) {
+      if (buyerEmail && buyerEmail.includes("@")) {
         emailTasks.push(
-          transporter
-            .sendMail({
-              from: smtpFrom,
-              to: buyerEmail.trim(),
-              subject: `Order Confirmed #${orderShortId} & Delivery PIN - CampusGo`,
-              text: buyerText,
-              html: buyerHtml,
-            })
-            .then((info) => {
+          sendMail({
+            to: buyerEmail.trim(),
+            subject: `Order Confirmed #${orderShortId} & Delivery PIN - CampusGo`,
+            html: buyerHtml,
+          })
+            .then(() => {
               console.log(
-                `[EMAIL SUCCESS] Order confirmation sent to buyer (${buyerEmail}). MessageID: ${info.messageId}`,
+                `[EMAIL SUCCESS] Order confirmation sent to buyer (${buyerEmail}).`,
               );
-              return { type: "buyer", email: buyerEmail, messageId: info.messageId };
+              return { type: "buyer", email: buyerEmail };
             })
             .catch((buyerErr) => {
               console.error(
@@ -509,25 +506,22 @@ export async function sendOrderConfirmationEmails(
 
       // 2. Send personalized email to each seller
       for (const [email, value] of sellerItemsMap) {
-        if (!email) continue;
+        if (!email || !email.includes("@")) continue;
         const items = Array.isArray(value) ? value : value.items;
         const sellerName = Array.isArray(value) ? undefined : value.sellerName;
         if (!items || items.length === 0) continue;
 
         emailTasks.push(
-          transporter
-            .sendMail({
-              from: smtpFrom,
-              to: email.trim(),
-              subject: `🎉 New Order Received #${orderShortId} - CampusGo`,
-              text: buildSellerText(items, sellerName),
-              html: buildSellerHtml(items, sellerName),
-            })
-            .then((info) => {
+          sendMail({
+            to: email.trim(),
+            subject: `🎉 New Order Received #${orderShortId} - CampusGo`,
+            html: buildSellerHtml(items, sellerName),
+          })
+            .then(() => {
               console.log(
-                `[EMAIL SUCCESS] New order alert sent to seller (${email}). MessageID: ${info.messageId}`,
+                `[EMAIL SUCCESS] New order alert sent to seller (${email}).`,
               );
-              return { type: "seller", email, messageId: info.messageId };
+              return { type: "seller", email };
             })
             .catch((sellerErr) => {
               console.error(
@@ -541,20 +535,18 @@ export async function sendOrderConfirmationEmails(
 
       // 3. Send notification to admin / dashboard
       for (const adminEmail of finalAdminEmails) {
+        if (!adminEmail || !adminEmail.includes("@")) continue;
         emailTasks.push(
-          transporter
-            .sendMail({
-              from: smtpFrom,
-              to: adminEmail,
-              subject: `🔔 [Admin] New Order #${orderShortId} Placed - CampusGo`,
-              text: buildAdminText(),
-              html: buildAdminHtml(),
-            })
-            .then((info) => {
+          sendMail({
+            to: adminEmail,
+            subject: `🔔 [Admin] New Order #${orderShortId} Placed - CampusGo`,
+            html: buildAdminHtml(),
+          })
+            .then(() => {
               console.log(
-                `[EMAIL SUCCESS] Admin order notification sent to ${adminEmail}. MessageID: ${info.messageId}`,
+                `[EMAIL SUCCESS] Admin order notification sent to ${adminEmail}.`,
               );
-              return { type: "admin", email: adminEmail, messageId: info.messageId };
+              return { type: "admin", email: adminEmail };
             })
             .catch((adminErr) => {
               console.error(
@@ -568,7 +560,7 @@ export async function sendOrderConfirmationEmails(
 
       await Promise.allSettled(emailTasks);
     } catch (err: any) {
-      console.error("[EMAIL ERROR] Transporter error sending order confirmation emails:", err?.message || err);
+      console.error("[EMAIL ERROR] Error sending order confirmation emails:", err?.message || err);
     }
   } else {
     console.log(`[MOCK EMAIL] Order Confirmation to Buyer (${buyerEmail}). PIN: ${order.deliveryPin}`);
